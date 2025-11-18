@@ -207,7 +207,7 @@
   <script>
     // Registra Service Worker per PWA
     if ('serviceWorker' in navigator) {
-      navigator.serviceWorker.register('/sw.js')
+      navigator.serviceWorker.register('/OtterCare/sw.js')
         .then(reg => console.log('SW registrato', reg))
         .catch(err => console.log('SW errore', err));
     }

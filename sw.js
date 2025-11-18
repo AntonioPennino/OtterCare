@@ -1,11 +1,11 @@
 // Service Worker per PWA OtterCare
 const CACHE_NAME = 'ottercare-v1';
 const urlsToCache = [
-  '/',
-  '/index.html',
-  '/style.css',
-  '/main.js',
-  '/manifest.json'
+  '/OtterCare/',
+  '/OtterCare/index.html',
+  '/OtterCare/style.css',
+  '/OtterCare/main.js',
+  '/OtterCare/manifest.json'
 ];
 
 // Installazione - cache delle risorse

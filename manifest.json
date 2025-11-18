@@ -2,7 +2,7 @@
   "name": "OtterCare - Cura la tua lontra",
   "short_name": "OtterCare",
   "description": "Un adorabile gioco per prendersi cura della tua lontra virtuale",
-  "start_url": "/",
+  "start_url": "/OtterCare/",
   "display": "standalone",
   "background_color": "#f3faf8",
   "theme_color": "#66cdaa",
