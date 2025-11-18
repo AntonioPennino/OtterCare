@@ -8,7 +8,12 @@ const DEFAULT = {
   energy: 80,
   coins: 0,
   hat: false,
-  lastTick: Date.now()
+  lastTick: Date.now(),
+  stats: {
+    gamesPlayed: 0,
+    fishCaught: 0,
+    itemsBought: 0
+  }
 };
 
 let state = {...DEFAULT};
@@ -102,6 +107,9 @@ function updateUI(){
 
   // Update mood based on stats
   updateMood();
+  
+  // Update stats page
+  updateStats();
 
   // equipment
   const otterSvg = $('otterSvg');
@@ -116,6 +124,14 @@ function updateUI(){
     const existing = document.querySelector('.hat');
     if(existing) existing.remove();
   }
+}
+
+function updateStats(){
+  if(!state.stats) state.stats = {gamesPlayed:0, fishCaught:0, itemsBought:0};
+  if($('statCoins')) $('statCoins').textContent = state.coins;
+  if($('statGames')) $('statGames').textContent = state.stats.gamesPlayed;
+  if($('statFish')) $('statFish').textContent = state.stats.fishCaught;
+  if($('statItems')) $('statItems').textContent = state.stats.itemsBought;
 }
 
 // slow decay over time
@@ -195,6 +211,10 @@ function startMiniGame(){
   $('miniScore').textContent = 0;
   const area = $('fishArea');
   area.innerHTML='';
+  
+  // Track game played
+  if(!state.stats) state.stats = {gamesPlayed:0, fishCaught:0, itemsBought:0};
+  state.stats.gamesPlayed++;
 
   // spawn fish
   function spawnFish(){
@@ -209,6 +229,7 @@ function startMiniGame(){
       f.remove();
       state.coins += 2; // reward
       state.happy = Math.min(100, state.happy + 4);
+      state.stats.fishCaught++;
       playSound('happy');
       updateUI(); saveState();
     });
@@ -227,6 +248,7 @@ function startMiniGame(){
     clearInterval(interval);
     miniRunning = false;
     $('overlay').classList.add('hidden');
+    updateStats();
     alert('Fine mini gioco! Hai ottenuto ' + miniScore + ' punti.');
   }, 10000);
 }
@@ -255,6 +277,8 @@ function buyItem(e){
   }
   state.coins -= price;
   if(item==='hat') state.hat = true;
+  if(!state.stats) state.stats = {gamesPlayed:0, fishCaught:0, itemsBought:0};
+  state.stats.itemsBought++;
   updateUI(); saveState();
 }
 
@@ -282,7 +306,43 @@ window.addEventListener('DOMContentLoaded', ()=>{
 
   // Initial mood set
   updateMood();
+
+  // Page navigation
+  setupNavigation();
 });
+
+// Page navigation system
+function setupNavigation(){
+  const navButtons = document.querySelectorAll('.nav-btn');
+  const pages = {
+    home: $('mainInfo'),
+    shop: $('shopPage'),
+    stats: $('statsPage')
+  };
+
+  navButtons.forEach(btn => {
+    btn.addEventListener('click', ()=>{
+      const targetPage = btn.dataset.page;
+      
+      // Update active button
+      navButtons.forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      
+      // Show/hide pages
+      Object.keys(pages).forEach(key => {
+        if(pages[key]){
+          if(key === targetPage){
+            pages[key].classList.remove('hidden');
+            if(key === 'shop') pages[key].classList.add('active');
+          } else {
+            pages[key].classList.add('hidden');
+            if(key === 'shop') pages[key].classList.remove('active');
+          }
+        }
+      });
+    });
+  });
+}
 
 // save periodically
 setInterval(saveState, 4000);

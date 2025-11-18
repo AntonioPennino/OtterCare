@@ -12,8 +12,9 @@ body{
   color:#333;
   min-height:100vh;
   overflow-x:hidden;
+  padding-bottom:70px;
 }
-header{padding:16px;text-align:center}
+header{padding:12px 16px;text-align:center}
 header h1{margin:0;font-size:clamp(1.5rem, 5vw, 2rem)}
 .tag{color:var(--muted);font-size:clamp(0.875rem, 3vw, 1rem);padding:0 8px}
 main{
@@ -22,8 +23,9 @@ main{
   padding:16px;
   align-items:flex-start;
   max-width:1100px;
-  margin:16px auto;
+  margin:0 auto;
   width:100%;
+  position:relative;
 }
 .game-area{
   display:flex;
@@ -35,15 +37,24 @@ main{
   box-shadow:0 6px 30px rgba(100,100,100,0.08);
   width:100%;
 }
+.otter-display{
+  flex:1;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  gap:16px;
+}
 .otter-wrapper{
-  width:340px;
-  height:260px;
+  width:100%;
+  max-width:340px;
+  height:auto;
+  aspect-ratio:340/260;
   display:flex;
   align-items:center;
   justify-content:center;
   flex-shrink:0;
 }
-.info{flex:1;min-width:0}
+.info{flex:1;min-width:0;width:100%}
 .status .bar{margin-bottom:10px}
 .status label{display:block;font-size:0.9rem;margin-bottom:6px}
 .progress{background:#e6f2ef;border-radius:6px;height:12px;overflow:hidden}
@@ -52,31 +63,103 @@ main{
 .fill.critical{background:linear-gradient(90deg,#ff4757,#d63031);animation:pulse 1s ease-in-out infinite}
 .controls{display:flex;gap:8px;margin-top:12px;flex-wrap:wrap}
 .controls button{
-  padding:10px 14px;
+  padding:12px 16px;
   border-radius:8px;
   border:1px solid rgba(0,0,0,0.06);
   background:#fff;
   cursor:pointer;
-  font-size:0.9rem;
+  font-size:0.95rem;
   flex:1 1 calc(50% - 4px);
   min-width:120px;
+  transition:all 0.2s;
 }
-.controls button:hover{transform:translateY(-2px)}
-.controls button:active{transform:scale(0.95)}
-.meta{display:flex;justify-content:space-between;align-items:center;margin-top:10px;flex-wrap:wrap;gap:8px}
-.coins{font-weight:700}
+.controls button:hover{transform:translateY(-2px);box-shadow:0 2px 8px rgba(102,205,170,0.2)}
+.controls button:active{transform:scale(0.98)}
+.btn-secondary{
+  background:#f5f5f5;
+  color:#666;
+  font-size:0.85rem;
+  padding:8px 12px;
+  border:1px solid rgba(0,0,0,0.06);
+  border-radius:6px;
+  cursor:pointer;
+}
+.meta{display:flex;justify-content:space-between;align-items:center;margin-top:12px;flex-wrap:wrap;gap:8px}
+.coins{font-weight:700;font-size:1rem}
 .shop{
-  width:240px;
+  width:100%;
   background:var(--card);
-  padding:12px;
+  padding:16px;
   border-radius:12px;
   box-shadow:0 6px 30px rgba(100,100,100,0.06);
 }
-.shop h2{margin-top:0;font-size:1.2rem}
-.item{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;gap:8px}
-.item-icon{font-size:1.8rem}
-.item-info{flex:1;font-size:0.9rem}
-.buy{padding:6px 10px;border-radius:8px;font-size:0.85rem;white-space:nowrap}
+.shop h2{margin-top:0;font-size:1.3rem}
+.item{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;gap:8px;padding:12px;background:#f9f9f9;border-radius:8px}
+.item-icon{font-size:2rem}
+.item-info{flex:1;font-size:0.95rem}
+.buy{padding:8px 16px;border-radius:8px;font-size:0.9rem;white-space:nowrap;background:var(--accent);color:white;border:none;cursor:pointer;font-weight:600}
+.buy:hover{background:#5bb899}
+
+/* Page content */
+.page-content{
+  width:100%;
+  max-width:1100px;
+  margin:0 auto;
+  padding:16px;
+}
+
+/* Bottom Navigation (mobile-first) */
+.bottom-nav{
+  position:fixed;
+  bottom:0;
+  left:0;
+  right:0;
+  background:var(--card);
+  border-top:1px solid rgba(0,0,0,0.08);
+  display:none;
+  justify-content:space-around;
+  padding:8px 0 calc(8px + env(safe-area-inset-bottom));
+  z-index:100;
+  box-shadow:0 -2px 10px rgba(0,0,0,0.05);
+}
+.nav-btn{
+  flex:1;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  gap:4px;
+  background:none;
+  border:none;
+  padding:8px 12px;
+  cursor:pointer;
+  color:#666;
+  transition:all 0.2s;
+}
+.nav-btn.active{
+  color:var(--accent);
+}
+.nav-icon{
+  font-size:24px;
+  transition:transform 0.2s;
+}
+.nav-btn.active .nav-icon{
+  transform:scale(1.2);
+}
+.nav-label{
+  font-size:0.7rem;
+  font-weight:500;
+}
+
+/* Hide pages by default on mobile */
+#shopPage{
+  display:none;
+}
+#shopPage.active{
+  display:block;
+}
+#mainInfo.hidden{
+  display:none;
+}
 .overlay{position:fixed;inset:0;background:rgba(0,0,0,0.4);display:flex;align-items:center;justify-content:center;z-index:1000;padding:16px}
 .hidden{display:none}
 .minigame{
@@ -163,6 +246,8 @@ footer{padding:6px;text-align:center;font-size:0.8rem;margin-top:10px;color:var(
   .item-info{font-size:0.85rem}
   .fish{font-size:24px}
   footer{font-size:0.75rem}
+  .bottom-nav{display:flex}
+  body{padding-bottom:70px}
 }
 
 /* Landscape mobile */
