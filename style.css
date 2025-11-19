@@ -657,3 +657,70 @@ input[type="checkbox"]:checked + .toggle-switch::after {
     display: none;
   }
 }
+/* Minigame Enhancements */
+.minigame-card {
+  background: linear-gradient(to bottom, #4FC3F7, #0288D1);
+  color: white;
+  overflow: hidden;
+  position: relative;
+}
+
+.fish-area {
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 12px;
+  position: relative;
+  overflow: hidden;
+}
+
+.fish {
+  position: absolute;
+  font-size: 2rem;
+  cursor: pointer;
+  animation: swim 3s linear infinite;
+  transition: transform 0.1s;
+  user-select: none;
+}
+
+.fish:active {
+  transform: scale(0.9);
+}
+
+.fish.rare {
+  filter: drop-shadow(0 0 5px gold);
+  font-size: 2.5rem;
+}
+
+.trash {
+  position: absolute;
+  font-size: 2rem;
+  cursor: pointer;
+  animation: float 4s ease-in-out infinite;
+  user-select: none;
+}
+
+@keyframes swim {
+  0% { transform: translateX(0) rotate(0deg); }
+  25% { transform: translateX(10px) rotate(5deg); }
+  50% { transform: translateX(0) rotate(0deg); }
+  75% { transform: translateX(-10px) rotate(-5deg); }
+  100% { transform: translateX(0) rotate(0deg); }
+}
+
+@keyframes float {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-10px); }
+}
+
+.score-popup {
+  position: absolute;
+  font-weight: bold;
+  font-size: 1.2rem;
+  color: #FFD700;
+  animation: popUp 0.8s ease-out forwards;
+  pointer-events: none;
+}
+
+@keyframes popUp {
+  0% { transform: translateY(0) scale(1); opacity: 1; }
+  100% { transform: translateY(-30px) scale(1.5); opacity: 0; }
+}

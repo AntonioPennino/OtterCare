@@ -1,0 +1,36 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200">
+  <defs>
+    <linearGradient id="furGradient" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#8D6E63"/>
+      <stop offset="100%" stop-color="#5D4037"/>
+    </linearGradient>
+  </defs>
+  <rect width="200" height="200" rx="40" fill="#8D6E63"/>
+  <g transform="translate(0, 20)">
+    <!-- Head Shape -->
+    <circle cx="100" cy="80" r="60" fill="url(#furGradient)"/>
+    
+    <!-- Ears -->
+    <circle cx="50" cy="50" r="12" fill="#5D4037"/>
+    <circle cx="150" cy="50" r="12" fill="#5D4037"/>
+    <circle cx="50" cy="50" r="6" fill="#8D6E63"/>
+    <circle cx="150" cy="50" r="6" fill="#8D6E63"/>
+
+    <!-- Face Patch -->
+    <ellipse cx="100" cy="95" rx="45" ry="35" fill="#EFEBE9" opacity="1"/>
+
+    <!-- Eyes -->
+    <g id="eyes">
+      <circle cx="75" cy="80" r="8" fill="#3E2723"/>
+      <circle cx="78" cy="78" r="3" fill="#FFFFFF"/>
+      <circle cx="125" cy="80" r="8" fill="#3E2723"/>
+      <circle cx="128" cy="78" r="3" fill="#FFFFFF"/>
+    </g>
+
+    <!-- Nose -->
+    <path d="M92,98 Q100,94 108,98 Q100,110 92,98" fill="#3E2723"/>
+
+    <!-- Mouth -->
+    <path d="M92,110 Q100,120 108,110" fill="none" stroke="#3E2723" stroke-width="3" stroke-linecap="round"/>
+  </g>
+</svg>

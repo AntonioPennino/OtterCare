@@ -6,6 +6,8 @@ import {
   resetState,
   setAnalyticsOptIn,
   setHatOwned,
+  setSunglassesOwned,
+  setScarfOwned,
   setTutorialSeen,
   subscribe
 } from './state.js';
@@ -107,19 +109,41 @@ function setBar(element: HTMLElement | null, value: number): void {
   }
 }
 
-function ensureHat(stateHat: boolean): void {
+function ensureAccessories(state: { hat: boolean; sunglasses: boolean; scarf: boolean }): void {
   const wrapper = document.querySelector('.otter-wrapper');
   if (!wrapper) {
     return;
   }
-  const existing = wrapper.querySelector('.hat');
-  if (stateHat && !existing) {
+
+  // Hat
+  const existingHat = wrapper.querySelector('.hat');
+  if (state.hat && !existingHat) {
     const hat = document.createElement('div');
     hat.classList.add('hat');
     hat.textContent = '🎩';
     wrapper.appendChild(hat);
-  } else if (!stateHat && existing) {
-    existing.remove();
+  } else if (!state.hat && existingHat) {
+    existingHat.remove();
+  }
+
+  // Sunglasses (SVG based)
+  const sunglassesGroup = $('sunglassesItem');
+  if (sunglassesGroup) {
+    if (state.sunglasses) {
+      sunglassesGroup.setAttribute('opacity', '1');
+    } else {
+      sunglassesGroup.setAttribute('opacity', '0');
+    }
+  }
+
+  // Scarf (SVG based)
+  const scarfGroup = $('scarfItem');
+  if (scarfGroup) {
+    if (state.scarf) {
+      scarfGroup.setAttribute('opacity', '1');
+    } else {
+      scarfGroup.setAttribute('opacity', '0');
+    }
   }
 }
 
@@ -175,7 +199,7 @@ function render(): void {
   setBar($('cleanBar'), state.clean);
   setBar($('energyBar'), state.energy);
   $('coins')!.textContent = String(state.coins);
-  ensureHat(state.hat);
+  ensureAccessories(state);
   setExpression(computeMood());
   updateStatsView();
   evaluateCriticalWarnings();
@@ -246,6 +270,10 @@ function initShop(): void {
       if (spendCoins(price)) {
         if (item === 'hat') {
           setHatOwned(true);
+        } else if (item === 'sunglasses') {
+          setSunglassesOwned(true);
+        } else if (item === 'scarf') {
+          setScarfOwned(true);
         }
         rewardItemPurchase(item);
         render();

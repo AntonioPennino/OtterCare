@@ -20,19 +20,6 @@
   <meta name="twitter:description" content="Prenditi cura della tua lontra virtuale!" />
   
   <!-- PWA -->
-  <meta name="theme-color" content="#8D6E63" />
-  <meta name="mobile-web-app-capable" content="yes" />
-  <meta name="apple-mobile-web-app-capable" content="yes" />
-  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
-  <meta name="apple-mobile-web-app-title" content="OtterCare" />
-  <link rel="manifest" href="manifest.json" />
-  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🦦</text></svg>" />
-  <link rel="apple-touch-icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 180 180'><rect width='180' height='180' fill='%238D6E63' rx='40'/><text x='90' y='140' font-size='100' text-anchor='middle'>🦦</text></svg>" />
-  
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="style.css" />
 </head>
 <body>
   <header>
@@ -72,11 +59,98 @@
                   <feMergeNode in="SourceGraphic"/>
                 </feMerge>
               </filter>
+            </defs>
+
+            <g id="otterBodyGroup" filter="url(#softShadow)">
+              <!-- Tail -->
+              <path id="tail" d="M280,220 Q340,210 360,180 Q340,240 280,250 Z" fill="url(#furGradient)"/>
+
+              <!-- Main Body -->
+              <ellipse cx="200" cy="180" rx="90" ry="110" fill="url(#furGradient)"/>
+              
+              <!-- Belly Patch -->
+              <ellipse cx="200" cy="190" rx="60" ry="80" fill="url(#bellyGradient)"/>
+
+              <!-- Feet -->
+              <g id="feet">
+                <path d="M130,270 Q120,290 140,290 Q160,290 150,270" fill="#5D4037"/>
+                <path d="M270,270 Q280,290 260,290 Q240,290 250,270" fill="#5D4037"/>
+              </g>
+
+              <!-- Arms -->
+              <g id="arms">
+                <path d="M120,180 Q100,220 140,220" fill="url(#furGradient)" stroke="#5D4037" stroke-width="1"/>
+                <path d="M280,180 Q300,220 260,220" fill="url(#furGradient)" stroke="#5D4037" stroke-width="1"/>
+              </g>
+
+              <!-- Head -->
+              <g id="head">
+                <!-- Head Shape -->
+                <circle cx="200" cy="100" r="70" fill="url(#furGradient)"/>
+                
+                <!-- Ears -->
+                <circle cx="140" cy="70" r="15" fill="#5D4037"/>
+                <circle cx="260" cy="70" r="15" fill="#5D4037"/>
+                <circle cx="140" cy="70" r="8" fill="#8D6E63"/>
+                <circle cx="260" cy="70" r="8" fill="#8D6E63"/>
+
+                <!-- Face Patch -->
+                <ellipse cx="200" cy="115" rx="55" ry="45" fill="#EFEBE9" opacity="1"/>
+
+                <!-- Eyes -->
+                <g id="eyes">
+                  <g id="eyeLeft">
+                    <circle cx="170" cy="100" r="10" fill="#3E2723"/>
+                    <circle cx="173" cy="97" r="3.5" fill="#FFFFFF"/>
+                  </g>
+                  <g id="eyeRight">
+                    <circle cx="230" cy="100" r="10" fill="#3E2723"/>
+                    <circle cx="233" cy="97" r="3.5" fill="#FFFFFF"/>
+                  </g>
+                </g>
+
+                <!-- Eyebrows -->
+                <path id="leftBrow" d="M160,80 Q170,75 180,80" fill="none" stroke="#5D4037" stroke-width="4" stroke-linecap="round" opacity="0.9"/>
+                <path id="rightBrow" d="M220,80 Q230,75 240,80" fill="none" stroke="#5D4037" stroke-width="4" stroke-linecap="round" opacity="0.9"/>
+
+                <!-- Nose -->
+                <path d="M190,118 Q200,113 210,118 Q200,133 190,118" fill="#3E2723"/>
+
+                <!-- Mouth -->
+                <path id="mouth" d="M190,130 Q200,140 210,130" fill="none" stroke="#3E2723" stroke-width="4" stroke-linecap="round"/>
+
+                <!-- Whiskers -->
+                <g stroke="#3E2723" stroke-width="1.5" opacity="0.7">
+                  <line x1="155" y1="120" x2="125" y2="115"/>
+                  <line x1="155" y1="128" x2="125" y2="128"/>
+                  <line x1="245" y1="120" x2="275" y2="115"/>
+                  <line x1="245" y1="128" x2="275" y2="128"/>
+                </g>
+                
+                <!-- Blush (Hidden by default) -->
+                <g id="blush" opacity="0">
+                   <circle cx="160" cy="125" r="10" fill="#FFAB91" opacity="0.6"/>
+                   <circle cx="240" cy="125" r="10" fill="#FFAB91" opacity="0.6"/>
                 </g>
                 
                 <!-- Food Item (Hidden by default) -->
                 <g id="foodItem" opacity="0" transform="translate(180, 140)">
                     <circle r="10" fill="#FF7043" />
+                </g>
+
+                <!-- Accessories -->
+                <g id="sunglassesItem" opacity="0">
+                  <rect x="150" y="85" width="45" height="30" rx="8" fill="#333" stroke="#555" stroke-width="2" opacity="0.9"/>
+                  <rect x="205" y="85" width="45" height="30" rx="8" fill="#333" stroke="#555" stroke-width="2" opacity="0.9"/>
+                  <line x1="195" y1="100" x2="205" y2="100" stroke="#333" stroke-width="3"/>
+                  <line x1="150" y1="100" x2="135" y2="95" stroke="#333" stroke-width="3"/>
+                  <line x1="250" y1="100" x2="265" y2="95" stroke="#333" stroke-width="3"/>
+                </g>
+
+                <g id="scarfItem" opacity="0">
+                   <path d="M150,140 Q200,160 250,140 Q260,155 250,165 Q200,185 150,165 Q140,155 150,140" fill="#EF5350"/>
+                   <path d="M170,160 L170,200 L195,200 L195,160" fill="#EF5350"/>
+                   <line x1="170" y1="195" x2="195" y2="195" stroke="#B71C1C" stroke-width="2"/>
                 </g>
               </g>
             </g>
@@ -138,7 +212,24 @@
           </div>
           <button class="buy-btn" data-price="50" data-item="hat">Compra</button>
         </div>
-        <!-- More items can be added here -->
+        
+        <div class="shop-item">
+          <div class="item-preview">🕶️</div>
+          <div class="item-details">
+            <h3>Occhiali</h3>
+            <span class="price">120 🪙</span>
+          </div>
+          <button class="buy-btn" data-price="120" data-item="sunglasses">Compra</button>
+        </div>
+
+        <div class="shop-item">
+          <div class="item-preview">🧣</div>
+          <div class="item-details">
+            <h3>Sciarpa</h3>
+            <span class="price">200 🪙</span>
+          </div>
+          <button class="buy-btn" data-price="200" data-item="scarf">Compra</button>
+        </div>
       </div>
     </section>
 

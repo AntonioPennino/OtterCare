@@ -1,4 +1,4 @@
-import { getState, markCriticalMessage, resetCriticalMessage, resetState, setAnalyticsOptIn, setHatOwned, setTutorialSeen, subscribe } from './state.js';
+import { getState, markCriticalMessage, resetCriticalMessage, resetState, setAnalyticsOptIn, setHatOwned, setSunglassesOwned, setScarfOwned, setTutorialSeen, subscribe } from './state.js';
 import { batheAction, feedAction, rewardItemPurchase, sleepAction, spendCoins } from './gameActions.js';
 import { playSound, resumeAudioContext } from './audio.js';
 import { recordEvent } from './analytics.js';
@@ -86,20 +86,41 @@ function setBar(element, value) {
         element.classList.add('critical');
     }
 }
-function ensureHat(stateHat) {
+function ensureAccessories(state) {
     const wrapper = document.querySelector('.otter-wrapper');
     if (!wrapper) {
         return;
     }
-    const existing = wrapper.querySelector('.hat');
-    if (stateHat && !existing) {
+    // Hat
+    const existingHat = wrapper.querySelector('.hat');
+    if (state.hat && !existingHat) {
         const hat = document.createElement('div');
         hat.classList.add('hat');
         hat.textContent = '🎩';
         wrapper.appendChild(hat);
     }
-    else if (!stateHat && existing) {
-        existing.remove();
+    else if (!state.hat && existingHat) {
+        existingHat.remove();
+    }
+    // Sunglasses (SVG based)
+    const sunglassesGroup = $('sunglassesItem');
+    if (sunglassesGroup) {
+        if (state.sunglasses) {
+            sunglassesGroup.setAttribute('opacity', '1');
+        }
+        else {
+            sunglassesGroup.setAttribute('opacity', '0');
+        }
+    }
+    // Scarf (SVG based)
+    const scarfGroup = $('scarfItem');
+    if (scarfGroup) {
+        if (state.scarf) {
+            scarfGroup.setAttribute('opacity', '1');
+        }
+        else {
+            scarfGroup.setAttribute('opacity', '0');
+        }
     }
 }
 function updateStatsView() {
@@ -152,7 +173,7 @@ function render() {
     setBar($('cleanBar'), state.clean);
     setBar($('energyBar'), state.energy);
     $('coins').textContent = String(state.coins);
-    ensureHat(state.hat);
+    ensureAccessories(state);
     setExpression(computeMood());
     updateStatsView();
     evaluateCriticalWarnings();
@@ -218,6 +239,12 @@ function initShop() {
             if (spendCoins(price)) {
                 if (item === 'hat') {
                     setHatOwned(true);
+                }
+                else if (item === 'sunglasses') {
+                    setSunglassesOwned(true);
+                }
+                else if (item === 'scarf') {
+                    setScarfOwned(true);
                 }
                 rewardItemPurchase(item);
                 render();

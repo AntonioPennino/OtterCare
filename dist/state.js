@@ -11,6 +11,8 @@ function createDefaultState() {
         energy: 80,
         coins: 0,
         hat: false,
+        sunglasses: false,
+        scarf: false,
         lastTick: now,
         tutorialSeen: false,
         analyticsOptIn: false,
@@ -150,6 +152,16 @@ export function ensureStats() {
 export function setHatOwned(value) {
     updateState(draft => {
         draft.hat = value;
+    });
+}
+export function setSunglassesOwned(value) {
+    updateState(draft => {
+        draft.sunglasses = value;
+    });
+}
+export function setScarfOwned(value) {
+    updateState(draft => {
+        draft.scarf = value;
     });
 }
 export function setTutorialSeen() {

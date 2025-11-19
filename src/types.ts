@@ -26,6 +26,8 @@ export interface GameState {
   energy: number;
   coins: number;
   hat: boolean;
+  sunglasses: boolean;
+  scarf: boolean;
   lastTick: number;
   tutorialSeen: boolean;
   analyticsOptIn: boolean;

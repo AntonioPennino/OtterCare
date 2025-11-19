@@ -16,25 +16,66 @@ function clearTimers() {
         timerId = null;
     }
 }
-function spawnFish(area) {
-    const fish = document.createElement('div');
-    fish.classList.add('fish');
-    fish.textContent = '🐟';
-    fish.style.left = `${Math.random() * 80}%`;
-    fish.style.top = `${Math.random() * 80}%`;
-    fish.addEventListener('click', () => {
-        if (!running) {
+function showScorePopup(x, y, value, text) {
+    if (!elements)
+        return;
+    const popup = document.createElement('div');
+    popup.classList.add('score-popup');
+    popup.textContent = text || (value > 0 ? `+${value}` : `${value}`);
+    popup.style.left = `${x}px`;
+    popup.style.top = `${y}px`;
+    if (value < 0)
+        popup.style.color = '#FF5252';
+    elements.area.appendChild(popup);
+    setTimeout(() => popup.remove(), 800);
+}
+function spawnItem(area) {
+    const rand = Math.random();
+    let type = 'fish';
+    let content = '🐟';
+    let points = 1;
+    let className = 'fish';
+    if (rand > 0.9) {
+        type = 'rare';
+        content = '🐠';
+        points = 3;
+        className = 'fish rare';
+    }
+    else if (rand > 0.75) {
+        type = 'trash';
+        content = '👢';
+        points = -2;
+        className = 'trash';
+    }
+    const item = document.createElement('div');
+    item.className = className;
+    item.textContent = content;
+    item.style.left = `${Math.random() * 85}%`;
+    item.style.top = `${Math.random() * 85}%`;
+    item.addEventListener('click', (e) => {
+        if (!running)
             return;
+        score += points;
+        if (score < 0)
+            score = 0; // Prevent negative score
+        if (points > 0) {
+            rewardFishCatch();
+            playSound('happy');
         }
-        score += 1;
-        rewardFishCatch();
-        playSound('happy');
+        else {
+            playSound('splash'); // Use 'splash' as negative sound
+        }
         if (elements) {
             elements.score.textContent = String(score);
+            // Get click coordinates relative to area
+            const rect = elements.area.getBoundingClientRect();
+            const x = e.clientX - rect.left;
+            const y = e.clientY - rect.top;
+            showScorePopup(x, y, points);
         }
-        fish.remove();
+        item.remove();
     }, { once: true });
-    area.appendChild(fish);
+    area.appendChild(item);
 }
 export function initMiniGame(el, cb) {
     elements = el;
@@ -57,11 +98,11 @@ export function openMiniGame() {
         if (!elements) {
             return;
         }
-        spawnFish(elements.area);
-        if (elements.area.children.length > 7) {
+        spawnItem(elements.area);
+        if (elements.area.children.length > 8) {
             elements.area.removeChild(elements.area.firstElementChild);
         }
-    }, 800);
+    }, 700);
     timerId = window.setTimeout(() => {
         closeMiniGame();
         if (callbacks) {

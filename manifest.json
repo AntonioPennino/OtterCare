@@ -5,23 +5,20 @@
   "start_url": "/OtterCare/",
   "display": "standalone",
   "background_color": "#f3faf8",
-  "theme_color": "#66cdaa",
+  "theme_color": "#8D6E63",
   "orientation": "portrait",
   "scope": "/OtterCare/",
   "icons": [
     {
-      "src": "icon-192.png",
-      "sizes": "192x192",
-      "type": "image/png",
-      "purpose": "any maskable"
-    },
-    {
-      "src": "icon-512.png",
-      "sizes": "512x512",
-      "type": "image/png",
+      "src": "icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
       "purpose": "any maskable"
     }
   ],
-  "categories": ["games", "entertainment"],
+  "categories": [
+    "games",
+    "entertainment"
+  ],
   "lang": "it-IT"
 }

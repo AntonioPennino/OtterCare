@@ -1,10 +1,11 @@
 // Service Worker per PWA OtterCare
-const CACHE_NAME = 'ottercare-v2';
+const CACHE_NAME = 'ottercare-v3';
 const urlsToCache = [
   '/OtterCare/',
   '/OtterCare/index.html',
   '/OtterCare/style.css',
   '/OtterCare/manifest.json',
+  '/OtterCare/icon.svg',
   '/OtterCare/dist/index.js',
   '/OtterCare/dist/ui.js',
   '/OtterCare/dist/state.js',
@@ -50,7 +51,7 @@ self.addEventListener('fetch', event => {
         }
         return fetch(event.request);
       }
-    )
+      )
   );
 });
 
