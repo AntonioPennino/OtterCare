@@ -1,5 +1,5 @@
 // Service Worker per PWA OtterCare
-const CACHE_NAME = 'ottercare-v3';
+const CACHE_NAME = 'ottercare-v4';
 const urlsToCache = [
   '/OtterCare/',
   '/OtterCare/index.html',
