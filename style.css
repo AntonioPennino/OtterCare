@@ -85,6 +85,13 @@ header h1 {
   color: var(--primary-dark);
 }
 
+.tagline {
+  margin: 4px 0 0;
+  color: var(--text-muted);
+  font-size: 0.9rem;
+  font-weight: 600;
+}
+
 .coins-display {
   background: rgba(255, 167, 38, 0.15);
   padding: 6px 12px;
