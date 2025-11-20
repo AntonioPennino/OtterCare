@@ -16,27 +16,11 @@ import { playSound, resumeAudioContext } from './audio.js';
 import { recordEvent } from './analytics.js';
 import { initMiniGame, isMiniGameRunning, openMiniGame } from './minigame.js';
 
-const EXPRESSIONS: Record<Mood, { mouth: string; leftBrow: string; rightBrow: string }> = {
-  neutral: {
-    mouth: 'M192,132 Q200,138 208,132',
-    leftBrow: 'M160,80 Q170,75 180,80',
-    rightBrow: 'M220,80 Q230,75 240,80'
-  },
-  happy: {
-    mouth: 'M192,132 Q200,148 208,132',
-    leftBrow: 'M160,77 Q170,72 180,77',
-    rightBrow: 'M220,77 Q230,72 240,77'
-  },
-  sad: {
-    mouth: 'M192,142 Q200,132 208,142',
-    leftBrow: 'M160,83 Q170,88 180,83',
-    rightBrow: 'M220,83 Q230,88 240,83'
-  },
-  sleepy: {
-    mouth: 'M198,135 Q200,135 202,135',
-    leftBrow: 'M160,80 Q170,80 180,80',
-    rightBrow: 'M220,80 Q230,80 240,80'
-  }
+const MOOD_IMAGES: Record<Mood, string> = {
+  neutral: 'src/assets/otter/otter_neutral.png',
+  happy: 'src/assets/otter/otter_happy.png',
+  sad: 'src/assets/otter/otter_sad.png',
+  sleepy: 'src/assets/otter/otter_sleep.png'
 };
 
 const CRITICAL_MESSAGES: Record<'hunger' | 'happy' | 'clean' | 'energy', string> = {
@@ -61,21 +45,16 @@ function setExpression(mood: Mood): void {
   if (currentMood === mood) {
     return;
   }
-  const svg = $('otterSvg');
-  if (!svg) {
+  const img = $('otterImage') as HTMLImageElement | null;
+  if (!img) {
     return;
   }
-  const expression = EXPRESSIONS[mood] ?? EXPRESSIONS.neutral;
-  const mouth = $('mouth');
-  const leftBrow = $('leftBrow');
-  const rightBrow = $('rightBrow');
-  mouth?.setAttribute('d', expression.mouth);
-  leftBrow?.setAttribute('d', expression.leftBrow);
-  rightBrow?.setAttribute('d', expression.rightBrow);
 
-  svg.classList.remove('happy', 'sad', 'sleepy');
+  img.src = MOOD_IMAGES[mood] ?? MOOD_IMAGES.neutral;
+
+  img.classList.remove('happy', 'sad', 'sleepy');
   if (mood !== 'neutral') {
-    svg.classList.add(mood);
+    img.classList.add(mood);
   }
   currentMood = mood;
 }
@@ -110,41 +89,32 @@ function setBar(element: HTMLElement | null, value: number): void {
 }
 
 function ensureAccessories(state: { hat: boolean; sunglasses: boolean; scarf: boolean }): void {
-  const wrapper = document.querySelector('.otter-wrapper');
-  if (!wrapper) {
+  const container = $('accessories-container');
+  if (!container) {
     return;
   }
 
-  // Hat
-  const existingHat = wrapper.querySelector('.hat');
-  if (state.hat && !existingHat) {
-    const hat = document.createElement('div');
-    hat.classList.add('hat');
-    hat.textContent = '🎩';
-    wrapper.appendChild(hat);
-  } else if (!state.hat && existingHat) {
-    existingHat.remove();
-  }
-
-  // Sunglasses (SVG based)
-  const sunglassesGroup = $('sunglassesItem');
-  if (sunglassesGroup) {
-    if (state.sunglasses) {
-      sunglassesGroup.setAttribute('opacity', '1');
-    } else {
-      sunglassesGroup.setAttribute('opacity', '0');
+  // Helper to handle accessory images
+  const handleAccessory = (id: string, src: string, show: boolean) => {
+    let img = document.getElementById(id) as HTMLImageElement | null;
+    if (show && !img) {
+      img = document.createElement('img');
+      img.id = id;
+      img.src = src;
+      img.classList.add('accessory');
+      container.appendChild(img);
+    } else if (!show && img) {
+      img.remove();
     }
-  }
+  };
 
-  // Scarf (SVG based)
-  const scarfGroup = $('scarfItem');
-  if (scarfGroup) {
-    if (state.scarf) {
-      scarfGroup.setAttribute('opacity', '1');
-    } else {
-      scarfGroup.setAttribute('opacity', '0');
-    }
-  }
+  // We assume these assets exist or will exist. 
+  // For now, we can use placeholders or the same logic if user provides them.
+  // Since the user only mentioned otter PNGs, we might need to ask for accessory PNGs too.
+  // For now, I'll assume standard naming convention.
+  handleAccessory('acc-hat', 'src/assets/otter/hat.png', state.hat);
+  handleAccessory('acc-sunglasses', 'src/assets/otter/sunglasses.png', state.sunglasses);
+  handleAccessory('acc-scarf', 'src/assets/otter/scarf.png', state.scarf);
 }
 
 function updateStatsView(): void {
@@ -229,19 +199,34 @@ function render(): void {
 }
 
 function triggerOtterAnimation(animation: 'feed' | 'bathe' | 'sleep'): void {
-  const svg = $('otterSvg');
-  if (!svg) {
+  const img = $('otterImage') as HTMLImageElement | null;
+  if (!img) {
     return;
   }
+
+  // Optional: Switch to specific action images if available
+  const originalSrc = img.src;
+
   if (animation === 'feed') {
-    svg.classList.add('hop', 'eating', 'feeding');
-    window.setTimeout(() => svg.classList.remove('hop', 'eating', 'feeding'), 1500);
+    img.src = 'src/assets/otter/otter_eat.png'; // Temporary switch
+    img.classList.add('hop', 'eating');
+    window.setTimeout(() => {
+      img.classList.remove('hop', 'eating');
+      img.src = originalSrc; // Restore mood image
+      setExpression(currentMood); // Re-ensure correct mood image
+    }, 1500);
   } else if (animation === 'bathe') {
-    svg.classList.add('bathing');
-    window.setTimeout(() => svg.classList.remove('bathing'), 1600);
+    img.src = 'src/assets/otter/otter_bath.png';
+    img.classList.add('bathing');
+    window.setTimeout(() => {
+      img.classList.remove('bathing');
+      img.src = originalSrc;
+      setExpression(currentMood);
+    }, 1600);
   } else if (animation === 'sleep') {
-    svg.classList.add('rest');
-    window.setTimeout(() => svg.classList.remove('rest'), 4000);
+    // Sleep is usually a state, but here it's an action animation
+    img.classList.add('rest');
+    window.setTimeout(() => img.classList.remove('rest'), 4000);
   }
 }
 
@@ -349,12 +334,12 @@ function initNavigation(): void {
 
 function initBlink(): void {
   window.setInterval(() => {
-    const svg = $('otterSvg');
-    if (!svg || isMiniGameRunning()) {
+    const img = $('otterImage');
+    if (!img || isMiniGameRunning()) {
       return;
     }
-    svg.classList.add('blink');
-    window.setTimeout(() => svg.classList.remove('blink'), 180);
+    img.classList.add('blink');
+    window.setTimeout(() => img.classList.remove('blink'), 180);
   }, 4000 + Math.random() * 2000);
 }
 
