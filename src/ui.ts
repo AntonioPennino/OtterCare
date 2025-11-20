@@ -18,22 +18,22 @@ import { initMiniGame, isMiniGameRunning, openMiniGame } from './minigame.js';
 
 const EXPRESSIONS: Record<Mood, { mouth: string; leftBrow: string; rightBrow: string }> = {
   neutral: {
-    mouth: 'M190,130 Q200,140 210,130',
+    mouth: 'M192,132 Q200,138 208,132',
     leftBrow: 'M160,80 Q170,75 180,80',
     rightBrow: 'M220,80 Q230,75 240,80'
   },
   happy: {
-    mouth: 'M190,130 Q200,145 210,130',
+    mouth: 'M192,132 Q200,148 208,132',
     leftBrow: 'M160,77 Q170,72 180,77',
     rightBrow: 'M220,77 Q230,72 240,77'
   },
   sad: {
-    mouth: 'M190,140 Q200,130 210,140',
+    mouth: 'M192,142 Q200,132 208,142',
     leftBrow: 'M160,83 Q170,88 180,83',
     rightBrow: 'M220,83 Q230,88 240,83'
   },
   sleepy: {
-    mouth: 'M195,135 Q200,135 205,135',
+    mouth: 'M198,135 Q200,135 202,135',
     leftBrow: 'M160,80 Q170,80 180,80',
     rightBrow: 'M220,80 Q230,80 240,80'
   }

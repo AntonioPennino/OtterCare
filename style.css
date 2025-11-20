@@ -127,6 +127,22 @@ main {
   max-width: 320px;
   aspect-ratio: 4/3;
   filter: drop-shadow(0 10px 20px rgba(93, 64, 55, 0.15));
+  position: relative;
+}
+
+.hat {
+  position: absolute;
+  top: 15%;
+  left: 50%;
+  transform: translateX(-50%) rotate(-10deg);
+  font-size: 3rem;
+  z-index: 10;
+  animation: floatHat 3s ease-in-out infinite;
+}
+
+@keyframes floatHat {
+  0%, 100% { transform: translateX(-50%) rotate(-10deg) translateY(0); }
+  50% { transform: translateX(-50%) rotate(-5deg) translateY(-5px); }
 }
 
 /* Status Bars */
