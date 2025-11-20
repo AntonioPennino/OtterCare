@@ -149,10 +149,22 @@ function ensureAccessories(state: { hat: boolean; sunglasses: boolean; scarf: bo
 
 function updateStatsView(): void {
   const state = getState();
-  $('statCoins')!.textContent = String(state.coins);
-  $('statGames')!.textContent = String(state.stats.gamesPlayed);
-  $('statFish')!.textContent = String(state.stats.fishCaught);
-  $('statItems')!.textContent = String(state.stats.itemsBought);
+  const statCoins = $('statCoins');
+  if (statCoins) {
+    statCoins.textContent = String(state.coins);
+  }
+  const statGames = $('statGames');
+  if (statGames) {
+    statGames.textContent = String(state.stats.gamesPlayed);
+  }
+  const statFish = $('statFish');
+  if (statFish) {
+    statFish.textContent = String(state.stats.fishCaught);
+  }
+  const statItems = $('statItems');
+  if (statItems) {
+    statItems.textContent = String(state.stats.itemsBought);
+  }
   const analyticsSummary = $('analyticsSummary');
   if (analyticsSummary) {
     const entries = Object.entries(state.analytics.events);
@@ -194,11 +206,21 @@ function evaluateCriticalWarnings(): void {
 
 function render(): void {
   const state = getState();
+  const tutorialOverlay = $('tutorialOverlay');
+  if (tutorialOverlay) {
+    const shouldShowTutorial = !state.tutorialSeen;
+    tutorialOverlay.classList.toggle('hidden', !shouldShowTutorial);
+    tutorialOverlay.setAttribute('aria-hidden', String(!shouldShowTutorial));
+    document.body.classList.toggle('overlay-active', shouldShowTutorial);
+  }
   setBar($('hungerBar'), state.hunger);
   setBar($('happyBar'), state.happy);
   setBar($('cleanBar'), state.clean);
   setBar($('energyBar'), state.energy);
-  $('coins')!.textContent = String(state.coins);
+  const coinsLabel = $('coins');
+  if (coinsLabel) {
+    coinsLabel.textContent = String(state.coins);
+  }
   ensureAccessories(state);
   setExpression(computeMood());
   updateStatsView();
@@ -426,16 +448,23 @@ export function initUI(): void {
   initTutorial();
   initUpdateBanner();
 
-  initMiniGame({
-    overlay: $('overlay')!,
-    area: $('fishArea')!,
-    score: $('miniScore')!,
-    closeButton: $('closeMini')!
-  }, {
-    onFinish: score => {
-      showAlert(`Mini-gioco terminato! Hai catturato ${score} pesci.`, 'info');
-    }
-  });
+  const overlayEl = $('overlay');
+  const areaEl = $('fishArea');
+  const scoreEl = $('miniScore');
+  const closeButtonEl = $('closeMini');
+
+  if (overlayEl && areaEl && scoreEl && closeButtonEl) {
+    initMiniGame({
+      overlay: overlayEl,
+      area: areaEl,
+      score: scoreEl,
+      closeButton: closeButtonEl
+    }, {
+      onFinish: result => {
+        showAlert(`Mini-gioco terminato! Hai catturato ${result} pesci.`, 'info');
+      }
+    });
+  }
 
   subscribe(() => render());
   render();

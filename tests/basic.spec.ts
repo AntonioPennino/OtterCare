@@ -10,6 +10,9 @@ test.beforeEach(async ({ page }) => {
   page.on('console', msg => {
     console.log('[browser]', msg.type(), msg.text());
   });
+  page.on('pageerror', error => {
+    console.log('[pageerror]', error.message, error.stack);
+  });
 });
 
 test('shows tutorial on first access and allows dismissal', async ({ page }) => {

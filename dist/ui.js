@@ -5,22 +5,22 @@ import { recordEvent } from './analytics.js';
 import { initMiniGame, isMiniGameRunning, openMiniGame } from './minigame.js';
 const EXPRESSIONS = {
     neutral: {
-        mouth: 'M190,130 Q200,140 210,130',
+        mouth: 'M192,132 Q200,138 208,132',
         leftBrow: 'M160,80 Q170,75 180,80',
         rightBrow: 'M220,80 Q230,75 240,80'
     },
     happy: {
-        mouth: 'M190,130 Q200,145 210,130',
+        mouth: 'M192,132 Q200,148 208,132',
         leftBrow: 'M160,77 Q170,72 180,77',
         rightBrow: 'M220,77 Q230,72 240,77'
     },
     sad: {
-        mouth: 'M190,140 Q200,130 210,140',
+        mouth: 'M192,142 Q200,132 208,142',
         leftBrow: 'M160,83 Q170,88 180,83',
         rightBrow: 'M220,83 Q230,88 240,83'
     },
     sleepy: {
-        mouth: 'M195,135 Q200,135 205,135',
+        mouth: 'M198,135 Q200,135 202,135',
         leftBrow: 'M160,80 Q170,80 180,80',
         rightBrow: 'M220,80 Q230,80 240,80'
     }
@@ -125,10 +125,22 @@ function ensureAccessories(state) {
 }
 function updateStatsView() {
     const state = getState();
-    $('statCoins').textContent = String(state.coins);
-    $('statGames').textContent = String(state.stats.gamesPlayed);
-    $('statFish').textContent = String(state.stats.fishCaught);
-    $('statItems').textContent = String(state.stats.itemsBought);
+    const statCoins = $('statCoins');
+    if (statCoins) {
+        statCoins.textContent = String(state.coins);
+    }
+    const statGames = $('statGames');
+    if (statGames) {
+        statGames.textContent = String(state.stats.gamesPlayed);
+    }
+    const statFish = $('statFish');
+    if (statFish) {
+        statFish.textContent = String(state.stats.fishCaught);
+    }
+    const statItems = $('statItems');
+    if (statItems) {
+        statItems.textContent = String(state.stats.itemsBought);
+    }
     const analyticsSummary = $('analyticsSummary');
     if (analyticsSummary) {
         const entries = Object.entries(state.analytics.events);
@@ -168,11 +180,21 @@ function evaluateCriticalWarnings() {
 }
 function render() {
     const state = getState();
+    const tutorialOverlay = $('tutorialOverlay');
+    if (tutorialOverlay) {
+        const shouldShowTutorial = !state.tutorialSeen;
+        tutorialOverlay.classList.toggle('hidden', !shouldShowTutorial);
+        tutorialOverlay.setAttribute('aria-hidden', String(!shouldShowTutorial));
+        document.body.classList.toggle('overlay-active', shouldShowTutorial);
+    }
     setBar($('hungerBar'), state.hunger);
     setBar($('happyBar'), state.happy);
     setBar($('cleanBar'), state.clean);
     setBar($('energyBar'), state.energy);
-    $('coins').textContent = String(state.coins);
+    const coinsLabel = $('coins');
+    if (coinsLabel) {
+        coinsLabel.textContent = String(state.coins);
+    }
     ensureAccessories(state);
     setExpression(computeMood());
     updateStatsView();
@@ -377,16 +399,22 @@ export function initUI() {
     initAnalyticsToggle();
     initTutorial();
     initUpdateBanner();
-    initMiniGame({
-        overlay: $('overlay'),
-        area: $('fishArea'),
-        score: $('miniScore'),
-        closeButton: $('closeMini')
-    }, {
-        onFinish: score => {
-            showAlert(`Mini-gioco terminato! Hai catturato ${score} pesci.`, 'info');
-        }
-    });
+    const overlayEl = $('overlay');
+    const areaEl = $('fishArea');
+    const scoreEl = $('miniScore');
+    const closeButtonEl = $('closeMini');
+    if (overlayEl && areaEl && scoreEl && closeButtonEl) {
+        initMiniGame({
+            overlay: overlayEl,
+            area: areaEl,
+            score: scoreEl,
+            closeButton: closeButtonEl
+        }, {
+            onFinish: result => {
+                showAlert(`Mini-gioco terminato! Hai catturato ${result} pesci.`, 'info');
+            }
+        });
+    }
     subscribe(() => render());
     render();
     document.addEventListener('click', () => resumeAudioContext(), { once: true });
