@@ -304,7 +304,7 @@ function initShop(): void {
 }
 
 function initNavigation(): void {
-  const navButtons = Array.from(document.querySelectorAll<HTMLButtonElement>('.nav-item'));
+  const navButtons = Array.from(document.querySelectorAll<HTMLButtonElement>('.nav-item, .desktop-nav-item'));
   const pages = {
     home: $('homePage'),
     shop: $('shopPage'),
