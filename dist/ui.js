@@ -331,35 +331,32 @@ function initTutorial() {
     if (!overlay || !startBtn || !analyticsToggle) {
         return;
     }
+    const closeOverlay = () => {
+        overlay.classList.add('hidden');
+        overlay.setAttribute('aria-hidden', 'true');
+        document.body.classList.remove('overlay-active');
+        window.setTimeout(() => {
+            const target = $('feedBtn');
+            target?.focus();
+        }, 0);
+    };
     const tutorialSeen = getState().tutorialSeen;
     if (tutorialSeen) {
-        overlay.classList.add('hidden');
+        closeOverlay();
         return;
     }
     overlay.classList.remove('hidden');
     overlay.setAttribute('aria-hidden', 'false');
     document.body.classList.add('overlay-active');
-    const focusHomeButton = () => {
-        const target = $('feedBtn');
-        window.setTimeout(() => target?.focus(), 0);
-    };
-    startBtn.addEventListener('click', () => {
-        if (getState().tutorialSeen) {
-            overlay.classList.add('hidden');
-            overlay.setAttribute('aria-hidden', 'true');
-            document.body.classList.remove('overlay-active');
-            focusHomeButton();
-            return;
-        }
+    const handleStart = () => {
         setTutorialSeen();
         setAnalyticsOptIn(analyticsToggle.checked);
-        overlay.classList.add('hidden');
-        overlay.setAttribute('aria-hidden', 'true');
-        document.body.classList.remove('overlay-active');
-        focusHomeButton();
+        closeOverlay();
         recordEvent('tutorial:completato');
         showAlert('Benvenuto in OtterCare! Prenditi cura della tua lontra 🦦', 'info');
-    });
+        startBtn.removeEventListener('click', handleStart);
+    };
+    startBtn.addEventListener('click', handleStart);
 }
 function initUpdateBanner() {
     const banner = $('updateBanner');

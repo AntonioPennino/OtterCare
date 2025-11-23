@@ -213,14 +213,14 @@ main {
 /* Actions Grid */
 .actions-grid {
   display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 16px;
+  grid-template-columns: repeat(2, minmax(120px, 1fr));
+  gap: 14px;
   margin-bottom: 24px;
 }
 
 .action-btn {
   background: var(--card-bg);
-  padding: 16px;
+  padding: 14px;
   border-radius: 20px;
   box-shadow: var(--card-shadow);
   display: flex;
@@ -236,13 +236,13 @@ main {
 }
 
 .btn-icon {
-  font-size: 2rem;
+  font-size: 1.8rem;
 }
 
 .btn-label {
   font-weight: 700;
   color: var(--primary-dark);
-  font-size: 0.9rem;
+  font-size: 0.85rem;
 }
 
 /* Shop & Stats */
@@ -745,7 +745,8 @@ input[type="checkbox"]:checked + .toggle-switch::after {
   }
 
   .actions-grid {
-    grid-template-columns: 1fr;
+    grid-template-columns: repeat(2, minmax(110px, 1fr));
+    gap: 12px;
   }
 
   .otter-wrapper {
@@ -777,7 +778,7 @@ input[type="checkbox"]:checked + .toggle-switch::after {
   }
 
   .action-btn {
-    padding: 14px;
+    padding: 12px;
   }
 
   .tutorial-card {

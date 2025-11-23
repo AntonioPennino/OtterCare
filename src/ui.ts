@@ -387,9 +387,19 @@ function initTutorial(): void {
     return;
   }
 
+  const closeOverlay = () => {
+    overlay.classList.add('hidden');
+    overlay.setAttribute('aria-hidden', 'true');
+    document.body.classList.remove('overlay-active');
+    window.setTimeout(() => {
+      const target = $('feedBtn') as HTMLButtonElement | null;
+      target?.focus();
+    }, 0);
+  };
+
   const tutorialSeen = getState().tutorialSeen;
   if (tutorialSeen) {
-    overlay.classList.add('hidden');
+    closeOverlay();
     return;
   }
 
@@ -397,29 +407,16 @@ function initTutorial(): void {
   overlay.setAttribute('aria-hidden', 'false');
   document.body.classList.add('overlay-active');
 
-  const focusHomeButton = () => {
-    const target = $('feedBtn') as HTMLButtonElement | null;
-    window.setTimeout(() => target?.focus(), 0);
-  };
-
-  startBtn.addEventListener('click', () => {
-    if (getState().tutorialSeen) {
-      overlay.classList.add('hidden');
-      overlay.setAttribute('aria-hidden', 'true');
-      document.body.classList.remove('overlay-active');
-      focusHomeButton();
-      return;
-    }
-
+  const handleStart = () => {
     setTutorialSeen();
     setAnalyticsOptIn(analyticsToggle.checked);
-    overlay.classList.add('hidden');
-    overlay.setAttribute('aria-hidden', 'true');
-    document.body.classList.remove('overlay-active');
-    focusHomeButton();
+    closeOverlay();
     recordEvent('tutorial:completato');
     showAlert('Benvenuto in OtterCare! Prenditi cura della tua lontra 🦦', 'info');
-  });
+    startBtn.removeEventListener('click', handleStart);
+  };
+
+  startBtn.addEventListener('click', handleStart);
 }
 
 function initUpdateBanner(): void {
