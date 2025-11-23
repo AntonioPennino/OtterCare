@@ -141,7 +141,7 @@ main {
   position: relative;
   overflow-y: auto;
   overflow-x: hidden;
-  padding-bottom: calc(var(--bottom-nav-height) + 32px + var(--safe-area-bottom));
+  padding-bottom: calc(var(--bottom-nav-height) + 64px + var(--safe-area-bottom));
   scroll-behavior: smooth;
 }
 
@@ -152,7 +152,7 @@ main {
   width: 100%;
   margin: 0 auto;
   animation: fadeIn 0.3s ease;
-  padding-bottom: 120px;
+  padding-bottom: 140px;
 }
 
 .page-content.active {
@@ -207,14 +207,14 @@ main {
   box-shadow: var(--card-shadow);
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 16px;
+  gap: 14px;
   margin-bottom: 20px;
 }
 
 .status-item {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 9px;
 }
 
 .status-icon {
@@ -223,7 +223,7 @@ main {
 
 .progress-bar {
   flex: 1;
-  height: 10px;
+  height: 9px;
   background: #F5F5F5;
   border-radius: 10px;
   overflow: hidden;
@@ -247,7 +247,7 @@ main {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
   gap: 12px;
-  margin-bottom: 28px;
+  margin-bottom: 34px;
 }
 
 .action-btn {
@@ -260,7 +260,7 @@ main {
   align-items: center;
   gap: 8px;
   transition: transform 0.1s, box-shadow 0.1s;
-  min-height: 96px;
+  min-height: 88px;
 }
 
 .action-btn:active {
@@ -269,7 +269,7 @@ main {
 }
 
 .btn-icon {
-  font-size: 1.8rem;
+  font-size: 1.7rem;
 }
 
 .btn-label {
@@ -883,8 +883,9 @@ input[type="checkbox"]:checked + .toggle-switch::after {
 
 @media (max-width: 480px) {
   .status-container {
-    grid-template-columns: 1fr;
-    padding: 16px;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    padding: 14px;
+    gap: 10px;
   }
 
   .install-toast {
@@ -896,12 +897,13 @@ input[type="checkbox"]:checked + .toggle-switch::after {
 
   .actions-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: 12px;
+    gap: 10px;
+    margin-bottom: 28px;
   }
   
   .action-btn {
-    min-height: 80px;
-    padding: 16px;
+    min-height: 72px;
+    padding: 14px;
   }
 
   .otter-wrapper {
@@ -911,6 +913,18 @@ input[type="checkbox"]:checked + .toggle-switch::after {
   .header-content {
     flex-direction: column;
     align-items: flex-start;
+  }
+  
+  .btn-icon {
+    font-size: 1.5rem;
+  }
+
+  .btn-label {
+    font-size: 0.8rem;
+  }
+
+  .page-content {
+    padding-bottom: 160px;
   }
   
   .header-left {
@@ -942,12 +956,13 @@ input[type="checkbox"]:checked + .toggle-switch::after {
   }
 
   .status-container {
-    padding: 16px;
+    padding: 12px;
+    gap: 8px;
   }
 
   .action-btn {
-    padding: 10px;
-    min-height: 88px;
+    padding: 12px;
+    min-height: 68px;
   }
 
   .tutorial-card {
