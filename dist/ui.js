@@ -192,9 +192,12 @@ function triggerOtterAnimation(animation) {
         }, 1600);
     }
     else if (animation === 'sleep') {
-        // Sleep is usually a state, but here it's an action animation
+        img.src = buildOtterImage('otter_sleepy', baseAccessories).src;
         img.classList.add('rest');
-        window.setTimeout(() => img.classList.remove('rest'), 4000);
+        window.setTimeout(() => {
+            img.classList.remove('rest');
+            setExpression(computeMood(), pickAccessories(getState()));
+        }, 4000);
     }
 }
 function initActionButtons() {
