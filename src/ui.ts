@@ -394,19 +394,32 @@ function initTutorial(): void {
   }
 
   overlay.classList.remove('hidden');
+  overlay.setAttribute('aria-hidden', 'false');
   document.body.classList.add('overlay-active');
 
+  const focusHomeButton = () => {
+    const target = $('feedBtn') as HTMLButtonElement | null;
+    window.setTimeout(() => target?.focus(), 0);
+  };
+
   startBtn.addEventListener('click', () => {
+    if (getState().tutorialSeen) {
+      overlay.classList.add('hidden');
+      overlay.setAttribute('aria-hidden', 'true');
+      document.body.classList.remove('overlay-active');
+      focusHomeButton();
+      return;
+    }
+
     setTutorialSeen();
     setAnalyticsOptIn(analyticsToggle.checked);
     overlay.classList.add('hidden');
     overlay.setAttribute('aria-hidden', 'true');
     document.body.classList.remove('overlay-active');
-    const focusTarget = $('feedBtn') as HTMLButtonElement | null;
-    focusTarget?.focus();
+    focusHomeButton();
     recordEvent('tutorial:completato');
     showAlert('Benvenuto in OtterCare! Prenditi cura della tua lontra 🦦', 'info');
-  }, { once: true });
+  });
 }
 
 function initUpdateBanner(): void {
