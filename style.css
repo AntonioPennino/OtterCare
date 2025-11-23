@@ -34,6 +34,7 @@ body {
   background: linear-gradient(180deg, var(--bg-gradient-start), var(--bg-gradient-end));
   color: var(--text-main);
   min-height: 100vh;
+  min-height: 100dvh;
   overflow: hidden; /* App-like feel */
   display: flex;
   flex-direction: column;
@@ -140,7 +141,7 @@ main {
   position: relative;
   overflow-y: auto;
   overflow-x: hidden;
-  padding-bottom: calc(var(--bottom-nav-height) + 140px + var(--safe-area-bottom));
+  padding-bottom: calc(var(--bottom-nav-height) + 32px + var(--safe-area-bottom));
   scroll-behavior: smooth;
 }
 
@@ -165,7 +166,7 @@ main {
 
 /* Home Page - Game Area */
 #homePage {
-  padding-bottom: 140px;
+  /* Padding handled by main */
 }
 
 .otter-container {
