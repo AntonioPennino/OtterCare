@@ -145,6 +145,10 @@ main {
   scroll-behavior: smooth;
 }
 
+main.no-scroll {
+  overflow: hidden;
+}
+
 .page-content {
   display: none;
   padding: 16px;

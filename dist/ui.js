@@ -391,6 +391,7 @@ function initNavigation() {
         shop: $('shopPage'),
         stats: $('statsPage')
     };
+    const mainEl = document.querySelector('main');
     const showPage = (page) => {
         navButtons.forEach(btn => {
             const isActive = btn.dataset.page === page;
@@ -407,6 +408,12 @@ function initNavigation() {
             element.setAttribute('aria-hidden', String(!isVisible));
         });
         recordEvent(`nav:${page}`);
+        if (page === 'home') {
+            mainEl?.classList.add('no-scroll');
+        }
+        else {
+            mainEl?.classList.remove('no-scroll');
+        }
     };
     navButtons.forEach(button => {
         button.addEventListener('click', () => {

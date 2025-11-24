@@ -465,6 +465,7 @@ function initNavigation(): void {
     shop: $('shopPage'),
     stats: $('statsPage')
   } satisfies Record<'home' | 'shop' | 'stats', HTMLElement | null>;
+  const mainEl = document.querySelector<HTMLElement>('main');
 
   type PageKey = keyof typeof pages;
 
@@ -486,6 +487,12 @@ function initNavigation(): void {
     });
 
     recordEvent(`nav:${page}`);
+
+    if (page === 'home') {
+      mainEl?.classList.add('no-scroll');
+    } else {
+      mainEl?.classList.remove('no-scroll');
+    }
   };
 
   navButtons.forEach(button => {
