@@ -95,7 +95,6 @@ export async function notifyLowStat(stat) {
             icon: 'icons/icon-192.png',
             badge: 'icons/icon-192.png',
             tag: `low-${stat}`,
-            renotify: false,
             data: { stat }
         });
         recordEvent(`notifiche:${stat}`);
@@ -114,9 +113,10 @@ async function ensurePushSubscription() {
     let subscription = await registration.pushManager.getSubscription();
     if (!subscription && isPushConfigured() && VAPID_PUBLIC_KEY) {
         try {
+            const serverKey = base64ToUint8Array(VAPID_PUBLIC_KEY);
             subscription = await registration.pushManager.subscribe({
                 userVisibleOnly: true,
-                applicationServerKey: base64ToUint8Array(VAPID_PUBLIC_KEY)
+                applicationServerKey: serverKey
             });
         }
         catch (error) {

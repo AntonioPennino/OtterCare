@@ -109,7 +109,6 @@ export async function notifyLowStat(stat: 'hunger' | 'happy' | 'clean' | 'energy
       icon: 'icons/icon-192.png',
       badge: 'icons/icon-192.png',
       tag: `low-${stat}`,
-      renotify: false,
       data: { stat }
     });
     recordEvent(`notifiche:${stat}`);
@@ -131,9 +130,10 @@ async function ensurePushSubscription(): Promise<void> {
 
   if (!subscription && isPushConfigured() && VAPID_PUBLIC_KEY) {
     try {
+      const serverKey = base64ToUint8Array(VAPID_PUBLIC_KEY);
       subscription = await registration.pushManager.subscribe({
         userVisibleOnly: true,
-        applicationServerKey: base64ToUint8Array(VAPID_PUBLIC_KEY)
+        applicationServerKey: serverKey as unknown as BufferSource
       });
     } catch (error) {
       console.warn('Impossibile sottoscriversi alle push', error);
