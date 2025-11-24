@@ -13,7 +13,8 @@ import {
   setTutorialSeen,
   subscribe,
   serializeBackup,
-  restoreBackupFromString
+  restoreBackupFromString,
+  setThemeMode
 } from './state.js';
 import { batheAction, feedAction, rewardItemPurchase, sleepAction, spendCoins } from './gameActions.js';
 import { playSound, resumeAudioContext } from './audio.js';
@@ -30,6 +31,8 @@ import {
   pullCloudState
 } from './cloudSyncManager.js';
 import { isCloudSyncConfigured } from './config.js';
+import { applyTheme } from './theme.js';
+import { disableNotifications, enableNotifications, notifyLowStat, notificationsSupported } from './notifications.js';
 
 type AccessoryState = {
   hat: boolean;
@@ -79,6 +82,20 @@ const CRITICAL_MESSAGES: Record<'hunger' | 'happy' | 'clean' | 'energy', string>
   energy: 'La lontra è esausta. Mettila a dormire per recuperare energia.'
 };
 
+const STAT_ICONS: Record<'hunger' | 'happy' | 'clean' | 'energy', string> = {
+  hunger: '🍗',
+  happy: '🎉',
+  clean: '🧼',
+  energy: '⚡'
+};
+
+function updateThemeButtons(mode: 'light' | 'comfort'): void {
+  const lightBtn = $('themeLightBtn');
+  const comfortBtn = $('themeComfortBtn');
+  lightBtn?.classList.toggle('active', mode === 'light');
+  comfortBtn?.classList.toggle('active', mode === 'comfort');
+}
+
 type AlertVariant = 'info' | 'warning';
 
 interface BeforeInstallPromptEvent extends Event {
@@ -104,6 +121,61 @@ function formatDateTime(iso: string | null): string {
     return new Date(iso).toLocaleString();
   } catch {
     return iso;
+  }
+}
+
+function refreshNotificationUI(state: GameState): void {
+  const statusEl = $('notificationStatus');
+  const enableBtn = $('notificationEnableBtn') as HTMLButtonElement | null;
+  const disableBtn = $('notificationDisableBtn') as HTMLButtonElement | null;
+  const warningEl = $('notificationUnsupported');
+  const granted = state.notifications.permission === 'granted';
+  const supported = notificationsSupported();
+
+  if (warningEl) {
+    warningEl.classList.toggle('hidden', supported);
+  }
+
+  if (!supported) {
+    if (statusEl) {
+      statusEl.textContent = 'Il tuo dispositivo non supporta le notifiche push.';
+    }
+    enableBtn?.setAttribute('disabled', 'true');
+    disableBtn?.setAttribute('disabled', 'true');
+    const details = $('notificationNextDetails');
+    if (details) {
+      details.textContent = '';
+    }
+    return;
+  }
+
+  if (enableBtn) {
+    enableBtn.disabled = state.notifications.enabled && granted;
+  }
+  if (disableBtn) {
+    disableBtn.disabled = !state.notifications.enabled;
+  }
+
+  if (statusEl) {
+    if (!granted) {
+      statusEl.textContent = 'Promemoria disattivati. Concedi il permesso per ricevere notifiche.';
+    } else if (!state.notifications.enabled) {
+      statusEl.textContent = 'Permesso attivo, premi "Attiva promemoria" per ricevere segnali di promemoria.';
+    } else {
+      statusEl.textContent = 'Promemoria attivi. Ti avviseremo quando la lontra avrà bisogno di attenzioni.';
+    }
+  }
+
+  const nextList = $('notificationNextDetails');
+  if (nextList) {
+    const items: string[] = [];
+    (['hunger', 'happy', 'clean', 'energy'] as const).forEach(key => {
+      const last = state.notifications.lastSent[key];
+      if (typeof last === 'number') {
+        items.push(`${STAT_ICONS[key]} ${formatDateTime(new Date(last).toISOString())}`);
+      }
+    });
+    nextList.textContent = items.length ? `Ultimi promemoria: ${items.join(' · ')}` : 'Nessun promemoria inviato finora.';
   }
 }
 
@@ -306,6 +378,7 @@ function evaluateCriticalWarnings(): void {
       markCriticalMessage(key);
       showAlert(CRITICAL_MESSAGES[key]);
       recordEvent(`avviso:${key}`);
+      void notifyLowStat(key).catch(() => undefined);
     } else if (value > 40 && state.criticalHintsShown[key]) {
       resetCriticalMessage(key);
     }
@@ -314,6 +387,8 @@ function evaluateCriticalWarnings(): void {
 
 function render(): void {
   const state = getState();
+  applyTheme(state.theme);
+  updateThemeButtons(state.theme);
   const tutorialOverlay = $('tutorialOverlay');
   const nameOverlay = $('nameOverlay');
   const shouldShowNamePrompt = !state.petNameConfirmed;
@@ -361,6 +436,7 @@ function render(): void {
   evaluateCriticalWarnings();
   updateAnalyticsToggle(state.analyticsOptIn);
   refreshCloudSyncUI(state);
+  refreshNotificationUI(state);
 }
 
 function triggerOtterAnimation(animation: 'feed' | 'bathe' | 'sleep'): void {
@@ -621,6 +697,52 @@ function initBackupControls(): void {
   }
 }
 
+function initThemeControls(): void {
+  const lightBtn = $('themeLightBtn') as HTMLButtonElement | null;
+  const comfortBtn = $('themeComfortBtn') as HTMLButtonElement | null;
+
+  lightBtn?.addEventListener('click', () => {
+    setThemeMode('light');
+    recordEvent('tema:light');
+  });
+
+  comfortBtn?.addEventListener('click', () => {
+    setThemeMode('comfort');
+    recordEvent('tema:comfort');
+  });
+}
+
+function initNotificationControls(): void {
+  const enableBtn = $('notificationEnableBtn') as HTMLButtonElement | null;
+  const disableBtn = $('notificationDisableBtn') as HTMLButtonElement | null;
+
+  enableBtn?.addEventListener('click', async () => {
+    if (!enableBtn) {
+      return;
+    }
+    enableBtn.disabled = true;
+    const granted = await enableNotifications();
+    enableBtn.disabled = false;
+    if (granted) {
+      showAlert('Promemoria attivati. Ti avviseremo quando la lontra avrà bisogno di aiuto.', 'info');
+    } else {
+      showAlert('Permesso negato o non disponibile. Controlla le impostazioni del browser.', 'warning');
+    }
+    refreshNotificationUI(getState());
+  });
+
+  disableBtn?.addEventListener('click', async () => {
+    if (!disableBtn) {
+      return;
+    }
+    disableBtn.disabled = true;
+    await disableNotifications();
+    disableBtn.disabled = false;
+    showAlert('Promemoria disattivati.', 'info');
+    refreshNotificationUI(getState());
+  });
+}
+
 function initCloudSyncUI(): void {
   const enableBtn = $('cloudSyncEnableBtn') as HTMLButtonElement | null;
   const syncBtn = $('cloudSyncSyncBtn') as HTMLButtonElement | null;
@@ -878,6 +1000,8 @@ export function initUI(): void {
   initNavigation();
   initBlink();
   initAnalyticsToggle();
+  initThemeControls();
+  initNotificationControls();
   initBackupControls();
   initCloudSyncAutoPush();
   initCloudSyncUI();

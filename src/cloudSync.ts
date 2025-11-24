@@ -26,6 +26,10 @@ function getClient(): SupabaseClient | null {
   return client;
 }
 
+export function getSupabaseClient(): SupabaseClient | null {
+  return getClient();
+}
+
 export function generateSyncCode(): string {
   const buffer = new Uint8Array(16);
   crypto.getRandomValues(buffer);

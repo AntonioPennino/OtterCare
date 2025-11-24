@@ -1,10 +1,12 @@
-import { getState, markCriticalMessage, resetCriticalMessage, resetState, setAnalyticsOptIn, setInstallPromptDismissed, setPetName, setHatOwned, setSunglassesOwned, setScarfOwned, setTutorialSeen, subscribe, serializeBackup, restoreBackupFromString } from './state.js';
+import { getState, markCriticalMessage, resetCriticalMessage, resetState, setAnalyticsOptIn, setInstallPromptDismissed, setPetName, setHatOwned, setSunglassesOwned, setScarfOwned, setTutorialSeen, subscribe, serializeBackup, restoreBackupFromString, setThemeMode } from './state.js';
 import { batheAction, feedAction, rewardItemPurchase, sleepAction, spendCoins } from './gameActions.js';
 import { playSound, resumeAudioContext } from './audio.js';
 import { recordEvent } from './analytics.js';
 import { initMiniGame, isMiniGameRunning, openMiniGame } from './minigame.js';
 import { disableCloudSync, enableCloudSync, forceCloudPush, getFormattedLocalSyncCode, initCloudSyncAutoPush, onCloudSyncEvent, pullCloudState } from './cloudSyncManager.js';
 import { isCloudSyncConfigured } from './config.js';
+import { applyTheme } from './theme.js';
+import { disableNotifications, enableNotifications, notifyLowStat, notificationsSupported } from './notifications.js';
 const OTTER_ASSET_BASE = 'src/assets/otter';
 const OUTFIT_VARIANTS = [
     { key: 'hatScarfSunglasses', suffix: '-hatScarfSunglasses', required: ['hat', 'scarf', 'sunglasses'] },
@@ -39,6 +41,18 @@ const CRITICAL_MESSAGES = {
     clean: 'La lontra è molto sporca. Portala a fare il bagnetto subito!',
     energy: 'La lontra è esausta. Mettila a dormire per recuperare energia.'
 };
+const STAT_ICONS = {
+    hunger: '🍗',
+    happy: '🎉',
+    clean: '🧼',
+    energy: '⚡'
+};
+function updateThemeButtons(mode) {
+    const lightBtn = $('themeLightBtn');
+    const comfortBtn = $('themeComfortBtn');
+    lightBtn?.classList.toggle('active', mode === 'light');
+    comfortBtn?.classList.toggle('active', mode === 'comfort');
+}
 let currentMood = 'neutral';
 let currentOutfit = 'base';
 let hasRenderedOnce = false;
@@ -57,6 +71,57 @@ function formatDateTime(iso) {
     }
     catch {
         return iso;
+    }
+}
+function refreshNotificationUI(state) {
+    const statusEl = $('notificationStatus');
+    const enableBtn = $('notificationEnableBtn');
+    const disableBtn = $('notificationDisableBtn');
+    const warningEl = $('notificationUnsupported');
+    const granted = state.notifications.permission === 'granted';
+    const supported = notificationsSupported();
+    if (warningEl) {
+        warningEl.classList.toggle('hidden', supported);
+    }
+    if (!supported) {
+        if (statusEl) {
+            statusEl.textContent = 'Il tuo dispositivo non supporta le notifiche push.';
+        }
+        enableBtn?.setAttribute('disabled', 'true');
+        disableBtn?.setAttribute('disabled', 'true');
+        const details = $('notificationNextDetails');
+        if (details) {
+            details.textContent = '';
+        }
+        return;
+    }
+    if (enableBtn) {
+        enableBtn.disabled = state.notifications.enabled && granted;
+    }
+    if (disableBtn) {
+        disableBtn.disabled = !state.notifications.enabled;
+    }
+    if (statusEl) {
+        if (!granted) {
+            statusEl.textContent = 'Promemoria disattivati. Concedi il permesso per ricevere notifiche.';
+        }
+        else if (!state.notifications.enabled) {
+            statusEl.textContent = 'Permesso attivo, premi "Attiva promemoria" per ricevere segnali di promemoria.';
+        }
+        else {
+            statusEl.textContent = 'Promemoria attivi. Ti avviseremo quando la lontra avrà bisogno di attenzioni.';
+        }
+    }
+    const nextList = $('notificationNextDetails');
+    if (nextList) {
+        const items = [];
+        ['hunger', 'happy', 'clean', 'energy'].forEach(key => {
+            const last = state.notifications.lastSent[key];
+            if (typeof last === 'number') {
+                items.push(`${STAT_ICONS[key]} ${formatDateTime(new Date(last).toISOString())}`);
+            }
+        });
+        nextList.textContent = items.length ? `Ultimi promemoria: ${items.join(' · ')}` : 'Nessun promemoria inviato finora.';
     }
 }
 function refreshCloudSyncUI(state) {
@@ -239,6 +304,7 @@ function evaluateCriticalWarnings() {
             markCriticalMessage(key);
             showAlert(CRITICAL_MESSAGES[key]);
             recordEvent(`avviso:${key}`);
+            void notifyLowStat(key).catch(() => undefined);
         }
         else if (value > 40 && state.criticalHintsShown[key]) {
             resetCriticalMessage(key);
@@ -247,6 +313,8 @@ function evaluateCriticalWarnings() {
 }
 function render() {
     const state = getState();
+    applyTheme(state.theme);
+    updateThemeButtons(state.theme);
     const tutorialOverlay = $('tutorialOverlay');
     const nameOverlay = $('nameOverlay');
     const shouldShowNamePrompt = !state.petNameConfirmed;
@@ -292,6 +360,7 @@ function render() {
     evaluateCriticalWarnings();
     updateAnalyticsToggle(state.analyticsOptIn);
     refreshCloudSyncUI(state);
+    refreshNotificationUI(state);
 }
 function triggerOtterAnimation(animation) {
     const img = $('otterImage');
@@ -532,6 +601,47 @@ function initBackupControls() {
             }
         });
     }
+}
+function initThemeControls() {
+    const lightBtn = $('themeLightBtn');
+    const comfortBtn = $('themeComfortBtn');
+    lightBtn?.addEventListener('click', () => {
+        setThemeMode('light');
+        recordEvent('tema:light');
+    });
+    comfortBtn?.addEventListener('click', () => {
+        setThemeMode('comfort');
+        recordEvent('tema:comfort');
+    });
+}
+function initNotificationControls() {
+    const enableBtn = $('notificationEnableBtn');
+    const disableBtn = $('notificationDisableBtn');
+    enableBtn?.addEventListener('click', async () => {
+        if (!enableBtn) {
+            return;
+        }
+        enableBtn.disabled = true;
+        const granted = await enableNotifications();
+        enableBtn.disabled = false;
+        if (granted) {
+            showAlert('Promemoria attivati. Ti avviseremo quando la lontra avrà bisogno di aiuto.', 'info');
+        }
+        else {
+            showAlert('Permesso negato o non disponibile. Controlla le impostazioni del browser.', 'warning');
+        }
+        refreshNotificationUI(getState());
+    });
+    disableBtn?.addEventListener('click', async () => {
+        if (!disableBtn) {
+            return;
+        }
+        disableBtn.disabled = true;
+        await disableNotifications();
+        disableBtn.disabled = false;
+        showAlert('Promemoria disattivati.', 'info');
+        refreshNotificationUI(getState());
+    });
 }
 function initCloudSyncUI() {
     const enableBtn = $('cloudSyncEnableBtn');
@@ -775,6 +885,8 @@ export function initUI() {
     initNavigation();
     initBlink();
     initAnalyticsToggle();
+    initThemeControls();
+    initNotificationControls();
     initBackupControls();
     initCloudSyncAutoPush();
     initCloudSyncUI();

@@ -1,4 +1,5 @@
 export type Mood = 'neutral' | 'happy' | 'sad' | 'sleepy';
+export type ThemeMode = 'light' | 'comfort';
 
 export interface GameStats {
   gamesPlayed: number;
@@ -25,6 +26,15 @@ export interface CloudSyncInfo {
   lastRemoteUpdate: string | null;
 }
 
+export interface NotificationSettings {
+  enabled: boolean;
+  permission: NotificationPermission;
+  lastPromptAt: number | null;
+  subscriptionId: string | null;
+  clientId: string;
+  lastSent: Record<'hunger' | 'happy' | 'clean' | 'energy', number | undefined>;
+}
+
 export interface GameState {
   version: number;
   hunger: number;
@@ -41,10 +51,12 @@ export interface GameState {
   lastTick: number;
   tutorialSeen: boolean;
   analyticsOptIn: boolean;
+  theme: ThemeMode;
   stats: GameStats;
   analytics: AnalyticsData;
   criticalHintsShown: CriticalHintsShown;
   cloudSync: CloudSyncInfo;
+  notifications: NotificationSettings;
 }
 
 export interface BackupPayload {

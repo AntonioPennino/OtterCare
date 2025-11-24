@@ -1,4 +1,4 @@
-import { BackupPayload, GameState, GameStats } from './types';
+import { BackupPayload, GameState, GameStats, ThemeMode } from './types';
 
 const STATE_KEY = 'otter_state_v2';
 const STATE_VERSION = 2;
@@ -8,6 +8,12 @@ type Listener = (state: GameState) => void;
 
 const listeners: Listener[] = [];
 let persistentStorageGranted: boolean | null = null;
+
+function generateClientId(): string {
+  const buffer = new Uint8Array(8);
+  crypto.getRandomValues(buffer);
+  return Array.from(buffer, byte => byte.toString(16).padStart(2, '0')).join('');
+}
 
 function createDefaultState(): GameState {
   const now = Date.now();
@@ -27,6 +33,7 @@ function createDefaultState(): GameState {
     lastTick: now,
     tutorialSeen: false,
     analyticsOptIn: false,
+    theme: 'light',
     stats: {
       gamesPlayed: 0,
       fishCaught: 0,
@@ -42,6 +49,19 @@ function createDefaultState(): GameState {
       recordId: null,
       lastSyncedAt: null,
       lastRemoteUpdate: null
+    },
+    notifications: {
+      enabled: false,
+      permission: typeof Notification !== 'undefined' ? Notification.permission : 'default',
+      lastPromptAt: null,
+      subscriptionId: null,
+      clientId: generateClientId(),
+      lastSent: {
+        hunger: undefined,
+        happy: undefined,
+        clean: undefined,
+        energy: undefined
+      }
     }
   };
 }
@@ -67,6 +87,7 @@ function mergeState(partial: Partial<GameState> | null | undefined): GameState {
     installPromptDismissed: typeof partial.installPromptDismissed === 'boolean'
       ? partial.installPromptDismissed
       : defaults.installPromptDismissed,
+    theme: partial.theme === 'comfort' ? 'comfort' : 'light',
     stats: {
       ...defaults.stats,
       ...(partial.stats ?? {})
@@ -87,6 +108,18 @@ function mergeState(partial: Partial<GameState> | null | undefined): GameState {
         : defaults.cloudSync.recordId,
       lastSyncedAt: partial.cloudSync?.lastSyncedAt ?? defaults.cloudSync.lastSyncedAt,
       lastRemoteUpdate: partial.cloudSync?.lastRemoteUpdate ?? defaults.cloudSync.lastRemoteUpdate
+    },
+    notifications: {
+      ...defaults.notifications,
+      ...(partial.notifications ?? {}),
+      permission: (partial.notifications?.permission ?? defaults.notifications.permission) as NotificationPermission,
+      clientId: typeof partial.notifications?.clientId === 'string' && partial.notifications.clientId.trim().length
+        ? partial.notifications.clientId.slice(0, 32)
+        : defaults.notifications.clientId,
+      lastSent: {
+        ...defaults.notifications.lastSent,
+        ...(partial.notifications?.lastSent ?? {})
+      }
     },
     criticalHintsShown: {
       ...defaults.criticalHintsShown,
@@ -269,6 +302,30 @@ export function updateCloudSyncInfo(mutator: (info: GameState['cloudSync']) => v
   updateState(draft => {
     mutator(draft.cloudSync);
   });
+}
+
+export function setThemeMode(mode: ThemeMode): void {
+  updateState(draft => {
+    draft.theme = mode;
+  });
+}
+
+export function updateNotificationSettings(mutator: (settings: GameState['notifications']) => void, options: UpdateOptions = {}): void {
+  updateState(draft => {
+    mutator(draft.notifications);
+  }, options);
+}
+
+export function markNotificationPrompted(): void {
+  updateNotificationSettings(settings => {
+    settings.lastPromptAt = Date.now();
+  });
+}
+
+export function markNotificationSent(stat: 'hunger' | 'happy' | 'clean' | 'energy'): void {
+  updateNotificationSettings(settings => {
+    settings.lastSent[stat] = Date.now();
+  }, { silent: true });
 }
 
 export async function ensurePersistentStorage(): Promise<boolean> {

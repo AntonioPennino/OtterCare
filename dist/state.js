@@ -3,6 +3,11 @@ const STATE_VERSION = 2;
 const BACKUP_SCHEMA_VERSION = 1;
 const listeners = [];
 let persistentStorageGranted = null;
+function generateClientId() {
+    const buffer = new Uint8Array(8);
+    crypto.getRandomValues(buffer);
+    return Array.from(buffer, byte => byte.toString(16).padStart(2, '0')).join('');
+}
 function createDefaultState() {
     const now = Date.now();
     return {
@@ -21,6 +26,7 @@ function createDefaultState() {
         lastTick: now,
         tutorialSeen: false,
         analyticsOptIn: false,
+        theme: 'light',
         stats: {
             gamesPlayed: 0,
             fishCaught: 0,
@@ -36,6 +42,19 @@ function createDefaultState() {
             recordId: null,
             lastSyncedAt: null,
             lastRemoteUpdate: null
+        },
+        notifications: {
+            enabled: false,
+            permission: typeof Notification !== 'undefined' ? Notification.permission : 'default',
+            lastPromptAt: null,
+            subscriptionId: null,
+            clientId: generateClientId(),
+            lastSent: {
+                hunger: undefined,
+                happy: undefined,
+                clean: undefined,
+                energy: undefined
+            }
         }
     };
 }
@@ -58,6 +77,7 @@ function mergeState(partial) {
         installPromptDismissed: typeof partial.installPromptDismissed === 'boolean'
             ? partial.installPromptDismissed
             : defaults.installPromptDismissed,
+        theme: partial.theme === 'comfort' ? 'comfort' : 'light',
         stats: {
             ...defaults.stats,
             ...(partial.stats ?? {})
@@ -78,6 +98,18 @@ function mergeState(partial) {
                 : defaults.cloudSync.recordId,
             lastSyncedAt: partial.cloudSync?.lastSyncedAt ?? defaults.cloudSync.lastSyncedAt,
             lastRemoteUpdate: partial.cloudSync?.lastRemoteUpdate ?? defaults.cloudSync.lastRemoteUpdate
+        },
+        notifications: {
+            ...defaults.notifications,
+            ...(partial.notifications ?? {}),
+            permission: (partial.notifications?.permission ?? defaults.notifications.permission),
+            clientId: typeof partial.notifications?.clientId === 'string' && partial.notifications.clientId.trim().length
+                ? partial.notifications.clientId.slice(0, 32)
+                : defaults.notifications.clientId,
+            lastSent: {
+                ...defaults.notifications.lastSent,
+                ...(partial.notifications?.lastSent ?? {})
+            }
         },
         criticalHintsShown: {
             ...defaults.criticalHintsShown,
@@ -234,6 +266,26 @@ export function updateCloudSyncInfo(mutator) {
     updateState(draft => {
         mutator(draft.cloudSync);
     });
+}
+export function setThemeMode(mode) {
+    updateState(draft => {
+        draft.theme = mode;
+    });
+}
+export function updateNotificationSettings(mutator, options = {}) {
+    updateState(draft => {
+        mutator(draft.notifications);
+    }, options);
+}
+export function markNotificationPrompted() {
+    updateNotificationSettings(settings => {
+        settings.lastPromptAt = Date.now();
+    });
+}
+export function markNotificationSent(stat) {
+    updateNotificationSettings(settings => {
+        settings.lastSent[stat] = Date.now();
+    }, { silent: true });
 }
 export async function ensurePersistentStorage() {
     if (persistentStorageGranted === true) {
