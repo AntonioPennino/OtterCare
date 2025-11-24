@@ -392,6 +392,7 @@ function initNavigation() {
         stats: $('statsPage')
     };
     const mainEl = document.querySelector('main');
+    const bodyEl = document.body;
     const showPage = (page) => {
         navButtons.forEach(btn => {
             const isActive = btn.dataset.page === page;
@@ -408,11 +409,14 @@ function initNavigation() {
             element.setAttribute('aria-hidden', String(!isVisible));
         });
         recordEvent(`nav:${page}`);
-        if (page === 'home') {
+        const shouldLock = page === 'home';
+        if (shouldLock) {
             mainEl?.classList.add('no-scroll');
+            bodyEl.classList.add('no-scroll');
         }
         else {
             mainEl?.classList.remove('no-scroll');
+            bodyEl.classList.remove('no-scroll');
         }
     };
     navButtons.forEach(button => {

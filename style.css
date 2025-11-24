@@ -35,9 +35,12 @@ body {
   color: var(--text-main);
   min-height: 100vh;
   min-height: 100dvh;
-  overflow: hidden; /* App-like feel */
   display: flex;
   flex-direction: column;
+}
+
+body.no-scroll {
+  overflow: hidden;
 }
 
 /* Typography */
