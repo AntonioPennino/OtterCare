@@ -36,7 +36,13 @@ function createDefaultState(): GameState {
       events: {},
       lastEventAt: null
     },
-    criticalHintsShown: {}
+    criticalHintsShown: {},
+    cloudSync: {
+      enabled: false,
+      recordId: null,
+      lastSyncedAt: null,
+      lastRemoteUpdate: null
+    }
   };
 }
 
@@ -72,6 +78,15 @@ function mergeState(partial: Partial<GameState> | null | undefined): GameState {
         ...defaults.analytics.events,
         ...((partial.analytics && partial.analytics.events) || {})
       }
+    },
+    cloudSync: {
+      ...defaults.cloudSync,
+      ...(partial.cloudSync ?? {}),
+      recordId: typeof partial.cloudSync?.recordId === 'string'
+        ? partial.cloudSync.recordId.slice(0, 128)
+        : defaults.cloudSync.recordId,
+      lastSyncedAt: partial.cloudSync?.lastSyncedAt ?? defaults.cloudSync.lastSyncedAt,
+      lastRemoteUpdate: partial.cloudSync?.lastRemoteUpdate ?? defaults.cloudSync.lastRemoteUpdate
     },
     criticalHintsShown: {
       ...defaults.criticalHintsShown,
@@ -248,6 +263,12 @@ export function resetCriticalMessage(stat: 'hunger' | 'happy' | 'clean' | 'energ
       delete draft.criticalHintsShown[stat];
     }
   }, { silent: true });
+}
+
+export function updateCloudSyncInfo(mutator: (info: GameState['cloudSync']) => void): void {
+  updateState(draft => {
+    mutator(draft.cloudSync);
+  });
 }
 
 export async function ensurePersistentStorage(): Promise<boolean> {

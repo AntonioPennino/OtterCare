@@ -205,6 +205,27 @@
           </div>
           <input id="backupFileInput" class="visually-hidden" type="file" accept="application/json" aria-label="Seleziona file di backup" />
         </div>
+        <div class="cloud-sync-section">
+          <h4>Sincronizzazione cloud</h4>
+          <p id="cloudSyncConfigWarning" class="small-text warning-text hidden">Imposta le chiavi Supabase in config.js per attivare il cloud sync.</p>
+          <p id="cloudSyncStatus" class="small-text">Sincronizzazione cloud non attiva.</p>
+          <div id="cloudSyncCodeWrapper" class="cloud-code-row hidden" aria-live="polite">
+            <code id="cloudSyncCode" class="cloud-code">----</code>
+            <button id="cloudSyncCopyBtn" class="small-btn" type="button">Copia codice</button>
+          </div>
+          <div class="cloud-sync-actions">
+            <button id="cloudSyncEnableBtn" class="primary-btn" type="button">Attiva cloud sync</button>
+            <button id="cloudSyncSyncBtn" class="secondary-btn hidden" type="button">Sincronizza ora</button>
+            <button id="cloudSyncDisableBtn" class="secondary-btn danger hidden" type="button">Disattiva</button>
+          </div>
+          <div class="cloud-sync-import">
+            <label for="cloudSyncCodeInput" class="small-text">Hai già un codice? Inseriscilo per recuperare la tua lontra.</label>
+            <div class="cloud-sync-input">
+              <input id="cloudSyncCodeInput" type="text" inputmode="text" autocomplete="off" maxlength="64" placeholder="es. abcd-1234-efgh" />
+              <button id="cloudSyncImportBtn" class="secondary-btn" type="button">Collega dispositivo</button>
+            </div>
+          </div>
+        </div>
         <button id="resetBtn" class="danger-btn">Reset Gioco</button>
       </div>
     </section>
@@ -283,6 +304,7 @@
     </button>
   </nav>
 
+  <script src="config.js" defer></script>
   <script type="module" src="dist/index.js"></script>
 </body>
 </html>

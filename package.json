@@ -28,6 +28,9 @@
     "url": "https://github.com/AntonioPennino/OtterCare/issues"
   },
   "homepage": "https://github.com/AntonioPennino/OtterCare#readme",
+  "dependencies": {
+    "@supabase/supabase-js": "^2.45.2"
+  },
   "devDependencies": {
     "@playwright/test": "^1.56.1",
     "http-server": "^14.1.1",

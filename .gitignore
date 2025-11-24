@@ -49,6 +49,7 @@ build
 # Local environment files
 .env.local
 .env.*.local
+config.js
 
 # Capacitor
 android/

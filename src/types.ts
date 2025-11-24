@@ -18,6 +18,13 @@ export interface CriticalHintsShown {
   energy?: boolean;
 }
 
+export interface CloudSyncInfo {
+  enabled: boolean;
+  recordId: string | null;
+  lastSyncedAt: string | null;
+  lastRemoteUpdate: string | null;
+}
+
 export interface GameState {
   version: number;
   hunger: number;
@@ -37,6 +44,7 @@ export interface GameState {
   stats: GameStats;
   analytics: AnalyticsData;
   criticalHintsShown: CriticalHintsShown;
+  cloudSync: CloudSyncInfo;
 }
 
 export interface BackupPayload {

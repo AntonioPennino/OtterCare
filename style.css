@@ -378,6 +378,60 @@ main {
   gap: 10px;
 }
 
+.cloud-sync-section {
+  margin-top: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.cloud-sync-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.cloud-sync-import {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.cloud-sync-input {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.cloud-sync-input input {
+  flex: 1 1 160px;
+  border: 1px solid rgba(141, 110, 99, 0.3);
+  border-radius: 12px;
+  padding: 10px 12px;
+  font-size: 0.95rem;
+  font-family: inherit;
+}
+
+.cloud-code-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.cloud-code {
+  background: rgba(38, 166, 154, 0.12);
+  color: var(--primary-dark);
+  padding: 6px 12px;
+  border-radius: 12px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  font-size: 0.95rem;
+}
+
+.warning-text {
+  color: #C62828;
+}
+
 .visually-hidden {
   position: absolute;
   width: 1px;
@@ -999,6 +1053,24 @@ input[type="checkbox"]:checked + .toggle-switch::after {
   }
   
   .backup-actions .secondary-btn {
+    width: 100%;
+  }
+
+  .cloud-sync-actions {
+    flex-direction: column;
+  }
+
+  .cloud-sync-actions .primary-btn,
+  .cloud-sync-actions .secondary-btn {
+    width: 100%;
+  }
+
+  .cloud-sync-input {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .cloud-sync-input button {
     width: 100%;
   }
 }

@@ -30,7 +30,13 @@ function createDefaultState() {
             events: {},
             lastEventAt: null
         },
-        criticalHintsShown: {}
+        criticalHintsShown: {},
+        cloudSync: {
+            enabled: false,
+            recordId: null,
+            lastSyncedAt: null,
+            lastRemoteUpdate: null
+        }
     };
 }
 let state = createDefaultState();
@@ -63,6 +69,15 @@ function mergeState(partial) {
                 ...defaults.analytics.events,
                 ...((partial.analytics && partial.analytics.events) || {})
             }
+        },
+        cloudSync: {
+            ...defaults.cloudSync,
+            ...(partial.cloudSync ?? {}),
+            recordId: typeof partial.cloudSync?.recordId === 'string'
+                ? partial.cloudSync.recordId.slice(0, 128)
+                : defaults.cloudSync.recordId,
+            lastSyncedAt: partial.cloudSync?.lastSyncedAt ?? defaults.cloudSync.lastSyncedAt,
+            lastRemoteUpdate: partial.cloudSync?.lastRemoteUpdate ?? defaults.cloudSync.lastRemoteUpdate
         },
         criticalHintsShown: {
             ...defaults.criticalHintsShown,
@@ -214,6 +229,11 @@ export function resetCriticalMessage(stat) {
             delete draft.criticalHintsShown[stat];
         }
     }, { silent: true });
+}
+export function updateCloudSyncInfo(mutator) {
+    updateState(draft => {
+        mutator(draft.cloudSync);
+    });
 }
 export async function ensurePersistentStorage() {
     if (persistentStorageGranted === true) {

@@ -12,6 +12,7 @@ Un adorabile gioco web per prendersi cura di una lontra, ispirato a Pou ma con u
 - **Tutorial guidato** al primo avvio con sovrapposizioni contestuali
 - **Analytics locali opt-in** per tracciare le interazioni principali senza inviare dati esterni
 - **PWA installabile** con service worker e prompt di aggiornamento automatico
+- **Backup locali + Cloud sync** tramite Supabase con codice di recupero
 
 ## 🕹️ Gameplay
 
@@ -73,6 +74,51 @@ npm test
 # verifica che TypeScript compili senza generare output
 npm run lint
 ```
+
+## ☁️ Cloud sync (Supabase)
+
+La sincronizzazione cloud è opzionale e richiede un progetto Supabase (piano free sufficiente per i salvataggi compressi).
+
+1. Crea un progetto su [Supabase](https://supabase.com) e annota `PROJECT_URL` e `ANON_KEY`.
+2. Nella sezione SQL esegui:
+
+	 ```sql
+	 create table if not exists otter_saves (
+		 id text primary key,
+		 state jsonb not null,
+		 updated_at timestamptz not null default timezone('utc', now())
+	 );
+
+	 alter table otter_saves enable row level security;
+
+	 create policy "anon upsert" on otter_saves
+		 for insert with check (auth.role() = 'anon');
+
+	 create policy "anon update" on otter_saves
+		 for update using (auth.role() = 'anon')
+		 with check (auth.role() = 'anon');
+
+	 create policy "anon select" on otter_saves
+		 for select using (auth.role() = 'anon');
+
+	 create policy "anon delete" on otter_saves
+		 for delete using (auth.role() = 'anon');
+	 ```
+
+	 > I salvataggi sono protetti da un codice casuale a 16 byte; conservalo privatamente.
+
+3. Copia `config.example.js` in `config.js` (ignorato da git) e incolla le tue chiavi:
+
+	 ```js
+	 window.OTTERCARE_CONFIG = {
+		 supabaseUrl: "https://<YOUR-ID>.supabase.co",
+		 supabaseAnonKey: "ey..."
+	 };
+	 ```
+
+4. Rifai la build (`npm run build`) e apri l'app: nella sezione **Statistiche → Impostazioni** troverai la card “Sincronizzazione cloud”.
+
+Una volta attivata, OtterCare genera un codice (es. `abcd-1234-efgh-5678`): usalo per collegare più dispositivi o ripristinare i progressi dopo un wipe completo. Puoi comunque esportare un backup manuale JSON per ulteriore sicurezza.
 
 ## 🤖 Test automatici
 

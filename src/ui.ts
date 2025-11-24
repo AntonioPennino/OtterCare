@@ -1,4 +1,4 @@
-import { Mood } from './types';
+import { GameState, Mood } from './types';
 import {
   getState,
   markCriticalMessage,
@@ -19,6 +19,17 @@ import { batheAction, feedAction, rewardItemPurchase, sleepAction, spendCoins } 
 import { playSound, resumeAudioContext } from './audio.js';
 import { recordEvent } from './analytics.js';
 import { initMiniGame, isMiniGameRunning, openMiniGame } from './minigame.js';
+import {
+  disableCloudSync,
+  enableCloudSync,
+  forceCloudPush,
+  getFormattedLocalSyncCode,
+  getLastCloudSync,
+  initCloudSyncAutoPush,
+  onCloudSyncEvent,
+  pullCloudState
+} from './cloudSyncManager.js';
+import { isCloudSyncConfigured } from './config.js';
 
 type AccessoryState = {
   hat: boolean;
@@ -84,6 +95,78 @@ let updateDismiss: (() => void) | null = null;
 let hasFocusedNamePrompt = false;
 let deferredInstallPrompt: BeforeInstallPromptEvent | null = null;
 let installBannerVisible = false;
+
+function formatDateTime(iso: string | null): string {
+  if (!iso) {
+    return 'Mai sincronizzato';
+  }
+  try {
+    return new Date(iso).toLocaleString();
+  } catch {
+    return iso;
+  }
+}
+
+function refreshCloudSyncUI(state: GameState): void {
+  const statusEl = $('cloudSyncStatus');
+  const codeWrapper = $('cloudSyncCodeWrapper');
+  const codeValue = $('cloudSyncCode');
+  const enableBtn = $('cloudSyncEnableBtn') as HTMLButtonElement | null;
+  const syncBtn = $('cloudSyncSyncBtn') as HTMLButtonElement | null;
+  const disableBtn = $('cloudSyncDisableBtn') as HTMLButtonElement | null;
+  const copyBtn = $('cloudSyncCopyBtn') as HTMLButtonElement | null;
+  const importInput = $('cloudSyncCodeInput') as HTMLInputElement | null;
+  const configWarning = $('cloudSyncConfigWarning');
+
+  const configured = isCloudSyncConfigured();
+
+  if (configWarning) {
+    configWarning.classList.toggle('hidden', configured);
+  }
+
+  if (!configured) {
+    if (statusEl) {
+      statusEl.textContent = 'Configura Supabase per abilitare la sincronizzazione cloud.';
+    }
+    enableBtn?.setAttribute('disabled', 'true');
+    syncBtn?.setAttribute('disabled', 'true');
+    disableBtn?.setAttribute('disabled', 'true');
+    copyBtn?.setAttribute('disabled', 'true');
+    importInput?.setAttribute('disabled', 'true');
+    codeWrapper?.classList.add('hidden');
+    return;
+  }
+
+  enableBtn?.removeAttribute('disabled');
+  importInput?.removeAttribute('disabled');
+
+  const hasCloud = state.cloudSync.enabled && Boolean(state.cloudSync.recordId);
+
+  if (statusEl) {
+    statusEl.textContent = hasCloud
+      ? `Ultimo salvataggio: ${formatDateTime(state.cloudSync.lastSyncedAt)}`
+      : 'Sincronizzazione cloud non attiva.';
+  }
+
+  if (hasCloud) {
+    const formattedCode = getFormattedLocalSyncCode();
+    if (codeValue) {
+      codeValue.textContent = formattedCode;
+    }
+    codeWrapper?.classList.remove('hidden');
+    syncBtn?.classList.remove('hidden');
+    disableBtn?.classList.remove('hidden');
+    syncBtn?.removeAttribute('disabled');
+    disableBtn?.removeAttribute('disabled');
+    copyBtn?.removeAttribute('disabled');
+    enableBtn?.classList.add('hidden');
+  } else {
+    codeWrapper?.classList.add('hidden');
+    syncBtn?.classList.add('hidden');
+    disableBtn?.classList.add('hidden');
+    enableBtn?.classList.remove('hidden');
+  }
+}
 
 function $(id: string): HTMLElement | null {
   return document.getElementById(id);
@@ -277,6 +360,7 @@ function render(): void {
   updateStatsView();
   evaluateCriticalWarnings();
   updateAnalyticsToggle(state.analyticsOptIn);
+  refreshCloudSyncUI(state);
 }
 
 function triggerOtterAnimation(animation: 'feed' | 'bathe' | 'sleep'): void {
@@ -526,6 +610,132 @@ function initBackupControls(): void {
   }
 }
 
+function initCloudSyncUI(): void {
+  const enableBtn = $('cloudSyncEnableBtn') as HTMLButtonElement | null;
+  const syncBtn = $('cloudSyncSyncBtn') as HTMLButtonElement | null;
+  const disableBtn = $('cloudSyncDisableBtn') as HTMLButtonElement | null;
+  const copyBtn = $('cloudSyncCopyBtn') as HTMLButtonElement | null;
+  const importBtn = $('cloudSyncImportBtn') as HTMLButtonElement | null;
+  const importInput = $('cloudSyncCodeInput') as HTMLInputElement | null;
+
+  enableBtn?.addEventListener('click', async () => {
+    if (!isCloudSyncConfigured()) {
+      showAlert('Configura Supabase prima di attivare la sincronizzazione.', 'warning');
+      return;
+    }
+    enableBtn.disabled = true;
+    try {
+      const result = await enableCloudSync();
+      showAlert(`Cloud sync attivata! Codice: ${result.formattedCode}`, 'info');
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Impossibile attivare il cloud sync.';
+      showAlert(message, 'warning');
+      console.error('Errore attivazione cloud sync', error);
+    } finally {
+      enableBtn.disabled = false;
+      refreshCloudSyncUI(getState());
+    }
+  });
+
+  syncBtn?.addEventListener('click', async () => {
+    syncBtn.disabled = true;
+    try {
+      await forceCloudPush();
+      showAlert('Salvataggio sincronizzato sul cloud.', 'info');
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Sincronizzazione non riuscita.';
+      showAlert(message, 'warning');
+      console.error('Errore sincronizzazione manuale', error);
+    } finally {
+      syncBtn.disabled = false;
+    }
+  });
+
+  disableBtn?.addEventListener('click', async () => {
+    const confirmed = window.confirm('Vuoi disattivare la sincronizzazione cloud? Il salvataggio remoto resterà disponibile.');
+    if (!confirmed) {
+      return;
+    }
+    disableBtn.disabled = true;
+    try {
+      await disableCloudSync(false);
+      showAlert('Cloud sync disattivata. Puoi riattivarla in qualsiasi momento.', 'info');
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Impossibile disattivare il cloud sync.';
+      showAlert(message, 'warning');
+      console.error('Errore disattivazione cloud sync', error);
+    } finally {
+      disableBtn.disabled = false;
+      refreshCloudSyncUI(getState());
+    }
+  });
+
+  copyBtn?.addEventListener('click', async () => {
+    const code = getFormattedLocalSyncCode();
+    if (!code) {
+      return;
+    }
+    try {
+      await navigator.clipboard.writeText(code);
+      showAlert('Codice copiato negli appunti.', 'info');
+    } catch {
+      showAlert('Non sono riuscito a copiare il codice, copialo manualmente.', 'warning');
+    }
+  });
+
+  importBtn?.addEventListener('click', async () => {
+    if (!importInput) {
+      return;
+    }
+    const code = importInput.value.trim();
+    if (!code) {
+      showAlert('Inserisci un codice di sincronizzazione.', 'warning');
+      return;
+    }
+    importBtn.disabled = true;
+    try {
+      const info = await pullCloudState(code);
+      showAlert(`Progressi recuperati! Bentornato ${info.petName}.`, 'info');
+      importInput.value = '';
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Non sono riuscito a recuperare quel codice.';
+      showAlert(message, 'warning');
+      console.error('Errore recupero cloud sync', error);
+    } finally {
+      importBtn.disabled = false;
+      refreshCloudSyncUI(getState());
+    }
+  });
+
+  onCloudSyncEvent(event => {
+    if (event.type === 'status') {
+      if (event.status === 'syncing') {
+        const statusEl = $('cloudSyncStatus');
+        if (statusEl) {
+          statusEl.textContent = 'Sincronizzazione in corso…';
+        }
+      } else {
+        refreshCloudSyncUI(getState());
+      }
+      return;
+    }
+
+    if (event.type === 'synced') {
+      const statusEl = $('cloudSyncStatus');
+      if (statusEl) {
+        statusEl.textContent = `Ultimo salvataggio: ${formatDateTime(event.timestamp)}`;
+      }
+      return;
+    }
+
+    if (event.type === 'error') {
+      showAlert(event.message, 'warning');
+    }
+  });
+
+  refreshCloudSyncUI(getState());
+}
+
 function initInstallPrompt(): void {
   const installButton = $('installConfirm') as HTMLButtonElement | null;
   const dismissButton = $('installDismiss') as HTMLButtonElement | null;
@@ -658,6 +868,8 @@ export function initUI(): void {
   initBlink();
   initAnalyticsToggle();
   initBackupControls();
+  initCloudSyncAutoPush();
+  initCloudSyncUI();
   initInstallPrompt();
   initNamePrompt();
   initTutorial();
