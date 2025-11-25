@@ -1,14 +1,15 @@
 // Service Worker per PWA OtterCare
-const CACHE_NAME = 'ottercare-v9';
+const CACHE_NAME = 'ottercare-v10';
 const urlsToCache = [
   './',
   './index.html',
   './style.css',
   './manifest.json',
-  './icon.svg',
   './icons/icon-192.png',
   './icons/icon-512.png',
   './icons/apple-touch-icon.png',
+  './icons/favicon-16x16.png',
+  './icons/favicon-32x32.png',
   './dist/index.js',
   './dist/ui.js',
   './dist/state.js',
