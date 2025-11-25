@@ -38,7 +38,7 @@ jobs:
 
       - name: Create config.js
         run: |
-          echo "window.OTTERCARE_CONFIG = {" > config.js
+          echo "window.PEBBLE_CONFIG = {" > config.js
           echo "  supabaseUrl: '${{ secrets.SUPABASE_URL }}'," >> config.js
           echo "  supabaseAnonKey: '${{ secrets.SUPABASE_ANON_KEY }}'," >> config.js
           echo "  vapidPublicKey: '${{ secrets.VAPID_PUBLIC_KEY }}'," >> config.js

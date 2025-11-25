@@ -1,7 +1,7 @@
 {
-  "name": "OtterCare — Gioco di cura della lontra",
-  "short_name": "OtterCare",
-  "description": "Prenditi cura della tua adorabile lontra virtuale: nutri, gioca, pulisci e fai crescere la tua nuova amica!",
+  "name": "Pebble — Gioco di cura della lontra",
+  "short_name": "Pebble",
+  "description": "Prenditi cura della tua adorabile lontra virtuale con Pebble: nutri, gioca, pulisci e falla crescere felice!",
   "lang": "it-IT",
   "dir": "ltr",
   "start_url": "./index.html",

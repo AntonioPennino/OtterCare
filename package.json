@@ -1,7 +1,7 @@
 {
-  "name": "ottercare",
+  "name": "pebble",
   "version": "1.1.0",
-  "description": "OtterCare — gioco virtuale per prendersi cura di una lontra, con PWA e mini-giochi.",
+  "description": "Pebble — gioco virtuale per prenderti cura di una lontra, con PWA e mini-giochi.",
   "type": "module",
   "main": "dist/index.js",
   "scripts": {
@@ -14,20 +14,21 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/AntonioPennino/OtterCare.git"
+    "url": "git+https://github.com/AntonioPennino/Pebble.git"
   },
   "keywords": [
     "pwa",
     "virtual-pet",
     "game",
-    "otter"
+    "otter",
+    "pebble"
   ],
   "author": "Antonio Pennino",
   "license": "SEE LICENSE IN LICENSE",
   "bugs": {
-    "url": "https://github.com/AntonioPennino/OtterCare/issues"
+    "url": "https://github.com/AntonioPennino/Pebble/issues"
   },
-  "homepage": "https://github.com/AntonioPennino/OtterCare#readme",
+  "homepage": "https://github.com/AntonioPennino/Pebble#readme",
   "dependencies": {
     "@supabase/supabase-js": "^2.45.2"
   },

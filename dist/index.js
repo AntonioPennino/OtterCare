@@ -12,7 +12,7 @@ function setupServiceWorker() {
         refreshing = true;
         window.location.reload();
     });
-    navigator.serviceWorker.register('/OtterCare/sw.js').then(registration => {
+    navigator.serviceWorker.register('sw.js').then(registration => {
         registration.update().catch(() => {
             // ignora errori di rete temporanei
         });
@@ -59,13 +59,13 @@ function bootstrap() {
             const supabaseUrl = typeof cfg.getSupabaseUrl === 'function' ? cfg.getSupabaseUrl() : '';
             const anon = typeof cfg.getSupabaseAnonKey === 'function' ? cfg.getSupabaseAnonKey() : '';
             const anonPreview = anon ? `${anon.slice(0, 6)}…${anon.slice(-6)}` : '(vuota)';
-            console.info('[OtterCare] runtime config:', { supabaseUrl: supabaseUrl || '(vuota)', supabaseAnonKey: anonPreview });
+            console.info('[Pebble] runtime config:', { supabaseUrl: supabaseUrl || '(vuota)', supabaseAnonKey: anonPreview });
         }
         catch (err) {
-            console.info('[OtterCare] runtime config: unable to read config module', err);
+            console.info('[Pebble] runtime config: unable to read config module', err);
         }
     }).catch(err => {
-        console.info('[OtterCare] runtime config: import error', err);
+        console.info('[Pebble] runtime config: import error', err);
     });
     initUI();
     setupServiceWorker();

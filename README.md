@@ -1,8 +1,8 @@
-# OtterCare 🦦 — Gioco di cura della lontra
+# Pebble 🦦 — Gioco di cura della lontra
 
 Un adorabile gioco web per prendersi cura di una lontra, ispirato a Pou ma con un'estetica più tenera e meno inquietante.
 
-**🎮 [GIOCA ORA](https://antoniopennino.github.io/OtterCare/)** | 📱 Installabile su mobile come app!
+**🎮 [GIOCA ORA](https://antoniopennino.github.io/Pebble/)** | 📱 Installabile su mobile come app!
 
 ## ✨ Caratteristiche
 
@@ -31,7 +31,7 @@ Un adorabile gioco web per prendersi cura di una lontra, ispirato a Pou ma con u
 ## 🧱 Struttura progetto
 
 ```
-Otter/
+Pebble/
 ├── index.html               # Shell dell'app, overlay tutorial, include dist/index.js
 ├── style.css                # Stili responsive, layout mobile, animazioni
 ├── sw.js                    # Service worker con cache versionata e skipWaiting
@@ -83,25 +83,25 @@ La sincronizzazione cloud è opzionale e richiede un progetto Supabase (piano fr
 2. Nella sezione SQL esegui:
 
 	 ```sql
-	 create table if not exists otter_saves (
+	 create table if not exists pebble_saves (
 		 id text primary key,
 		 state jsonb not null,
 		 updated_at timestamptz not null default timezone('utc', now())
 	 );
 
-	 alter table otter_saves enable row level security;
+	 alter table pebble_saves enable row level security;
 
-	 create policy "anon upsert" on otter_saves
+	 create policy "anon upsert" on pebble_saves
 		 for insert with check (auth.role() = 'anon');
 
-	 create policy "anon update" on otter_saves
+	 create policy "anon update" on pebble_saves
 		 for update using (auth.role() = 'anon')
 		 with check (auth.role() = 'anon');
 
-	 create policy "anon select" on otter_saves
+	 create policy "anon select" on pebble_saves
 		 for select using (auth.role() = 'anon');
 
-	 create policy "anon delete" on otter_saves
+	 create policy "anon delete" on pebble_saves
 		 for delete using (auth.role() = 'anon');
 	 ```
 
@@ -110,7 +110,7 @@ La sincronizzazione cloud è opzionale e richiede un progetto Supabase (piano fr
 3. Copia `config.example.js` in `config.js` (ignorato da git) e incolla le tue chiavi:
 
 	 ```js
-	 window.OTTERCARE_CONFIG = {
+	 window.PEBBLE_CONFIG = {
 		 supabaseUrl: "https://<YOUR-ID>.supabase.co",
 		 supabaseAnonKey: "ey..."
 	 };
@@ -118,7 +118,7 @@ La sincronizzazione cloud è opzionale e richiede un progetto Supabase (piano fr
 
 4. Rifai la build (`npm run build`) e apri l'app: nella sezione **Statistiche → Impostazioni** troverai la card “Sincronizzazione cloud”.
 
-Una volta attivata, OtterCare genera un codice (es. `abcd-1234-efgh-5678`): usalo per collegare più dispositivi o ripristinare i progressi dopo un wipe completo. Puoi comunque esportare un backup manuale JSON per ulteriore sicurezza.
+Una volta attivata, Pebble genera un codice (es. `abcd-1234-efgh-5678`): usalo per collegare più dispositivi o ripristinare i progressi dopo un wipe completo. Puoi comunque esportare un backup manuale JSON per ulteriore sicurezza.
 
 ## 🤖 Test automatici
 
@@ -128,7 +128,7 @@ non viene registrato: è normale vedere un warning 404 durante i test.
 
 ## 🎯 Differenze da Pou
 
-| Aspetto | Pou | OtterCare |
+| Aspetto | Pou | Pebble |
 |---------|-----|-----------|
 | Design | Alieno marrone | Lontra naturalistica |
 | Espressioni | Semplici | 4 emozioni con morfing SVG |
@@ -170,8 +170,8 @@ Hai trovato un bug? Apri una Issue su GitHub con:
 ## 📞 Contatti
 
 - **GitHub**: [@AntonioPennino](https://github.com/AntonioPennino)
-- **Repository**: [OtterCare](https://github.com/AntonioPennino/OtterCare)
-- **Demo live**: [https://antoniopennino.github.io/OtterCare/](https://antoniopennino.github.io/OtterCare/)
+- **Repository**: [Pebble](https://github.com/AntonioPennino/Pebble)
+- **Demo live**: [https://antoniopennino.github.io/Pebble/](https://antoniopennino.github.io/Pebble/)
 
 ---
 
@@ -179,4 +179,4 @@ Hai trovato un bug? Apri una Issue su GitHub con:
 
 *Creato con ❤️ per chi ama gli animali carini e i giochi rilassanti*
 
-> ⚠️ **Nota legale**: OtterCare è un progetto originale protetto da copyright. L'uso commerciale, la copia del codice o delle grafiche senza autorizzazione è vietato. Per collaborazioni commerciali, contattare l'autore.
+> ⚠️ **Nota legale**: Pebble è un progetto originale protetto da copyright. L'uso commerciale, la copia del codice o delle grafiche senza autorizzazione è vietato. Per collaborazioni commerciali, contattare l'autore.

@@ -1,5 +1,5 @@
 function getRuntimeConfig() {
-    const globalConfig = globalThis.OTTERCARE_CONFIG;
+    const globalConfig = globalThis.PEBBLE_CONFIG;
     return globalConfig ?? null;
 }
 const maybeProcess = typeof globalThis === 'object' && globalThis !== null && 'process' in globalThis

@@ -18,7 +18,7 @@ function getClient(): SupabaseClient | null {
       auth: { persistSession: false },
       global: {
         headers: {
-          'x-otter-client': 'ottercare-app'
+          'x-pebble-client': 'pebble-app'
         }
       }
     });
@@ -51,7 +51,7 @@ export async function uploadStateToCloud(code: string, state: GameState): Promis
     updated_at: new Date().toISOString()
   };
   const { error, data } = await supabase
-    .from('otter_saves')
+    .from('pebble_saves')
     .upsert(payload, { onConflict: 'id', ignoreDuplicates: false })
     .select('updated_at')
     .maybeSingle();
@@ -67,7 +67,7 @@ export async function downloadStateFromCloud(code: string): Promise<RemoteState 
     throw new Error('Cloud sync non configurata');
   }
   const { data, error } = await supabase
-    .from('otter_saves')
+    .from('pebble_saves')
     .select('state, updated_at')
     .eq('id', code)
     .maybeSingle();
@@ -89,7 +89,7 @@ export async function deleteStateFromCloud(code: string): Promise<void> {
     throw new Error('Cloud sync non configurata');
   }
   const { error } = await supabase
-    .from('otter_saves')
+    .from('pebble_saves')
     .delete()
     .eq('id', code);
   if (error) {

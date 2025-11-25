@@ -1,6 +1,6 @@
-# 📱 Guida Mobile - OtterCare su Android & iOS
+# 📱 Guida Mobile - Pebble su Android & iOS
 
-Questa guida confronta tutte le opzioni per portare OtterCare su smartphone.
+Questa guida confronta tutte le opzioni per portare Pebble su smartphone.
 
 ---
 
@@ -100,7 +100,7 @@ npm init -y
 
 # 3. Installa Capacitor
 npm install @capacitor/core @capacitor/cli
-npx cap init OtterCare com.tuonome.ottercare --web-dir .
+npx cap init Pebble com.tuonome.pebble --web-dir .
 
 # 4. Aggiungi piattaforme
 npm install @capacitor/android @capacitor/ios
@@ -166,9 +166,9 @@ import { Share } from '@capacitor/share';
 
 async function shareOtter(){
   await Share.share({
-    title: 'La mia lontra su OtterCare!',
+    title: 'La mia lontra su Pebble!',
     text: `La mia lontra è a livello ${state.level}! 🦦`,
-    url: 'https://ottercare.app',
+    url: 'https://pebble.app',
   });
 }
 ```
@@ -225,7 +225,7 @@ npx cap open ios
 npm install -g react-native-cli
 
 # Crea progetto
-npx react-native init OtterCare
+npx react-native init Pebble
 
 # Ricostruisci la UI in React
 # (dovrai convertire HTML → JSX, CSS → StyleSheet)
@@ -238,7 +238,7 @@ npx react-native init OtterCare
 # https://docs.flutter.dev/get-started/install
 
 # Crea progetto
-flutter create ottercare
+flutter create pebble
 
 # Ricostruisci la UI in Dart/Flutter widgets
 ```

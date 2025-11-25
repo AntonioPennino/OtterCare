@@ -17,7 +17,7 @@ function createDefaultState() {
         clean: 80,
         energy: 80,
         coins: 0,
-        petName: 'OtterCare',
+        petName: 'Pebble',
         petNameConfirmed: false,
         installPromptDismissed: false,
         hat: false,
@@ -231,7 +231,7 @@ export function setScarfOwned(value) {
 export function setPetName(name) {
     const sanitized = name.replace(/[<>]/g, '').replace(/\s+/g, ' ').trim().slice(0, 24);
     updateState(draft => {
-        draft.petName = sanitized.length ? sanitized : 'OtterCare';
+        draft.petName = sanitized.length ? sanitized : 'Pebble';
         draft.petNameConfirmed = true;
     });
 }

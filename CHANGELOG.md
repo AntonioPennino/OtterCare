@@ -1,4 +1,4 @@
-# Changelog - OtterCare 🦦
+# Changelog - Pebble 🦦
 
 ## [v2.0] - 18 novembre 2025
 

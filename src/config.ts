@@ -1,19 +1,19 @@
-type OtterCareRuntimeConfig = {
+type PebbleRuntimeConfig = {
   supabaseUrl?: string;
   supabaseAnonKey?: string;
   vapidPublicKey?: string;
   reminderFunction?: string;
 } | null;
 
-function getRuntimeConfig(): OtterCareRuntimeConfig {
+function getRuntimeConfig(): PebbleRuntimeConfig {
   const globalConfig = (globalThis as unknown as {
-    OTTERCARE_CONFIG?: {
+    PEBBLE_CONFIG?: {
       supabaseUrl?: string;
       supabaseAnonKey?: string;
       vapidPublicKey?: string;
       reminderFunction?: string;
     };
-  }).OTTERCARE_CONFIG;
+  }).PEBBLE_CONFIG;
   return globalConfig ?? null;
 }
 

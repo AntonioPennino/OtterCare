@@ -326,7 +326,7 @@ function render() {
         if (!hasFocusedNamePrompt) {
             const nameInput = $('petNameInput');
             if (nameInput) {
-                nameInput.value = state.petName ?? 'OtterCare';
+                nameInput.value = state.petName ?? 'Pebble';
                 window.setTimeout(() => nameInput.focus(), 0);
             }
             hasFocusedNamePrompt = true;
@@ -337,12 +337,12 @@ function render() {
     }
     const nameLabel = $('petNameLabel');
     if (nameLabel) {
-        nameLabel.textContent = state.petName || 'OtterCare';
+        nameLabel.textContent = state.petName || 'Pebble';
     }
-    const baseTitle = 'OtterCare — Gioco di cura della lontra';
+    const baseTitle = 'Pebble — Gioco di cura della lontra';
     const trimmedName = state.petName.trim();
-    if (state.petNameConfirmed && trimmedName && trimmedName !== 'OtterCare') {
-        document.title = `${trimmedName} — OtterCare`;
+    if (state.petNameConfirmed && trimmedName && trimmedName !== 'Pebble') {
+        document.title = `${trimmedName} — Pebble`;
     }
     else {
         document.title = baseTitle;
@@ -555,14 +555,14 @@ function initBackupControls() {
     exportBtn?.addEventListener('click', () => {
         try {
             const backupJson = serializeBackup();
-            const petName = getState().petName.trim() || 'OtterCare';
-            const normalized = petName.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '') || 'ottercare';
+            const petName = getState().petName.trim() || 'Pebble';
+            const normalized = petName.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '') || 'pebble';
             const timestamp = new Date().toISOString().replace(/[:]/g, '-');
             const blob = new Blob([backupJson], { type: 'application/json' });
             const url = URL.createObjectURL(blob);
             const anchor = document.createElement('a');
             anchor.href = url;
-            anchor.download = `ottercare-backup-${normalized}-${timestamp}.json`;
+            anchor.download = `pebble-backup-${normalized}-${timestamp}.json`;
             document.body.appendChild(anchor);
             anchor.click();
             anchor.remove();
@@ -587,7 +587,7 @@ function initBackupControls() {
             try {
                 const text = await file.text();
                 const summary = restoreBackupFromString(text);
-                const name = summary.petName || 'OtterCare';
+                const name = summary.petName || 'Pebble';
                 showAlert(`Backup ripristinato! Bentornato ${name}.`, 'info');
                 recordEvent('backup:import');
             }
@@ -779,7 +779,7 @@ function initInstallPrompt() {
     });
     installButton?.addEventListener('click', async () => {
         if (!deferredInstallPrompt) {
-            showAlert('Installazione non disponibile. Usa il menu del browser per aggiungere OtterCare.', 'warning');
+            showAlert('Installazione non disponibile. Usa il menu del browser per aggiungere Pebble.', 'warning');
             return;
         }
         try {
@@ -787,7 +787,7 @@ function initInstallPrompt() {
             const outcome = await deferredInstallPrompt.userChoice;
             recordEvent(`pwa:${outcome.outcome}`);
             if (outcome.outcome === 'accepted') {
-                showAlert('OtterCare è stata aggiunta alla tua schermata Home! 🦦', 'info');
+                showAlert('Pebble è stata aggiunta alla tua schermata Home! 🦦', 'info');
             }
         }
         finally {
@@ -810,7 +810,7 @@ function initInstallPrompt() {
         hideInstallBanner();
         setInstallPromptDismissed(true);
         recordEvent('pwa:installed');
-        showAlert('Installazione completata! Trovi OtterCare tra le tue app.', 'info');
+        showAlert('Installazione completata! Trovi Pebble tra le tue app.', 'info');
     });
 }
 function initNamePrompt() {
@@ -849,7 +849,7 @@ function initTutorial() {
         setAnalyticsOptIn(analyticsToggle.checked);
         closeOverlay();
         recordEvent('tutorial:completato');
-        showAlert('Benvenuto in OtterCare! Prenditi cura della tua lontra 🦦', 'info');
+        showAlert('Benvenuto in Pebble! Prenditi cura della tua lontra 🦦', 'info');
         startBtn.removeEventListener('click', handleStart);
     };
     startBtn.addEventListener('click', handleStart);
