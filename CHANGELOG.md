@@ -1,5 +1,11 @@
 # Changelog - Pebble 🦦
 
+## [Unreleased]
+
+### 🎨 Interfaccia
+- Sostituite le icone delle azioni e della navigazione con un nuovo set vettoriale coordinato con la palette Pebble.
+- Aggiornato il service worker per includere le nuove risorse SVG nella cache offline.
+
 ## [v2.0] - 18 novembre 2025
 
 ### 🎨 Grafica completamente rinnovata

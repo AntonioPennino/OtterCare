@@ -1,5 +1,5 @@
 // Service Worker per PWA Pebble
-const CACHE_NAME = 'pebble-v1';
+const CACHE_NAME = 'pebble-v2';
 const urlsToCache = [
   './',
   './index.html',
@@ -41,7 +41,14 @@ const urlsToCache = [
   './src/assets/otter/otter_eat-hatScarfSunglasses.png',
   './src/assets/otter/otter_bath-hat.png',
   './src/assets/otter/otter_bath-hatScarf.png',
-  './src/assets/otter/otter_bath-hatScarfSunglasses.png'
+  './src/assets/otter/otter_bath-hatScarfSunglasses.png',
+  './src/assets/menu-icons/icon-food.svg',
+  './src/assets/menu-icons/icon-games.svg',
+  './src/assets/menu-icons/icon-health.svg',
+  './src/assets/menu-icons/icon-home.svg',
+  './src/assets/menu-icons/icon-hygiene.svg',
+  './src/assets/menu-icons/icon-shop.svg',
+  './src/assets/menu-icons/icon-stats.svg'
 ];
 
 // Installazione - cache delle risorse
