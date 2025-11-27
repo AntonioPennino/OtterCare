@@ -1,5 +1,7 @@
 :root {
   --font-base: 'Nunito', 'Nunito Sans', system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+  
+  /* Brand Colors (Preserved) */
   --bg-gradient-start: #CFEDEA;
   --bg-gradient-end: #F2E3C6;
   --primary: #8D5B3E;
@@ -8,32 +10,46 @@
   --accent-light: #B3E3D8;
   --accent-salmon: #FF9B85;
   --status-mud: #5C5248;
-  --text-main: #8D5B3E;
-  --text-muted: #B9937B;
-  --card-bg: #FFF9F1;
-  --card-shadow: 0 8px 24px rgba(92, 82, 72, 0.12);
-  --card-radius: 24px;
-  --header-bg: rgba(255, 249, 241, 0.9);
-  --header-shadow: 0 4px 20px rgba(92, 82, 72, 0.1);
-  --bottom-nav-bg: rgba(255, 249, 241, 0.92);
-  --bottom-nav-shadow: 0 -4px 20px rgba(92, 82, 72, 0.12);
-  --divider: rgba(92, 82, 72, 0.18);
-  --modal-bg: #FFF9F1;
-  --modal-shadow: 0 20px 40px rgba(92, 82, 72, 0.25);
-  --secondary-btn-bg: #F8EDDC;
-  --secondary-btn-color: var(--status-mud);
-  --secondary-btn-border: rgba(92, 82, 72, 0.18);
+  
+  /* Text Colors */
+  --text-main: #5F3C28; /* Slightly darker for better contrast */
+  --text-muted: #9C7B68;
+  
+  /* Surfaces & Glass */
+  --card-bg: rgba(255, 249, 241, 0.95);
+  --surface-glass: rgba(255, 249, 241, 0.7);
+  --surface-glass-strong: rgba(255, 249, 241, 0.95);
+  --header-bg: rgba(255, 249, 241, 0.8);
+  --bottom-nav-bg: rgba(255, 249, 241, 0.9);
+  
+  /* Shadows & Depth (Premium Feel) */
+  --card-shadow: 
+    0 4px 6px -1px rgba(92, 82, 72, 0.05),
+    0 10px 15px -3px rgba(92, 82, 72, 0.1),
+    0 20px 25px -5px rgba(92, 82, 72, 0.05);
+  --header-shadow: 0 4px 30px rgba(0, 0, 0, 0.03);
+  --bottom-nav-shadow: 0 -4px 30px rgba(0, 0, 0, 0.04);
+  --modal-shadow: 0 25px 50px -12px rgba(92, 82, 72, 0.25);
+  
+  /* UI Metrics */
+  --card-radius: 32px; /* Softer, rounder corners */
+  --btn-radius: 20px;
+  --bottom-nav-height: 84px;
+  --safe-area-bottom: env(safe-area-inset-bottom, 20px);
+  
+  /* Interactive */
+  --secondary-btn-bg: #FFF5E6;
+  --secondary-btn-color: var(--primary);
+  --secondary-btn-border: rgba(141, 91, 62, 0.15);
   --secondary-btn-active-bg: var(--accent);
   --secondary-btn-active-color: #05312C;
-  --surface-glass: rgba(255, 249, 241, 0.86);
-  --surface-glass-strong: rgba(255, 249, 241, 0.95);
-  --input-border: rgba(92, 82, 72, 0.35);
-  --bottom-nav-height: 78px;
-  --color-hunger: var(--accent-salmon);
+  --input-border: rgba(141, 91, 62, 0.2);
+  
+  /* Status Colors */
+  --color-hunger: #FF9B85;
   --color-happy: #FFD08A;
-  --color-clean: var(--accent);
+  --color-clean: #6ABFAB;
   --color-energy: #B5C47B;
-  --safe-area-bottom: env(safe-area-inset-bottom, 20px);
 }
 
 * {
@@ -52,6 +68,9 @@ body {
   flex-direction: column;
   transition: background 0.3s ease, color 0.3s ease;
   color-scheme: light;
+  font-size: 16px;
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
 }
 
 body.gift-modal-open {
@@ -98,10 +117,17 @@ body.theme-comfort {
 }
 
 /* Typography */
+/* Typography */
 h1, h2, h3 {
   margin: 0;
   font-weight: 800;
+  letter-spacing: -0.025em;
+  color: var(--primary-dark);
 }
+
+h1 { font-size: 1.5rem; }
+h2 { font-size: 1.25rem; }
+h3 { font-size: 1.1rem; }
 
 button {
   font-family: var(--font-base);
@@ -117,16 +143,17 @@ button:focus-visible {
 
 /* Layout */
 header {
-  padding: 12px 20px;
-  padding-top: max(12px, env(safe-area-inset-top));
+  padding: 16px 24px;
+  padding-top: max(16px, env(safe-area-inset-top));
   background: var(--header-bg);
-  -webkit-backdrop-filter: blur(10px);
-  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(20px) saturate(180%);
+  backdrop-filter: blur(20px) saturate(180%);
   position: sticky;
   top: 0;
   z-index: 100;
   box-shadow: var(--header-shadow);
   transition: background 0.3s ease, box-shadow 0.3s ease;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.2);
 }
 
 @media (max-width: 400px) {
@@ -254,11 +281,12 @@ main.no-scroll {
   background: var(--card-bg);
   border-radius: var(--card-radius);
   box-shadow: var(--card-shadow);
-  padding: 24px;
+  padding: 32px;
   display: flex;
   flex-direction: column;
   gap: 24px;
   position: relative;
+  border: 1px solid rgba(255, 255, 255, 0.4);
 }
 
 .scene-instructions {
@@ -407,15 +435,16 @@ main.no-scroll {
 
 .food-item {
   background: var(--card-bg);
-  border-radius: 16px;
-  padding: 12px 18px;
+  border-radius: 20px;
+  padding: 16px 20px;
   box-shadow: var(--card-shadow);
   font-size: 1rem;
   font-weight: 700;
   display: flex;
-  gap: 8px;
+  gap: 10px;
   align-items: center;
   transition: transform 0.2s ease, box-shadow 0.2s ease;
+  border: 1px solid rgba(255, 255, 255, 0.4);
 }
 
 .food-item:hover,
@@ -498,14 +527,15 @@ main.no-scroll {
 
 .game-card {
   background: var(--card-bg);
-  border-radius: 20px;
+  border-radius: var(--card-radius);
   box-shadow: var(--card-shadow);
-  padding: 20px;
+  padding: 24px;
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 12px;
   text-align: left;
   transition: transform 0.2s ease, box-shadow 0.2s ease;
+  border: 1px solid rgba(255, 255, 255, 0.4);
 }
 
 .game-card:hover,
@@ -571,13 +601,14 @@ main.no-scroll {
 /* Status Bars */
 .status-container {
   background: var(--card-bg);
-  padding: 18px;
+  padding: 20px;
   border-radius: var(--card-radius);
   box-shadow: var(--card-shadow);
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 12px;
-  margin-bottom: 18px;
+  gap: 16px;
+  margin-bottom: 24px;
+  border: 1px solid rgba(255, 255, 255, 0.4);
 }
 
 .status-item {
@@ -592,11 +623,12 @@ main.no-scroll {
 
 .progress-bar {
   flex: 1;
-  height: 7px;
-  background: rgba(255, 255, 255, 0.6);
+  height: 10px;
+  background: rgba(0, 0, 0, 0.06);
   border-radius: 10px;
   overflow: hidden;
   position: relative;
+  box-shadow: inset 0 1px 2px rgba(0,0,0,0.05);
 }
 
 .progress-fill {
@@ -621,15 +653,16 @@ main.no-scroll {
 
 .action-btn {
   background: var(--card-bg);
-  padding: 12px;
-  border-radius: 20px;
+  padding: 16px;
+  border-radius: 24px;
   box-shadow: var(--card-shadow);
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 6px;
+  gap: 8px;
   transition: transform 0.1s, box-shadow 0.1s;
-  min-height: 82px;
+  min-height: 90px;
+  border: 1px solid rgba(255, 255, 255, 0.4);
 }
 
 .action-btn:active {
@@ -690,12 +723,19 @@ main.no-scroll {
 
 .shop-item {
   background: var(--card-bg);
-  padding: 16px;
-  border-radius: 20px;
+  padding: 20px;
+  border-radius: var(--card-radius);
   box-shadow: var(--card-shadow);
   display: flex;
   align-items: center;
-  gap: 16px;
+  gap: 20px;
+  border: 1px solid rgba(255, 255, 255, 0.4);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.shop-item:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 20px 40px rgba(92, 82, 72, 0.15);
 }
 
 .item-preview {
@@ -963,19 +1003,23 @@ input[type="checkbox"]:checked + .toggle-switch::after {
 /* Bottom Nav */
 .bottom-nav {
   position: fixed;
-  bottom: 0;
-  left: 0;
-  right: 0;
+  bottom: 20px;
+  left: 20px;
+  right: 20px;
   background: var(--bottom-nav-bg);
-  -webkit-backdrop-filter: blur(10px);
-  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(20px) saturate(180%);
+  backdrop-filter: blur(20px) saturate(180%);
   padding: 10px 20px;
-  padding-bottom: calc(12px + var(--safe-area-bottom));
+  padding-bottom: 10px;
   display: flex;
   justify-content: space-around;
   box-shadow: var(--bottom-nav-shadow);
   z-index: 200;
   min-height: var(--bottom-nav-height);
+  border-radius: 24px;
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  max-width: 600px;
+  margin: 0 auto;
 }
 
 .nav-item {
@@ -1083,13 +1127,14 @@ input[type="checkbox"]:checked + .toggle-switch::after {
 .minigame-card, .tutorial-card, .gift-card {
   background: var(--modal-bg);
   width: 100%;
-  max-width: 400px;
-  border-radius: 24px;
-  padding: 24px;
+  max-width: 420px;
+  border-radius: 32px;
+  padding: 32px;
   box-shadow: var(--modal-shadow);
   color: var(--text-main);
   transition: background 0.3s ease, box-shadow 0.3s ease, color 0.3s ease;
   animation: popIn 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+  border: 1px solid rgba(255, 255, 255, 0.5);
 }
 
 .gift-card h2 {
@@ -1173,11 +1218,11 @@ input[type="checkbox"]:checked + .toggle-switch::after {
 .secondary-btn {
   background: var(--secondary-btn-bg);
   color: var(--secondary-btn-color);
-  padding: 8px 16px;
-  border-radius: 12px;
-  font-weight: 600;
+  padding: 12px 20px;
+  border-radius: var(--btn-radius);
+  font-weight: 700;
   border: 1px solid var(--secondary-btn-border);
-  transition: background 0.2s ease, color 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .secondary-btn:hover {
@@ -1397,13 +1442,14 @@ body.theme-comfort .tutorial-overlay {
 
 .name-input {
   border: 2px solid var(--input-border);
-  border-radius: 16px;
-  padding: 12px 16px;
-  font-size: 1rem;
+  border-radius: 20px;
+  padding: 16px 20px;
+  font-size: 1.1rem;
   font-family: inherit;
   color: var(--text-main);
-  background: var(--card-bg);
-  transition: border-color 0.2s ease, box-shadow 0.2s ease, background 0.3s ease, color 0.3s ease;
+  background: rgba(255, 255, 255, 0.5);
+  transition: all 0.2s ease;
+  box-shadow: inset 0 2px 4px rgba(0,0,0,0.02);
 }
 
 .name-input::placeholder {
@@ -1450,14 +1496,21 @@ body.theme-comfort .tutorial-overlay {
 }
 
 .primary-btn {
-  background: var(--accent);
+  background: linear-gradient(135deg, var(--accent), #4F9F93);
   color: white;
-  padding: 14px;
-  border-radius: 16px;
-  font-weight: 700;
-  font-size: 1rem;
-  transition: background 0.2s;
-  min-height: 52px;
+  padding: 16px 24px;
+  border-radius: var(--btn-radius);
+  font-weight: 800;
+  font-size: 1.05rem;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  min-height: 56px;
+  box-shadow: 0 4px 12px rgba(106, 191, 171, 0.4);
+  letter-spacing: 0.02em;
+}
+
+.primary-btn:active {
+  transform: scale(0.96);
+  box-shadow: 0 2px 6px rgba(106, 191, 171, 0.3);
 }
 
 .primary-btn:hover {
