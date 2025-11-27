@@ -289,7 +289,7 @@ function setDenJournalVisibility(visible: boolean): void {
   }
   if (toggleBtn) {
     toggleBtn.setAttribute('aria-expanded', String(visible));
-    toggleBtn.textContent = visible ? 'Chiudi il diario' : 'Apri il diario';
+    toggleBtn.textContent = visible ? 'Chiudi diario e statistiche' : 'Apri diario e statistiche';
   }
 }
 
@@ -639,12 +639,19 @@ function initActionButtons(): void {
 function initKitchenScene(): void {
   const dropZone = $('kitchenDropZone');
   const foodButtons = Array.from(document.querySelectorAll<HTMLButtonElement>('.food-item'));
+  const quickFeedBtn = $('kitchenFeedBtn') as HTMLButtonElement | null;
 
   if (!dropZone || !foodButtons.length) {
     return;
   }
 
   let currentFood: string | null = null;
+
+  const setActiveFood = (button: HTMLButtonElement | null): void => {
+    foodButtons.forEach(btn => {
+      btn.classList.toggle('active', btn === button);
+    });
+  };
 
   const feedWithSnack = (_foodKey: string | null): void => {
     void resumeAudioContext();
@@ -658,6 +665,7 @@ function initKitchenScene(): void {
   const resetDragState = (): void => {
     dropZone.classList.remove('drag-over');
     currentFood = null;
+    setActiveFood(null);
   };
 
   dropZone.addEventListener('dragover', event => {
@@ -680,6 +688,7 @@ function initKitchenScene(): void {
     button.addEventListener('dragstart', event => {
       const foodKey = button.dataset.food ?? null;
       currentFood = foodKey;
+      setActiveFood(button);
       button.classList.add('dragging');
       if (event.dataTransfer && foodKey) {
         event.dataTransfer.setData('text/plain', foodKey);
@@ -693,8 +702,14 @@ function initKitchenScene(): void {
     });
 
     button.addEventListener('click', () => {
+      setActiveFood(button);
       feedWithSnack(button.dataset.food ?? null);
     });
+  });
+
+  quickFeedBtn?.addEventListener('click', () => {
+    setActiveFood(null);
+    feedWithSnack(null);
   });
 }
 

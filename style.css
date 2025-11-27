@@ -222,6 +222,23 @@ main.no-scroll {
   display: block;
 }
 
+.scene-header {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.scene-header h2 {
+  font-size: 1.35rem;
+  color: var(--primary);
+}
+
+.scene-header p {
+  margin: 0;
+  color: var(--text-muted);
+  font-size: 0.95rem;
+}
+
 /* Scene Layout */
 .scene-frame {
   background: var(--card-bg);
@@ -247,7 +264,7 @@ main.no-scroll {
 
 /* Den Scene */
 .den-atmosphere {
-  background: linear-gradient(135deg, rgba(106, 191, 171, 0.25), rgba(255, 208, 138, 0.28));
+  background: linear-gradient(135deg, rgba(106, 191, 171, 0.18), rgba(255, 208, 138, 0.26));
   border-radius: 20px;
   padding: 24px;
   min-height: 180px;
@@ -311,6 +328,21 @@ main.no-scroll {
   align-items: stretch;
 }
 
+.kitchen-otter,
+.games-otter {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.kitchen-otter .otter-img {
+  max-width: 260px;
+}
+
+.games-otter .otter-img {
+  max-width: 300px;
+}
+
 .kitchen-dropzone {
   border: 2px dashed rgba(92, 82, 72, 0.2);
   border-radius: 24px;
@@ -319,25 +351,30 @@ main.no-scroll {
   align-items: center;
   justify-content: center;
   position: relative;
-  background: rgba(255, 249, 241, 0.6);
+  background: rgba(255, 249, 241, 0.75);
   transition: border-color 0.2s ease, background 0.2s ease, transform 0.2s ease;
+  text-align: center;
+  padding: 16px;
 }
 
-.kitchen-dropzone::before {
-  content: 'Trascina qui uno snack';
-  color: var(--text-muted);
+.kitchen-dropzone-hint {
   font-weight: 700;
+  color: var(--text-muted);
   letter-spacing: 0.02em;
 }
 
 .kitchen-dropzone.drag-over {
   border-color: var(--accent);
-  background: rgba(106, 191, 171, 0.15);
+  background: rgba(106, 191, 171, 0.18);
   transform: translateY(-2px);
 }
 
-.kitchen-dropzone.fed::before {
-  content: 'Buon appetito!';
+.kitchen-dropzone.fed {
+  background: rgba(255, 155, 133, 0.15);
+  border-color: rgba(255, 155, 133, 0.6);
+}
+
+.kitchen-dropzone.fed .kitchen-dropzone-hint {
   color: var(--accent-salmon);
 }
 
@@ -346,6 +383,10 @@ main.no-scroll {
   justify-content: center;
   gap: 12px;
   flex-wrap: wrap;
+  margin-top: 16px;
+  background: rgba(255, 249, 241, 0.6);
+  padding: 16px;
+  border-radius: 20px;
 }
 
 .food-item {
@@ -369,6 +410,26 @@ main.no-scroll {
 
 .food-item.dragging {
   opacity: 0.6;
+}
+
+.food-item.active {
+  transform: translateY(-2px);
+  box-shadow: 0 18px 32px rgba(92, 82, 72, 0.2);
+}
+
+.kitchen-shortcuts {
+  margin-top: 18px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  text-align: center;
+}
+
+.kitchen-tip {
+  margin: 0;
+  color: var(--text-muted);
+  font-size: 0.85rem;
 }
 
 /* Hygiene Scene */

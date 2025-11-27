@@ -85,6 +85,10 @@
   <main>
     <section id="denPage" class="scene den-scene active" aria-hidden="false" aria-label="La tana della lontra">
       <div class="scene-frame">
+        <header class="scene-header">
+          <h2>Rifugio della Tana</h2>
+          <p>Riposati con Pebble, osserva il suo umore e usa il diario per tenere traccia dei progressi.</p>
+        </header>
         <div class="den-atmosphere" aria-hidden="true">
           <div class="den-window">
             <span id="denWindowLabel">Riparo serale</span>
@@ -101,7 +105,7 @@
         </div>
         <div class="den-actions">
           <button id="sleepBtn" class="primary-btn scene-action" type="button">Spegni le luci</button>
-          <button id="statsToggleBtn" class="secondary-btn scene-action" type="button">Apri il diario</button>
+          <button id="statsToggleBtn" class="secondary-btn scene-action" type="button">Apri diario e statistiche</button>
         </div>
       </div>
       <div id="denJournal" class="den-journal hidden" aria-hidden="true">
@@ -223,6 +227,10 @@
 
     <section id="kitchenPage" class="scene kitchen-scene hidden" aria-hidden="true" aria-label="La roccia del picnic">
       <div class="scene-frame">
+        <header class="scene-header">
+          <h2>Roccia del Picnic</h2>
+          <p>Prepara uno snack e trascinalo sulla lontra, oppure tocca un alimento per servirlo subito.</p>
+        </header>
         <div class="kitchen-otter" aria-live="polite">
           <img
             class="otter-img"
@@ -230,19 +238,29 @@
             alt="Pebble attende uno spuntino"
           />
         </div>
-        <p class="scene-instructions">Trascina uno snack sulla lontra per riempirle la pancia.</p>
-        <div id="kitchenDropZone" class="kitchen-dropzone" aria-label="Area dove servire il cibo"></div>
+        <p class="scene-instructions">Trascina un alimento sulla zona di servizio oppure tocca il pulsante rapido qui sotto.</p>
+        <div id="kitchenDropZone" class="kitchen-dropzone" aria-label="Area dove servire il cibo">
+          <span class="kitchen-dropzone-hint">Trascina qui uno snack per Pebble</span>
+        </div>
       </div>
       <div class="food-drawer" aria-label="Dispensa del picnic">
         <button class="food-item" draggable="true" data-food="fish">🐟 Pesce fresco</button>
         <button class="food-item" draggable="true" data-food="berry">🍓 Frutti di bosco</button>
         <button class="food-item" draggable="true" data-food="clam">🦪 Vongola</button>
       </div>
+      <div class="kitchen-shortcuts">
+        <button id="kitchenFeedBtn" class="primary-btn" type="button">Servi uno snack rapido</button>
+        <p class="kitchen-tip">Suggerimento: trascina e rilascia gli alimenti sulla lontra per variare la dieta.</p>
+      </div>
       <button id="feedBtn" class="visually-hidden" type="button">Nutri</button>
     </section>
 
     <section id="hygienePage" class="scene hygiene-scene hidden" aria-hidden="true" aria-label="Il fiume basso">
       <div class="scene-frame">
+        <header class="scene-header">
+          <h2>Fiume Limpido</h2>
+          <p>Accompagna Pebble al bagnetto e strofina con movimenti delicati per far brillare il suo manto.</p>
+        </header>
         <div class="hygiene-river">
           <div class="hygiene-otter" aria-live="polite">
             <img
@@ -256,12 +274,16 @@
             <button id="bathBtn" class="primary-btn scene-action" type="button">Passa la spugna</button>
           </div>
         </div>
-        <p class="scene-instructions">Massaggia la lontra con movimenti circolari per farla brillare.</p>
+        <p class="scene-instructions">Massaggia la lontra con movimenti circolari per farla brillare di felicità.</p>
       </div>
     </section>
 
     <section id="gamesPage" class="scene games-scene hidden" aria-hidden="true" aria-label="Il prato dei giochi">
       <div class="scene-frame">
+        <header class="scene-header">
+          <h2>Prato dei Giochi</h2>
+          <p>Scegli un’attività per guadagnare sassolini e intrattenere Pebble.</p>
+        </header>
         <div class="games-otter" aria-live="polite">
           <img
             class="otter-img"
@@ -269,7 +291,6 @@
             alt="Pebble scalpita per giocare"
           />
         </div>
-        <p class="scene-instructions">Scegli un'attività per divertirti insieme a Pebble.</p>
         <div class="games-grid">
           <button id="playBtn" class="game-card" type="button">
             <span class="game-card__icon" aria-hidden="true">🎣</span>

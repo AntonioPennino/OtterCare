@@ -218,7 +218,7 @@ function setDenJournalVisibility(visible) {
     }
     if (toggleBtn) {
         toggleBtn.setAttribute('aria-expanded', String(visible));
-        toggleBtn.textContent = visible ? 'Chiudi il diario' : 'Apri il diario';
+        toggleBtn.textContent = visible ? 'Chiudi diario e statistiche' : 'Apri diario e statistiche';
     }
 }
 export function showGiftModal(item) {
@@ -538,10 +538,16 @@ function initActionButtons() {
 function initKitchenScene() {
     const dropZone = $('kitchenDropZone');
     const foodButtons = Array.from(document.querySelectorAll('.food-item'));
+    const quickFeedBtn = $('kitchenFeedBtn');
     if (!dropZone || !foodButtons.length) {
         return;
     }
     let currentFood = null;
+    const setActiveFood = (button) => {
+        foodButtons.forEach(btn => {
+            btn.classList.toggle('active', btn === button);
+        });
+    };
     const feedWithSnack = (_foodKey) => {
         void resumeAudioContext();
         feedAction();
@@ -553,6 +559,7 @@ function initKitchenScene() {
     const resetDragState = () => {
         dropZone.classList.remove('drag-over');
         currentFood = null;
+        setActiveFood(null);
     };
     dropZone.addEventListener('dragover', event => {
         event.preventDefault();
@@ -571,6 +578,7 @@ function initKitchenScene() {
         button.addEventListener('dragstart', event => {
             const foodKey = button.dataset.food ?? null;
             currentFood = foodKey;
+            setActiveFood(button);
             button.classList.add('dragging');
             if (event.dataTransfer && foodKey) {
                 event.dataTransfer.setData('text/plain', foodKey);
@@ -582,8 +590,13 @@ function initKitchenScene() {
             resetDragState();
         });
         button.addEventListener('click', () => {
+            setActiveFood(button);
             feedWithSnack(button.dataset.food ?? null);
         });
+    });
+    quickFeedBtn?.addEventListener('click', () => {
+        setActiveFood(null);
+        feedWithSnack(null);
     });
 }
 function initShop() {
