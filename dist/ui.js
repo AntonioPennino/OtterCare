@@ -7,6 +7,7 @@ import { disableCloudSync, enableCloudSync, forceCloudPush, getFormattedLocalSyn
 import { isCloudSyncConfigured } from './config.js';
 import { applyTheme } from './theme.js';
 import { disableNotifications, enableNotifications, notifyLowStat, notificationsSupported } from './notifications.js';
+import { getGameStateInstance, syncManagerWithLegacyCoreStats } from './gameStateManager.js';
 const OTTER_ASSET_BASE = 'src/assets/otter';
 const OUTFIT_VARIANTS = [
     { key: 'hatScarfSunglasses', suffix: '-hatScarfSunglasses', required: ['hat', 'scarf', 'sunglasses'] },
@@ -188,6 +189,53 @@ function toggleOverlayVisibility(element, show) {
     element.classList.toggle('hidden', !show);
     element.setAttribute('aria-hidden', String(!show));
 }
+let giftModalOpen = false;
+function setGiftModalVisibility(show) {
+    const overlay = $('giftOverlay');
+    if (!overlay) {
+        return;
+    }
+    giftModalOpen = show;
+    toggleOverlayVisibility(overlay, show);
+    overlay.classList.toggle('active', show);
+    document.body.classList.toggle('gift-modal-open', show);
+}
+function hideGiftModal() {
+    setGiftModalVisibility(false);
+    const trigger = $('giftCloseBtn');
+    trigger?.blur();
+}
+export function showGiftModal(item) {
+    const title = $('giftTitle');
+    if (title) {
+        title.textContent = 'La tua lontra ha un dono!';
+    }
+    const message = $('giftMessage');
+    if (message) {
+        message.textContent = `Ha trovato ${item}.`;
+    }
+    renderInventory(getGameStateInstance().getInventory());
+    setGiftModalVisibility(true);
+    window.setTimeout(() => {
+        const closeBtn = $('giftCloseBtn');
+        closeBtn?.focus();
+    }, 0);
+}
+function initGiftModal() {
+    const closeBtn = $('giftCloseBtn');
+    const overlay = $('giftOverlay');
+    closeBtn?.addEventListener('click', () => hideGiftModal());
+    overlay?.addEventListener('click', event => {
+        if (event.target === overlay) {
+            hideGiftModal();
+        }
+    });
+    window.addEventListener('keydown', event => {
+        if (event.key === 'Escape' && giftModalOpen) {
+            hideGiftModal();
+        }
+    });
+}
 function showInstallBanner() {
     if (installBannerVisible) {
         return;
@@ -228,15 +276,14 @@ function setExpression(mood, accessories) {
     currentOutfit = outfit;
     hasRenderedOnce = true;
 }
-function computeMood() {
-    const state = getState();
-    if (state.energy < 30) {
+function computeMood(core) {
+    if (core.energy < 30) {
         return 'sleepy';
     }
-    if (state.happy > 75 && state.hunger > 50) {
+    if (core.happiness > 75 && core.hunger > 50) {
         return 'happy';
     }
-    if (state.happy < 30 || state.hunger < 20) {
+    if (core.happiness < 30 || core.hunger < 20) {
         return 'sad';
     }
     return 'neutral';
@@ -254,6 +301,28 @@ function setBar(element, value) {
     if (clamped < 15) {
         element.classList.add('critical');
     }
+}
+function renderInventory(items) {
+    const list = $('inventoryList');
+    const emptyState = $('inventoryEmpty');
+    if (!list || !emptyState) {
+        return;
+    }
+    list.replaceChildren();
+    if (!items.length) {
+        emptyState.classList.remove('hidden');
+        list.classList.add('hidden');
+        return;
+    }
+    emptyState.classList.add('hidden');
+    list.classList.remove('hidden');
+    const fragment = document.createDocumentFragment();
+    items.forEach(item => {
+        const li = document.createElement('li');
+        li.textContent = item;
+        fragment.appendChild(li);
+    });
+    list.appendChild(fragment);
 }
 function updateStatsView() {
     const state = getState();
@@ -313,6 +382,8 @@ function evaluateCriticalWarnings() {
 }
 function render() {
     const state = getState();
+    const coreManager = getGameStateInstance();
+    const coreStats = coreManager.getStats();
     applyTheme(state.theme);
     updateThemeButtons(state.theme);
     const tutorialOverlay = $('tutorialOverlay');
@@ -347,15 +418,16 @@ function render() {
     else {
         document.title = baseTitle;
     }
-    setBar($('hungerBar'), state.hunger);
-    setBar($('happyBar'), state.happy);
+    setBar($('hungerBar'), coreStats.hunger);
+    setBar($('happyBar'), coreStats.happiness);
     setBar($('cleanBar'), state.clean);
-    setBar($('energyBar'), state.energy);
+    setBar($('energyBar'), coreStats.energy);
     const coinsLabel = $('coins');
     if (coinsLabel) {
         coinsLabel.textContent = String(state.coins);
     }
-    setExpression(computeMood(), pickAccessories(state));
+    setExpression(computeMood(coreStats), pickAccessories(state));
+    renderInventory(coreManager.getInventory());
     updateStatsView();
     evaluateCriticalWarnings();
     updateAnalyticsToggle(state.analyticsOptIn);
@@ -369,12 +441,13 @@ function triggerOtterAnimation(animation) {
     }
     // Optional: Switch to specific action images if available
     const baseAccessories = pickAccessories(getState());
+    const resolveMood = () => computeMood(getGameStateInstance().getStats());
     if (animation === 'feed') {
         img.src = buildOtterImage('otter_eat', baseAccessories).src;
         img.classList.add('hop', 'eating');
         window.setTimeout(() => {
             img.classList.remove('hop', 'eating');
-            setExpression(currentMood, pickAccessories(getState())); // Re-ensure correct mood image
+            setExpression(resolveMood(), pickAccessories(getState()));
         }, 1500);
     }
     else if (animation === 'bathe') {
@@ -382,7 +455,7 @@ function triggerOtterAnimation(animation) {
         img.classList.add('bathing');
         window.setTimeout(() => {
             img.classList.remove('bathing');
-            setExpression(currentMood, pickAccessories(getState()));
+            setExpression(resolveMood(), pickAccessories(getState()));
         }, 1600);
     }
     else if (animation === 'sleep') {
@@ -390,7 +463,7 @@ function triggerOtterAnimation(animation) {
         img.classList.add('rest');
         window.setTimeout(() => {
             img.classList.remove('rest');
-            setExpression(computeMood(), pickAccessories(getState()));
+            setExpression(resolveMood(), pickAccessories(getState()));
         }, 4000);
     }
 }
@@ -421,8 +494,9 @@ function initActionButtons() {
         const confirmed = window.confirm('Sei sicuro di voler ricominciare da zero?');
         if (confirmed) {
             resetState();
+            getGameStateInstance().setInventory([]);
+            syncManagerWithLegacyCoreStats();
             recordEvent('reset');
-            render();
             showAlert('Nuova lontra creata. Prenditene cura!', 'info');
         }
     });
@@ -444,7 +518,6 @@ function initShop() {
                     setScarfOwned(true);
                 }
                 rewardItemPurchase(item);
-                render();
                 showAlert('Acquisto completato! Trovi il nuovo oggetto sulla lontra.', 'info');
             }
             else {
@@ -894,6 +967,13 @@ export function initUI() {
     initNamePrompt();
     initTutorial();
     initUpdateBanner();
+    initGiftModal();
+    window.addEventListener('pebble-inventory-changed', event => {
+        const detail = event.detail;
+        if (detail) {
+            renderInventory(detail.inventory);
+        }
+    });
     const overlayEl = $('overlay');
     const areaEl = $('fishArea');
     const scoreEl = $('miniScore');
