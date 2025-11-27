@@ -109,9 +109,11 @@ interface BeforeInstallPromptEvent extends Event {
   userChoice: Promise<{ outcome: 'accepted' | 'dismissed'; platform: string }>;
 }
 
-let currentMood: Mood = 'neutral';
-let currentOutfit: OutfitKey = 'base';
-let hasRenderedOnce = false;
+const otterElements = new Set<HTMLImageElement>();
+const otterRenderCache = new WeakMap<HTMLImageElement, { mood: Mood; outfit: OutfitKey }>();
+const otterAnimationTimers = new WeakMap<HTMLImageElement, number>();
+let latestMood: Mood = 'neutral';
+let latestAccessories: AccessoryState = { hat: false, scarf: false, sunglasses: false };
 let alertTimeoutId: number | null = null;
 let updateConfirm: (() => void) | null = null;
 let updateDismiss: (() => void) | null = null;
@@ -433,26 +435,59 @@ function hideInstallBanner(): void {
   installBannerVisible = false;
 }
 
-function setExpression(mood: Mood, accessories: AccessoryState): void {
-  const img = $('otterImage') as HTMLImageElement | null;
-  if (!img) {
-    return;
-  }
+function collectOtterElements(): void {
+  otterElements.clear();
+  document.querySelectorAll<HTMLImageElement>('.otter-img').forEach(img => {
+    otterElements.add(img);
+  });
+}
 
-  const { src, outfit } = buildOtterImage(`otter_${mood}`, accessories);
-  if (hasRenderedOnce && currentMood === mood && currentOutfit === outfit) {
-    return;
-  }
-
-  img.src = src;
-
-  img.classList.remove('happy', 'sad', 'sleepy');
+function applyMoodClasses(element: HTMLImageElement, mood: Mood): void {
+  element.classList.remove('happy', 'sad', 'sleepy');
   if (mood !== 'neutral') {
-    img.classList.add(mood);
+    element.classList.add(mood);
   }
-  currentMood = mood;
-  currentOutfit = outfit;
-  hasRenderedOnce = true;
+}
+
+function applyExpressionToElement(
+  element: HTMLImageElement,
+  mood: Mood,
+  accessories: AccessoryState,
+  force = false
+): void {
+  const { src, outfit } = buildOtterImage(`otter_${mood}`, accessories);
+  const cached = otterRenderCache.get(element);
+  if (!force && cached && cached.mood === mood && cached.outfit === outfit) {
+    return;
+  }
+  otterRenderCache.set(element, { mood, outfit });
+  element.src = src;
+  applyMoodClasses(element, mood);
+}
+
+function syncOtterExpressions(options: { force?: boolean } = {}): void {
+  if (!otterElements.size) {
+    collectOtterElements();
+  }
+  const mood = latestMood;
+  const accessories = latestAccessories;
+  otterElements.forEach(element => {
+    if (!options.force && element.dataset.animating) {
+      return;
+    }
+    applyExpressionToElement(element, mood, accessories, options.force ?? false);
+  });
+}
+
+function getActiveOtterElement(): HTMLImageElement | null {
+  const activeScene = document.querySelector<HTMLElement>('.scene.active');
+  if (activeScene) {
+    const activeOtter = activeScene.querySelector<HTMLImageElement>('.otter-img');
+    if (activeOtter) {
+      return activeOtter;
+    }
+  }
+  return $('otterImage') as HTMLImageElement | null;
 }
 
 function computeMood(core: CoreStats): Mood {
@@ -615,7 +650,11 @@ function render(): void {
   if (coinsLabel) {
     coinsLabel.textContent = String(state.coins);
   }
-  setExpression(computeMood(coreStats), pickAccessories(state));
+  const mood = computeMood(coreStats);
+  const accessories = pickAccessories(state);
+  latestMood = mood;
+  latestAccessories = accessories;
+  syncOtterExpressions();
   renderInventory(coreManager.getInventory());
   updateStatsView();
   evaluateCriticalWarnings();
@@ -625,36 +664,51 @@ function render(): void {
 }
 
 function triggerOtterAnimation(animation: 'feed' | 'bathe' | 'sleep'): void {
-  const img = $('otterImage') as HTMLImageElement | null;
-  if (!img) {
+  const target = getActiveOtterElement();
+  if (!target) {
     return;
   }
 
-  // Optional: Switch to specific action images if available
-  const baseAccessories = pickAccessories(getState());
-  const resolveMood = () => computeMood(getGameStateInstance().getStats());
+  const previousTimer = otterAnimationTimers.get(target);
+  if (typeof previousTimer === 'number') {
+    window.clearTimeout(previousTimer);
+    otterAnimationTimers.delete(target);
+  }
+
+  target.classList.remove('hop', 'eating', 'bathing', 'rest');
+  target.classList.remove('happy', 'sad', 'sleepy');
+  target.dataset.animating = animation;
+
+  const accessories = pickAccessories(getState());
+  const applyAction = (assetBase: string, classes: string[], duration: number): void => {
+    const { src } = buildOtterImage(assetBase, accessories);
+    otterRenderCache.delete(target);
+    target.src = src;
+    if (classes.length) {
+      target.classList.add(...classes);
+    }
+    const timerId = window.setTimeout(() => {
+      if (classes.length) {
+        target.classList.remove(...classes);
+      }
+      delete target.dataset.animating;
+      otterAnimationTimers.delete(target);
+      const state = getState();
+      const mood = computeMood(getGameStateInstance().getStats());
+      const refreshedAccessories = pickAccessories(state);
+      latestMood = mood;
+      latestAccessories = refreshedAccessories;
+      syncOtterExpressions({ force: true });
+    }, duration);
+    otterAnimationTimers.set(target, timerId);
+  };
 
   if (animation === 'feed') {
-    img.src = buildOtterImage('otter_eat', baseAccessories).src;
-    img.classList.add('hop', 'eating');
-    window.setTimeout(() => {
-      img.classList.remove('hop', 'eating');
-      setExpression(resolveMood(), pickAccessories(getState()));
-    }, 1500);
+    applyAction('otter_eat', ['hop', 'eating'], 1500);
   } else if (animation === 'bathe') {
-    img.src = buildOtterImage('otter_bath', baseAccessories).src;
-    img.classList.add('bathing');
-    window.setTimeout(() => {
-      img.classList.remove('bathing');
-      setExpression(resolveMood(), pickAccessories(getState()));
-    }, 1600);
+    applyAction('otter_bath', ['bathing'], 1600);
   } else if (animation === 'sleep') {
-    img.src = buildOtterImage('otter_sleepy', baseAccessories).src;
-    img.classList.add('rest');
-    window.setTimeout(() => {
-      img.classList.remove('rest');
-      setExpression(resolveMood(), pickAccessories(getState()));
-    }, 4000);
+    applyAction('otter_sleepy', ['rest'], 4000);
   }
 }
 
@@ -707,6 +761,8 @@ function initKitchenScene(): void {
   }
 
   let currentFood: string | null = null;
+  let suppressNextClick = false;
+  let touchDrag: { button: HTMLButtonElement; pointerId: number; foodKey: string | null } | null = null;
 
   const setActiveFood = (button: HTMLButtonElement | null): void => {
     foodButtons.forEach(btn => {
@@ -727,6 +783,37 @@ function initKitchenScene(): void {
     dropZone.classList.remove('drag-over');
     currentFood = null;
     setActiveFood(null);
+    foodButtons.forEach(btn => btn.classList.remove('dragging'));
+  };
+
+  const isTouchPointer = (event: PointerEvent): boolean =>
+    event.pointerType === 'touch' || event.pointerType === 'pen';
+
+  const isPointInsideDropZone = (x: number, y: number): boolean => {
+    const rect = dropZone.getBoundingClientRect();
+    return x >= rect.left && x <= rect.right && y >= rect.top && y <= rect.bottom;
+  };
+
+  const finishTouchDrag = (event: PointerEvent, drop: boolean): void => {
+    if (!touchDrag || touchDrag.pointerId !== event.pointerId) {
+      return;
+    }
+    try {
+      touchDrag.button.releasePointerCapture(event.pointerId);
+    } catch (error) {
+      void error;
+    }
+    if (drop) {
+      suppressNextClick = true;
+      feedWithSnack(touchDrag.foodKey);
+      window.setTimeout(() => {
+        suppressNextClick = false;
+      }, 0);
+    } else {
+      suppressNextClick = false;
+    }
+    touchDrag = null;
+    resetDragState();
   };
 
   dropZone.addEventListener('dragover', event => {
@@ -746,6 +833,49 @@ function initKitchenScene(): void {
   });
 
   foodButtons.forEach(button => {
+    button.addEventListener('pointerdown', event => {
+      if (!isTouchPointer(event)) {
+        return;
+      }
+      touchDrag = {
+        button,
+        pointerId: event.pointerId,
+        foodKey: button.dataset.food ?? null
+      };
+      currentFood = touchDrag.foodKey;
+      setActiveFood(button);
+      button.classList.add('dragging');
+      try {
+        button.setPointerCapture(event.pointerId);
+      } catch (error) {
+        void error;
+      }
+      dropZone.classList.toggle('drag-over', isPointInsideDropZone(event.clientX, event.clientY));
+      event.preventDefault();
+    });
+
+    button.addEventListener('pointermove', event => {
+      if (!touchDrag || touchDrag.pointerId !== event.pointerId) {
+        return;
+      }
+      dropZone.classList.toggle('drag-over', isPointInsideDropZone(event.clientX, event.clientY));
+    });
+
+    button.addEventListener('pointerup', event => {
+      if (!touchDrag || touchDrag.pointerId !== event.pointerId) {
+        return;
+      }
+      const shouldDrop = isPointInsideDropZone(event.clientX, event.clientY);
+      finishTouchDrag(event, shouldDrop);
+    });
+
+    button.addEventListener('pointercancel', event => {
+      if (!touchDrag || touchDrag.pointerId !== event.pointerId) {
+        return;
+      }
+      finishTouchDrag(event, false);
+    });
+
     button.addEventListener('dragstart', event => {
       const foodKey = button.dataset.food ?? null;
       currentFood = foodKey;
@@ -758,11 +888,14 @@ function initKitchenScene(): void {
     });
 
     button.addEventListener('dragend', () => {
-      button.classList.remove('dragging');
       resetDragState();
     });
 
     button.addEventListener('click', () => {
+      if (suppressNextClick) {
+        suppressNextClick = false;
+        return;
+      }
       setActiveFood(button);
       currentFood = button.dataset.food ?? null;
       feedWithSnack(button.dataset.food ?? null);
@@ -840,6 +973,9 @@ function initNavigation(): void {
       element.classList.toggle('active', isVisible);
       element.setAttribute('aria-hidden', String(!isVisible));
     });
+
+    collectOtterElements();
+    syncOtterExpressions();
 
     recordEvent(`nav:${scene}`);
 
@@ -1394,6 +1530,7 @@ export function initUI(): void {
     });
   }
 
+  collectOtterElements();
   subscribe(() => render());
   render();
 
