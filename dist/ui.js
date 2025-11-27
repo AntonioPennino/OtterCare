@@ -193,6 +193,7 @@ function toggleOverlayVisibility(element, show) {
 }
 let giftModalOpen = false;
 let denJournalOpen = false;
+let settingsModalOpen = false;
 function setGiftModalVisibility(show) {
     const overlay = $('giftOverlay');
     if (!overlay) {
@@ -208,6 +209,14 @@ function hideGiftModal() {
     const trigger = $('giftCloseBtn');
     trigger?.blur();
 }
+function recomputeOverlayState() {
+    const nameOverlay = $('nameOverlay');
+    const tutorialOverlay = $('tutorialOverlay');
+    const isNameOpen = Boolean(nameOverlay && !nameOverlay.classList.contains('hidden'));
+    const isTutorialOpen = Boolean(tutorialOverlay && !tutorialOverlay.classList.contains('hidden'));
+    const anyOverlayOpen = settingsModalOpen || isNameOpen || isTutorialOpen;
+    document.body.classList.toggle('overlay-active', anyOverlayOpen);
+}
 function setDenJournalVisibility(visible) {
     const journal = $('denJournal');
     const toggleBtn = $('statsToggleBtn');
@@ -220,6 +229,21 @@ function setDenJournalVisibility(visible) {
         toggleBtn.setAttribute('aria-expanded', String(visible));
         toggleBtn.textContent = visible ? 'Chiudi diario e statistiche' : 'Apri diario e statistiche';
     }
+}
+function setSettingsOverlayVisibility(visible) {
+    const overlay = $('settingsOverlay');
+    const settingsBtn = $('settingsBtn');
+    const closeBtn = $('settingsCloseBtn');
+    settingsModalOpen = visible;
+    toggleOverlayVisibility(overlay, visible);
+    overlay?.classList.toggle('active', visible);
+    if (settingsBtn) {
+        settingsBtn.setAttribute('aria-expanded', String(visible));
+    }
+    if (visible) {
+        window.setTimeout(() => closeBtn?.focus(), 0);
+    }
+    recomputeOverlayState();
 }
 export function showGiftModal(item) {
     const title = $('giftTitle');
@@ -249,6 +273,31 @@ function initGiftModal() {
     window.addEventListener('keydown', event => {
         if (event.key === 'Escape' && giftModalOpen) {
             hideGiftModal();
+        }
+    });
+}
+function initSettingsOverlay() {
+    const settingsBtn = $('settingsBtn');
+    const closeBtn = $('settingsCloseBtn');
+    const overlay = $('settingsOverlay');
+    settingsBtn?.setAttribute('aria-expanded', 'false');
+    settingsBtn?.addEventListener('click', () => {
+        setSettingsOverlayVisibility(true);
+    });
+    closeBtn?.addEventListener('click', () => {
+        setSettingsOverlayVisibility(false);
+        settingsBtn?.focus();
+    });
+    overlay?.addEventListener('click', event => {
+        if (event.target === overlay) {
+            setSettingsOverlayVisibility(false);
+            settingsBtn?.focus();
+        }
+    });
+    window.addEventListener('keydown', event => {
+        if (event.key === 'Escape' && settingsModalOpen) {
+            setSettingsOverlayVisibility(false);
+            settingsBtn?.focus();
         }
     });
 }
@@ -426,7 +475,7 @@ function render() {
     const shouldShowTutorial = !state.tutorialSeen && state.petNameConfirmed;
     toggleOverlayVisibility(nameOverlay, shouldShowNamePrompt);
     toggleOverlayVisibility(tutorialOverlay, shouldShowTutorial);
-    document.body.classList.toggle('overlay-active', shouldShowNamePrompt || shouldShowTutorial);
+    recomputeOverlayState();
     if (shouldShowNamePrompt) {
         if (!hasFocusedNamePrompt) {
             const nameInput = $('petNameInput');
@@ -591,10 +640,12 @@ function initKitchenScene() {
         });
         button.addEventListener('click', () => {
             setActiveFood(button);
+            currentFood = button.dataset.food ?? null;
             feedWithSnack(button.dataset.food ?? null);
         });
     });
     quickFeedBtn?.addEventListener('click', () => {
+        currentFood = null;
         setActiveFood(null);
         feedWithSnack(null);
     });
@@ -1125,6 +1176,7 @@ export function initUI() {
     initKitchenScene();
     initShop();
     initDenJournal();
+    initSettingsOverlay();
     initNavigation();
     initBlink();
     initAnalyticsToggle();

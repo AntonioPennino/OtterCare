@@ -48,9 +48,19 @@
           <button class="desktop-nav-item" data-page="shop" aria-pressed="false">Mercante</button>
         </nav>
       </div>
-      <div class="coins-display" aria-live="polite">
-        <span aria-hidden="true">🪙</span>
-        <span id="coins">0</span>
+      <div class="header-right">
+        <button
+          id="settingsBtn"
+          class="icon-btn settings-btn"
+          type="button"
+          aria-haspopup="dialog"
+          aria-controls="settingsOverlay"
+          aria-label="Apri impostazioni"
+        >⚙️</button>
+        <div class="coins-display" aria-live="polite">
+          <span aria-hidden="true">🪙</span>
+          <span id="coins">0</span>
+        </div>
       </div>
     </div>
   </header>
@@ -111,8 +121,9 @@
       <div id="denJournal" class="den-journal hidden" aria-hidden="true">
         <div class="den-journal__header">
           <h2>Diario di Pebble</h2>
-          <p class="small-text">Statistiche e preferenze del tuo compagno di fiume.</p>
+          <p class="small-text">Statistiche rapide del tuo compagno di fiume.</p>
         </div>
+        <p class="den-journal__note">Controlla fame, energia, pulizia e felicità per capire cosa desidera Pebble.</p>
         <div class="status-container" role="list">
           <div class="status-item" role="listitem">
             <div class="status-icon" aria-hidden="true">🍗</div>
@@ -138,89 +149,6 @@
               <div id="energyBar" class="progress-fill"></div>
             </div>
           </div>
-        </div>
-        <div class="den-journal__grid">
-          <div class="stats-card">
-            <div class="stat-row">
-              <span>🪙 Sassolini totali</span>
-              <span id="statCoins" class="stat-value">0</span>
-            </div>
-            <div class="stat-row">
-              <span>🎮 Giochi completati</span>
-              <span id="statGames" class="stat-value">0</span>
-            </div>
-            <div class="stat-row">
-              <span>🐟 Pesci catturati</span>
-              <span id="statFish" class="stat-value">0</span>
-            </div>
-            <div class="stat-row">
-              <span>🎩 Oggetti acquistati</span>
-              <span id="statItems" class="stat-value">0</span>
-            </div>
-          </div>
-          <div class="inventory-card">
-            <h3>Collezione</h3>
-            <p id="inventoryEmpty" class="small-text">Ancora nessun ricordo trovato. Torna più tardi per scoprire nuove sorprese!</p>
-            <ul id="inventoryList" class="inventory-list hidden" aria-live="polite"></ul>
-          </div>
-        </div>
-        <div class="settings-card">
-          <h3>Impostazioni</h3>
-          <label class="toggle-row">
-            <span>Statistiche anonime</span>
-            <input type="checkbox" id="analyticsOptInToggle" />
-            <span class="toggle-switch"></span>
-          </label>
-          <p id="analyticsSummary" class="small-text">Statistiche disattivate.</p>
-          <div class="theme-section">
-            <h4>Tema</h4>
-            <p class="small-text">Scegli l'atmosfera: comfort abbassa la luminosità serale.</p>
-            <div class="theme-actions">
-              <button id="themeLightBtn" class="secondary-btn" type="button">Luce</button>
-              <button id="themeComfortBtn" class="secondary-btn" type="button">Comfort</button>
-            </div>
-          </div>
-          <div class="notification-section">
-            <h4>Promemoria lontra</h4>
-            <p id="notificationUnsupported" class="small-text warning-text hidden">Il tuo dispositivo non supporta le notifiche push.</p>
-            <p id="notificationStatus" class="small-text">Promemoria disattivati.</p>
-            <p id="notificationNextDetails" class="small-text"></p>
-            <div class="notification-actions">
-              <button id="notificationEnableBtn" class="primary-btn" type="button">Attiva promemoria</button>
-              <button id="notificationDisableBtn" class="secondary-btn" type="button">Disattiva</button>
-            </div>
-          </div>
-          <div class="backup-section">
-            <h4>Backup salvataggi</h4>
-            <p class="small-text">Esporta un file di sicurezza o ripristina i tuoi progressi su un nuovo dispositivo.</p>
-            <div class="backup-actions">
-              <button id="backupExportBtn" class="secondary-btn">Scarica backup</button>
-              <button id="backupImportBtn" class="secondary-btn">Ripristina backup</button>
-            </div>
-            <input id="backupFileInput" class="visually-hidden" type="file" accept="application/json" aria-label="Seleziona file di backup" />
-          </div>
-          <div class="cloud-sync-section">
-            <h4>Sincronizzazione cloud</h4>
-            <p id="cloudSyncConfigWarning" class="small-text warning-text hidden">Imposta le chiavi Supabase in config.js per attivare il cloud sync.</p>
-            <p id="cloudSyncStatus" class="small-text">Sincronizzazione cloud non attiva.</p>
-            <div id="cloudSyncCodeWrapper" class="cloud-code-row hidden" aria-live="polite">
-              <code id="cloudSyncCode" class="cloud-code">----</code>
-              <button id="cloudSyncCopyBtn" class="small-btn" type="button">Copia codice</button>
-            </div>
-            <div class="cloud-sync-actions">
-              <button id="cloudSyncEnableBtn" class="primary-btn" type="button">Attiva cloud sync</button>
-              <button id="cloudSyncSyncBtn" class="secondary-btn hidden" type="button">Sincronizza ora</button>
-              <button id="cloudSyncDisableBtn" class="secondary-btn danger hidden" type="button">Disattiva</button>
-            </div>
-            <div class="cloud-sync-import">
-              <label for="cloudSyncCodeInput" class="small-text">Hai già un codice? Inseriscilo per recuperare la tua lontra.</label>
-              <div class="cloud-sync-input">
-                <input id="cloudSyncCodeInput" type="text" inputmode="text" autocomplete="off" maxlength="64" placeholder="es. abcd-1234-efgh" />
-                <button id="cloudSyncImportBtn" class="secondary-btn" type="button">Collega dispositivo</button>
-              </div>
-            </div>
-          </div>
-          <button id="resetBtn" class="danger-btn">Reset Gioco</button>
         </div>
       </div>
     </section>
@@ -380,6 +308,90 @@
         <span class="toggle-switch"></span>
       </label>
       <button id="tutorialStart" class="primary-btn full-width">Inizia l'avventura</button>
+    </div>
+  </div>
+
+  <div
+    id="settingsOverlay"
+    class="overlay hidden"
+    role="dialog"
+    aria-modal="true"
+    aria-hidden="true"
+    aria-labelledby="settingsTitle"
+  >
+    <div class="settings-modal">
+      <div class="settings-modal__header">
+        <h2 id="settingsTitle">Impostazioni</h2>
+        <button id="settingsCloseBtn" class="icon-btn settings-close-btn" type="button" aria-label="Chiudi impostazioni">✕</button>
+      </div>
+      <div class="settings-modal__content">
+        <div class="settings-card">
+          <h3>Preferenze</h3>
+          <label class="toggle-row">
+            <span>Statistiche anonime</span>
+            <input type="checkbox" id="analyticsOptInToggle" />
+            <span class="toggle-switch"></span>
+          </label>
+          <p id="analyticsSummary" class="small-text">Statistiche disattivate.</p>
+          <div class="theme-section">
+            <h4>Tema</h4>
+            <p class="small-text">Scegli l'atmosfera: comfort abbassa la luminosità serale.</p>
+            <div class="theme-actions">
+              <button id="themeLightBtn" class="secondary-btn" type="button">Luce</button>
+              <button id="themeComfortBtn" class="secondary-btn" type="button">Comfort</button>
+            </div>
+          </div>
+          <div class="notification-section">
+            <h4>Promemoria lontra</h4>
+            <p id="notificationUnsupported" class="small-text warning-text hidden">Il tuo dispositivo non supporta le notifiche push.</p>
+            <p id="notificationStatus" class="small-text">Promemoria disattivati.</p>
+            <p id="notificationNextDetails" class="small-text"></p>
+            <div class="notification-actions">
+              <button id="notificationEnableBtn" class="primary-btn" type="button">Attiva promemoria</button>
+              <button id="notificationDisableBtn" class="secondary-btn" type="button">Disattiva</button>
+            </div>
+          </div>
+        </div>
+        <div class="settings-card">
+          <h3>Backup e sincronizzazione</h3>
+          <div class="backup-section">
+            <h4>Backup salvataggi</h4>
+            <p class="small-text">Esporta un file di sicurezza o ripristina i tuoi progressi su un nuovo dispositivo.</p>
+            <div class="backup-actions">
+              <button id="backupExportBtn" class="secondary-btn">Scarica backup</button>
+              <button id="backupImportBtn" class="secondary-btn">Ripristina backup</button>
+            </div>
+            <input id="backupFileInput" class="visually-hidden" type="file" accept="application/json" aria-label="Seleziona file di backup" />
+          </div>
+          <div class="cloud-sync-section">
+            <h4>Sincronizzazione cloud</h4>
+            <p id="cloudSyncConfigWarning" class="small-text warning-text hidden">Imposta le chiavi Supabase in config.js per attivare il cloud sync.</p>
+            <p id="cloudSyncStatus" class="small-text">Sincronizzazione cloud non attiva.</p>
+            <div id="cloudSyncCodeWrapper" class="cloud-code-row hidden" aria-live="polite">
+              <code id="cloudSyncCode" class="cloud-code">----</code>
+              <button id="cloudSyncCopyBtn" class="small-btn" type="button">Copia codice</button>
+            </div>
+            <div class="cloud-sync-actions">
+              <button id="cloudSyncEnableBtn" class="primary-btn" type="button">Attiva cloud sync</button>
+              <button id="cloudSyncSyncBtn" class="secondary-btn hidden" type="button">Sincronizza ora</button>
+              <button id="cloudSyncDisableBtn" class="secondary-btn danger hidden" type="button">Disattiva</button>
+            </div>
+            <div class="cloud-sync-import">
+              <label for="cloudSyncCodeInput" class="small-text">Hai già un codice? Inseriscilo per recuperare la tua lontra.</label>
+              <div class="cloud-sync-input">
+                <input id="cloudSyncCodeInput" type="text" inputmode="text" autocomplete="off" maxlength="64" placeholder="es. abcd-1234-efgh" />
+                <button id="cloudSyncImportBtn" class="secondary-btn" type="button">Collega dispositivo</button>
+              </div>
+            </div>
+          </div>
+          <button id="resetBtn" class="danger-btn">Reset Gioco</button>
+        </div>
+        <div class="inventory-card">
+          <h3>Collezione</h3>
+          <p id="inventoryEmpty" class="small-text">Ancora nessun ricordo trovato. Torna più tardi per scoprire nuove sorprese!</p>
+          <ul id="inventoryList" class="inventory-list hidden" aria-live="polite"></ul>
+        </div>
+      </div>
     </div>
   </div>
 

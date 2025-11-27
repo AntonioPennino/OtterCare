@@ -147,6 +147,12 @@ header {
   gap: 20px;
 }
 
+.header-right {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
 .desktop-nav {
   display: none;
   gap: 8px;
@@ -260,6 +266,12 @@ main.no-scroll {
 
 .scene-action {
   align-self: center;
+}
+
+.den-journal__note {
+  margin: 0;
+  color: var(--text-muted);
+  font-size: 0.9rem;
 }
 
 /* Den Scene */
@@ -1021,6 +1033,45 @@ input[type="checkbox"]:checked + .toggle-switch::after {
   padding: 20px;
 }
 
+.settings-modal {
+  background: var(--modal-bg);
+  color: var(--text-main);
+  width: min(92vw, 680px);
+  max-height: min(92vh, 720px);
+  border-radius: 28px;
+  box-shadow: var(--modal-shadow);
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  padding: 28px;
+}
+
+.settings-modal__header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 16px;
+}
+
+.settings-modal__header h2 {
+  margin: 0;
+  font-size: 1.6rem;
+  color: var(--primary-dark);
+}
+
+.settings-modal__content {
+  overflow-y: auto;
+  padding-right: 4px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.settings-modal__content .settings-card,
+.settings-modal__content .inventory-card {
+  margin-bottom: 0;
+}
+
 .hidden {
   display: none !important;
 }
@@ -1493,6 +1544,34 @@ body.theme-comfort .tutorial-overlay {
   box-shadow: 0 10px 24px rgba(0, 0, 0, 0.18);
 }
 
+.icon-btn.settings-btn {
+  background: rgba(106, 191, 171, 0.18);
+  color: var(--accent);
+  box-shadow: none;
+  border-radius: 14px;
+  padding: 6px 10px;
+  font-size: 1.35rem;
+  transition: background 0.2s ease, color 0.2s ease;
+}
+
+.icon-btn.settings-btn:hover,
+.icon-btn.settings-btn:focus-visible {
+  background: rgba(106, 191, 171, 0.28);
+  color: var(--primary);
+}
+
+.icon-btn.settings-close-btn {
+  background: rgba(92, 82, 72, 0.12);
+  box-shadow: none;
+  border-radius: 12px;
+  padding: 6px;
+}
+
+.icon-btn.settings-close-btn:hover,
+.icon-btn.settings-close-btn:focus-visible {
+  background: rgba(92, 82, 72, 0.22);
+}
+
 /* Image Animations */
 .otter-img {
   width: 100%;
@@ -1723,6 +1802,13 @@ body.theme-comfort .tutorial-overlay {
 
   .cloud-sync-input button {
     width: 100%;
+  }
+
+  .settings-modal {
+    width: 100%;
+    max-height: 100%;
+    padding: 24px 18px;
+    border-radius: 20px;
   }
 }
 

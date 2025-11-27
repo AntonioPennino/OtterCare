@@ -261,6 +261,7 @@ function toggleOverlayVisibility(element: HTMLElement | null, show: boolean): vo
 
 let giftModalOpen = false;
 let denJournalOpen = false;
+let settingsModalOpen = false;
 
 function setGiftModalVisibility(show: boolean): void {
   const overlay = $('giftOverlay');
@@ -279,6 +280,15 @@ function hideGiftModal(): void {
   trigger?.blur();
 }
 
+function recomputeOverlayState(): void {
+  const nameOverlay = $('nameOverlay');
+  const tutorialOverlay = $('tutorialOverlay');
+  const isNameOpen = Boolean(nameOverlay && !nameOverlay.classList.contains('hidden'));
+  const isTutorialOpen = Boolean(tutorialOverlay && !tutorialOverlay.classList.contains('hidden'));
+  const anyOverlayOpen = settingsModalOpen || isNameOpen || isTutorialOpen;
+  document.body.classList.toggle('overlay-active', anyOverlayOpen);
+}
+
 function setDenJournalVisibility(visible: boolean): void {
   const journal = $('denJournal');
   const toggleBtn = $('statsToggleBtn') as HTMLButtonElement | null;
@@ -291,6 +301,22 @@ function setDenJournalVisibility(visible: boolean): void {
     toggleBtn.setAttribute('aria-expanded', String(visible));
     toggleBtn.textContent = visible ? 'Chiudi diario e statistiche' : 'Apri diario e statistiche';
   }
+}
+
+function setSettingsOverlayVisibility(visible: boolean): void {
+  const overlay = $('settingsOverlay');
+  const settingsBtn = $('settingsBtn') as HTMLButtonElement | null;
+  const closeBtn = $('settingsCloseBtn') as HTMLButtonElement | null;
+  settingsModalOpen = visible;
+  toggleOverlayVisibility(overlay, visible);
+  overlay?.classList.toggle('active', visible);
+  if (settingsBtn) {
+    settingsBtn.setAttribute('aria-expanded', String(visible));
+  }
+  if (visible) {
+    window.setTimeout(() => closeBtn?.focus(), 0);
+  }
+  recomputeOverlayState();
 }
 
 export function showGiftModal(item: string): void {
@@ -322,6 +348,37 @@ function initGiftModal(): void {
   window.addEventListener('keydown', event => {
     if (event.key === 'Escape' && giftModalOpen) {
       hideGiftModal();
+    }
+  });
+}
+
+function initSettingsOverlay(): void {
+  const settingsBtn = $('settingsBtn') as HTMLButtonElement | null;
+  const closeBtn = $('settingsCloseBtn') as HTMLButtonElement | null;
+  const overlay = $('settingsOverlay');
+
+  settingsBtn?.setAttribute('aria-expanded', 'false');
+
+  settingsBtn?.addEventListener('click', () => {
+    setSettingsOverlayVisibility(true);
+  });
+
+  closeBtn?.addEventListener('click', () => {
+    setSettingsOverlayVisibility(false);
+    settingsBtn?.focus();
+  });
+
+  overlay?.addEventListener('click', event => {
+    if (event.target === overlay) {
+      setSettingsOverlayVisibility(false);
+      settingsBtn?.focus();
+    }
+  });
+
+  window.addEventListener('keydown', event => {
+    if (event.key === 'Escape' && settingsModalOpen) {
+      setSettingsOverlayVisibility(false);
+      settingsBtn?.focus();
     }
   });
 }
@@ -519,7 +576,7 @@ function render(): void {
 
   toggleOverlayVisibility(nameOverlay, shouldShowNamePrompt);
   toggleOverlayVisibility(tutorialOverlay, shouldShowTutorial);
-  document.body.classList.toggle('overlay-active', shouldShowNamePrompt || shouldShowTutorial);
+  recomputeOverlayState();
 
   if (shouldShowNamePrompt) {
     if (!hasFocusedNamePrompt) {
@@ -703,11 +760,13 @@ function initKitchenScene(): void {
 
     button.addEventListener('click', () => {
       setActiveFood(button);
+      currentFood = button.dataset.food ?? null;
       feedWithSnack(button.dataset.food ?? null);
     });
   });
 
   quickFeedBtn?.addEventListener('click', () => {
+    currentFood = null;
     setActiveFood(null);
     feedWithSnack(null);
   });
@@ -1290,6 +1349,7 @@ export function initUI(): void {
   initKitchenScene();
   initShop();
   initDenJournal();
+  initSettingsOverlay();
   initNavigation();
   initBlink();
   initAnalyticsToggle();
