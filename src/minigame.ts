@@ -1,5 +1,5 @@
 import { rewardFishCatch, rewardMiniGameStart } from './gameActions.js';
-import { playSound } from './audio.js';
+import { audioManager, resumeAudioContext } from './audio.js';
 
 interface MiniGameElements {
   overlay: HTMLElement;
@@ -73,11 +73,13 @@ function spawnItem(area: HTMLElement): void {
     score += points;
     if (score < 0) score = 0; // Prevent negative score
 
+    void resumeAudioContext();
+
     if (points > 0) {
       rewardFishCatch();
-      playSound('happy');
+      void audioManager.playSFX('happy', true);
     } else {
-      playSound('splash'); // Use 'splash' as negative sound
+      void audioManager.playSFX('splash', true); // Use 'splash' as negative sound
     }
 
     if (elements) {

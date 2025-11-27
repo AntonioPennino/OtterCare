@@ -1,6 +1,6 @@
 import { getState, markCriticalMessage, resetCriticalMessage, resetState, setAnalyticsOptIn, setInstallPromptDismissed, setPetName, setHatOwned, setSunglassesOwned, setScarfOwned, setTutorialSeen, subscribe, serializeBackup, restoreBackupFromString, setThemeMode } from './state.js';
 import { batheAction, feedAction, rewardItemPurchase, sleepAction, spendCoins } from './gameActions.js';
-import { playSound, resumeAudioContext } from './audio.js';
+import { audioManager, resumeAudioContext } from './audio.js';
 import { recordEvent } from './analytics.js';
 import { initMiniGame, isMiniGameRunning, openMiniGame } from './minigame.js';
 import { disableCloudSync, enableCloudSync, forceCloudPush, getFormattedLocalSyncCode, initCloudSyncAutoPush, onCloudSyncEvent, pullCloudState } from './cloudSyncManager.js';
@@ -469,25 +469,25 @@ function triggerOtterAnimation(animation) {
 }
 function initActionButtons() {
     $('feedBtn')?.addEventListener('click', () => {
-        resumeAudioContext();
+        void resumeAudioContext();
         feedAction();
         triggerOtterAnimation('feed');
-        playSound('feed');
+        void audioManager.playSFX('feed', true);
     });
     $('bathBtn')?.addEventListener('click', () => {
-        resumeAudioContext();
+        void resumeAudioContext();
         batheAction();
         triggerOtterAnimation('bathe');
-        playSound('splash');
+        void audioManager.playSFX('splash', true);
     });
     $('sleepBtn')?.addEventListener('click', () => {
-        resumeAudioContext();
+        void resumeAudioContext();
         sleepAction();
         triggerOtterAnimation('sleep');
     });
     $('playBtn')?.addEventListener('click', () => {
-        resumeAudioContext();
-        playSound('happy');
+        void resumeAudioContext();
+        void audioManager.playSFX('happy', true);
         openMiniGame();
     });
     $('resetBtn')?.addEventListener('click', () => {
@@ -535,6 +535,11 @@ function initNavigation() {
     };
     const mainEl = document.querySelector('main');
     const bodyEl = document.body;
+    const ambientByPage = {
+        home: { track: 'ambient-river', volume: 0.55 },
+        shop: { track: 'ambient-birds', volume: 0.4 },
+        stats: { track: 'ambient-fireplace', volume: 0.35 }
+    };
     const showPage = (page) => {
         navButtons.forEach(btn => {
             const isActive = btn.dataset.page === page;
@@ -551,6 +556,18 @@ function initNavigation() {
             element.setAttribute('aria-hidden', String(!isVisible));
         });
         recordEvent(`nav:${page}`);
+        const ambientTarget = ambientByPage[page];
+        if (ambientTarget) {
+            if (audioManager.hasAsset(ambientTarget.track)) {
+                void audioManager.playAmbient(ambientTarget.track, ambientTarget.volume);
+            }
+            else {
+                void audioManager.stopAmbient(0.8);
+            }
+        }
+        else {
+            void audioManager.stopAmbient();
+        }
         const shouldLock = page === 'home';
         if (shouldLock) {
             mainEl?.classList.add('no-scroll');
@@ -992,5 +1009,7 @@ export function initUI() {
     }
     subscribe(() => render());
     render();
-    document.addEventListener('click', () => resumeAudioContext(), { once: true });
+    document.addEventListener('click', () => {
+        void resumeAudioContext();
+    }, { once: true });
 }
