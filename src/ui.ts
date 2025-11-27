@@ -260,6 +260,7 @@ function toggleOverlayVisibility(element: HTMLElement | null, show: boolean): vo
 }
 
 let giftModalOpen = false;
+let denJournalOpen = false;
 
 function setGiftModalVisibility(show: boolean): void {
   const overlay = $('giftOverlay');
@@ -276,6 +277,20 @@ function hideGiftModal(): void {
   setGiftModalVisibility(false);
   const trigger = $('giftCloseBtn') as HTMLButtonElement | null;
   trigger?.blur();
+}
+
+function setDenJournalVisibility(visible: boolean): void {
+  const journal = $('denJournal');
+  const toggleBtn = $('statsToggleBtn') as HTMLButtonElement | null;
+  denJournalOpen = visible;
+  if (journal) {
+    journal.classList.toggle('hidden', !visible);
+    journal.setAttribute('aria-hidden', String(!visible));
+  }
+  if (toggleBtn) {
+    toggleBtn.setAttribute('aria-expanded', String(visible));
+    toggleBtn.textContent = visible ? 'Chiudi il diario' : 'Apri il diario';
+  }
 }
 
 export function showGiftModal(item: string): void {
@@ -307,6 +322,28 @@ function initGiftModal(): void {
   window.addEventListener('keydown', event => {
     if (event.key === 'Escape' && giftModalOpen) {
       hideGiftModal();
+    }
+  });
+}
+
+function initDenJournal(): void {
+  const toggleBtn = $('statsToggleBtn') as HTMLButtonElement | null;
+  if (!toggleBtn) {
+    return;
+  }
+
+  setDenJournalVisibility(false);
+
+  toggleBtn.addEventListener('click', () => {
+    setDenJournalVisibility(!denJournalOpen);
+    if (denJournalOpen) {
+      recordEvent('nav:den-journal');
+    }
+  });
+
+  document.addEventListener('keydown', event => {
+    if (event.key === 'Escape' && denJournalOpen) {
+      setDenJournalVisibility(false);
     }
   });
 }
@@ -599,6 +636,68 @@ function initActionButtons(): void {
   });
 }
 
+function initKitchenScene(): void {
+  const dropZone = $('kitchenDropZone');
+  const foodButtons = Array.from(document.querySelectorAll<HTMLButtonElement>('.food-item'));
+
+  if (!dropZone || !foodButtons.length) {
+    return;
+  }
+
+  let currentFood: string | null = null;
+
+  const feedWithSnack = (_foodKey: string | null): void => {
+    void resumeAudioContext();
+    feedAction();
+    triggerOtterAnimation('feed');
+    void audioManager.playSFX('feed', true);
+    dropZone.classList.add('fed');
+    window.setTimeout(() => dropZone.classList.remove('fed'), 1200);
+  };
+
+  const resetDragState = (): void => {
+    dropZone.classList.remove('drag-over');
+    currentFood = null;
+  };
+
+  dropZone.addEventListener('dragover', event => {
+    event.preventDefault();
+    dropZone.classList.add('drag-over');
+  });
+
+  dropZone.addEventListener('dragleave', () => {
+    dropZone.classList.remove('drag-over');
+  });
+
+  dropZone.addEventListener('drop', event => {
+    event.preventDefault();
+    const transferred = event.dataTransfer?.getData('text/plain') || currentFood;
+    feedWithSnack(transferred ?? null);
+    resetDragState();
+  });
+
+  foodButtons.forEach(button => {
+    button.addEventListener('dragstart', event => {
+      const foodKey = button.dataset.food ?? null;
+      currentFood = foodKey;
+      button.classList.add('dragging');
+      if (event.dataTransfer && foodKey) {
+        event.dataTransfer.setData('text/plain', foodKey);
+        event.dataTransfer.effectAllowed = 'move';
+      }
+    });
+
+    button.addEventListener('dragend', () => {
+      button.classList.remove('dragging');
+      resetDragState();
+    });
+
+    button.addEventListener('click', () => {
+      feedWithSnack(button.dataset.food ?? null);
+    });
+  });
+}
+
 function initShop(): void {
   const buttons = document.querySelectorAll<HTMLButtonElement>('.buy-btn');
   buttons.forEach(button => {
@@ -624,86 +723,112 @@ function initShop(): void {
 
 function initNavigation(): void {
   const navButtons = Array.from(document.querySelectorAll<HTMLButtonElement>('.nav-item, .desktop-nav-item'));
-  const pages = {
-    home: $('homePage'),
-    shop: $('shopPage'),
-    stats: $('statsPage')
-  } satisfies Record<'home' | 'shop' | 'stats', HTMLElement | null>;
+  const scenes = {
+    den: $('denPage'),
+    kitchen: $('kitchenPage'),
+    hygiene: $('hygienePage'),
+    games: $('gamesPage'),
+    shop: $('shopPage')
+  } satisfies Record<'den' | 'kitchen' | 'hygiene' | 'games' | 'shop', HTMLElement | null>;
   const mainEl = document.querySelector<HTMLElement>('main');
   const bodyEl = document.body;
 
-  type PageKey = keyof typeof pages;
+  type SceneKey = keyof typeof scenes;
 
-  const ambientByPage: Record<PageKey, { track: string; volume: number } | null> = {
-    home: { track: 'ambient-river', volume: 0.55 },
-    shop: { track: 'ambient-birds', volume: 0.4 },
-    stats: { track: 'ambient-fireplace', volume: 0.35 }
+  const ambientByScene: Partial<Record<SceneKey, { track: string; volume: number }>> = {
+    den: { track: 'ambient-fireplace', volume: 0.38 },
+    kitchen: { track: 'ambient-river', volume: 0.55 },
+    hygiene: { track: 'ambient-river', volume: 0.6 },
+    games: { track: 'ambient-birds', volume: 0.45 },
+    shop: { track: 'ambient-fireplace', volume: 0.35 }
   };
 
-  const showPage = (page: PageKey): void => {
+  const isSceneKey = (value: string): value is SceneKey =>
+    Object.prototype.hasOwnProperty.call(scenes, value);
+
+  const showScene = (scene: SceneKey): void => {
     navButtons.forEach(btn => {
-      const isActive = btn.dataset.page === page;
+      const isActive = btn.dataset.page === scene;
       btn.classList.toggle('active', isActive);
       btn.setAttribute('aria-pressed', String(isActive));
     });
 
-    (Object.entries(pages) as Array<[PageKey, HTMLElement | null]>).forEach(([key, element]) => {
+    (Object.entries(scenes) as Array<[SceneKey, HTMLElement | null]>).forEach(([key, element]) => {
       if (!element) {
         return;
       }
-      const isVisible = key === page;
+      const isVisible = key === scene;
       element.classList.toggle('hidden', !isVisible);
       element.classList.toggle('active', isVisible);
       element.setAttribute('aria-hidden', String(!isVisible));
     });
 
-    recordEvent(`nav:${page}`);
+    recordEvent(`nav:${scene}`);
 
-    const ambientTarget = ambientByPage[page];
-    if (ambientTarget) {
-      if (audioManager.hasAsset(ambientTarget.track)) {
-        void audioManager.playAmbient(ambientTarget.track, ambientTarget.volume);
-      } else {
-        void audioManager.stopAmbient(0.8);
-      }
+    const ambientTarget = ambientByScene[scene];
+    if (ambientTarget && audioManager.hasAsset(ambientTarget.track)) {
+      void audioManager.playAmbient(ambientTarget.track, ambientTarget.volume);
     } else {
       void audioManager.stopAmbient();
     }
 
-    const shouldLock = page === 'home';
-    if (shouldLock) {
-      mainEl?.classList.add('no-scroll');
-      bodyEl.classList.add('no-scroll');
-    } else {
-      mainEl?.classList.remove('no-scroll');
-      bodyEl.classList.remove('no-scroll');
+    if (scene !== 'den') {
+      setDenJournalVisibility(false);
     }
+
+    const shouldLock = scene === 'den';
+    mainEl?.classList.toggle('no-scroll', shouldLock);
+    bodyEl.classList.toggle('no-scroll', shouldLock);
   };
 
   navButtons.forEach(button => {
     button.addEventListener('click', () => {
-      const target = (button.dataset.page ?? 'home') as PageKey;
-      showPage(target);
-      window.location.hash = target === 'home' ? '' : `#${target}`;
+      const target = button.dataset.page ?? 'den';
+
+      if (target === 'stats') {
+        showScene('den');
+        setDenJournalVisibility(true);
+        window.location.hash = '#stats';
+        return;
+      }
+
+      if (!isSceneKey(target)) {
+        showScene('den');
+        window.location.hash = '';
+        return;
+      }
+
+      showScene(target);
+      window.location.hash = target === 'den' ? '' : `#${target}`;
     });
   });
 
   const applyHash = (): void => {
     const hash = window.location.hash.replace('#', '');
-    if (hash === 'shop' || hash === 'stats') {
-      showPage(hash as PageKey);
+
+    if (hash === '' || hash === 'home' || hash === 'den') {
+      showScene('den');
       return;
     }
-    if (hash === 'home' || hash === '') {
-      showPage('home');
+
+    if (hash === 'stats') {
+      showScene('den');
+      setDenJournalVisibility(true);
       return;
     }
+
     if (hash === 'play') {
-      showPage('home');
+      showScene('games');
       window.setTimeout(() => $('playBtn')?.click(), 300);
       return;
     }
-    showPage('home');
+
+    if (isSceneKey(hash)) {
+      showScene(hash);
+      return;
+    }
+
+    showScene('den');
   };
 
   window.addEventListener('hashchange', applyHash);
@@ -1147,7 +1272,9 @@ export function prepareUpdatePrompt(onConfirm: () => void, onDismiss: () => void
 
 export function initUI(): void {
   initActionButtons();
+  initKitchenScene();
   initShop();
+  initDenJournal();
   initNavigation();
   initBlink();
   initAnalyticsToggle();

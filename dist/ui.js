@@ -192,6 +192,7 @@ function toggleOverlayVisibility(element, show) {
     element.setAttribute('aria-hidden', String(!show));
 }
 let giftModalOpen = false;
+let denJournalOpen = false;
 function setGiftModalVisibility(show) {
     const overlay = $('giftOverlay');
     if (!overlay) {
@@ -206,6 +207,19 @@ function hideGiftModal() {
     setGiftModalVisibility(false);
     const trigger = $('giftCloseBtn');
     trigger?.blur();
+}
+function setDenJournalVisibility(visible) {
+    const journal = $('denJournal');
+    const toggleBtn = $('statsToggleBtn');
+    denJournalOpen = visible;
+    if (journal) {
+        journal.classList.toggle('hidden', !visible);
+        journal.setAttribute('aria-hidden', String(!visible));
+    }
+    if (toggleBtn) {
+        toggleBtn.setAttribute('aria-expanded', String(visible));
+        toggleBtn.textContent = visible ? 'Chiudi il diario' : 'Apri il diario';
+    }
 }
 export function showGiftModal(item) {
     const title = $('giftTitle');
@@ -235,6 +249,24 @@ function initGiftModal() {
     window.addEventListener('keydown', event => {
         if (event.key === 'Escape' && giftModalOpen) {
             hideGiftModal();
+        }
+    });
+}
+function initDenJournal() {
+    const toggleBtn = $('statsToggleBtn');
+    if (!toggleBtn) {
+        return;
+    }
+    setDenJournalVisibility(false);
+    toggleBtn.addEventListener('click', () => {
+        setDenJournalVisibility(!denJournalOpen);
+        if (denJournalOpen) {
+            recordEvent('nav:den-journal');
+        }
+    });
+    document.addEventListener('keydown', event => {
+        if (event.key === 'Escape' && denJournalOpen) {
+            setDenJournalVisibility(false);
         }
     });
 }
@@ -503,6 +535,57 @@ function initActionButtons() {
         }
     });
 }
+function initKitchenScene() {
+    const dropZone = $('kitchenDropZone');
+    const foodButtons = Array.from(document.querySelectorAll('.food-item'));
+    if (!dropZone || !foodButtons.length) {
+        return;
+    }
+    let currentFood = null;
+    const feedWithSnack = (_foodKey) => {
+        void resumeAudioContext();
+        feedAction();
+        triggerOtterAnimation('feed');
+        void audioManager.playSFX('feed', true);
+        dropZone.classList.add('fed');
+        window.setTimeout(() => dropZone.classList.remove('fed'), 1200);
+    };
+    const resetDragState = () => {
+        dropZone.classList.remove('drag-over');
+        currentFood = null;
+    };
+    dropZone.addEventListener('dragover', event => {
+        event.preventDefault();
+        dropZone.classList.add('drag-over');
+    });
+    dropZone.addEventListener('dragleave', () => {
+        dropZone.classList.remove('drag-over');
+    });
+    dropZone.addEventListener('drop', event => {
+        event.preventDefault();
+        const transferred = event.dataTransfer?.getData('text/plain') || currentFood;
+        feedWithSnack(transferred ?? null);
+        resetDragState();
+    });
+    foodButtons.forEach(button => {
+        button.addEventListener('dragstart', event => {
+            const foodKey = button.dataset.food ?? null;
+            currentFood = foodKey;
+            button.classList.add('dragging');
+            if (event.dataTransfer && foodKey) {
+                event.dataTransfer.setData('text/plain', foodKey);
+                event.dataTransfer.effectAllowed = 'move';
+            }
+        });
+        button.addEventListener('dragend', () => {
+            button.classList.remove('dragging');
+            resetDragState();
+        });
+        button.addEventListener('click', () => {
+            feedWithSnack(button.dataset.food ?? null);
+        });
+    });
+}
 function initShop() {
     const buttons = document.querySelectorAll('.buy-btn');
     buttons.forEach(button => {
@@ -530,79 +613,92 @@ function initShop() {
 }
 function initNavigation() {
     const navButtons = Array.from(document.querySelectorAll('.nav-item, .desktop-nav-item'));
-    const pages = {
-        home: $('homePage'),
-        shop: $('shopPage'),
-        stats: $('statsPage')
+    const scenes = {
+        den: $('denPage'),
+        kitchen: $('kitchenPage'),
+        hygiene: $('hygienePage'),
+        games: $('gamesPage'),
+        shop: $('shopPage')
     };
     const mainEl = document.querySelector('main');
     const bodyEl = document.body;
-    const ambientByPage = {
-        home: { track: 'ambient-river', volume: 0.55 },
-        shop: { track: 'ambient-birds', volume: 0.4 },
-        stats: { track: 'ambient-fireplace', volume: 0.35 }
+    const ambientByScene = {
+        den: { track: 'ambient-fireplace', volume: 0.38 },
+        kitchen: { track: 'ambient-river', volume: 0.55 },
+        hygiene: { track: 'ambient-river', volume: 0.6 },
+        games: { track: 'ambient-birds', volume: 0.45 },
+        shop: { track: 'ambient-fireplace', volume: 0.35 }
     };
-    const showPage = (page) => {
+    const isSceneKey = (value) => Object.prototype.hasOwnProperty.call(scenes, value);
+    const showScene = (scene) => {
         navButtons.forEach(btn => {
-            const isActive = btn.dataset.page === page;
+            const isActive = btn.dataset.page === scene;
             btn.classList.toggle('active', isActive);
             btn.setAttribute('aria-pressed', String(isActive));
         });
-        Object.entries(pages).forEach(([key, element]) => {
+        Object.entries(scenes).forEach(([key, element]) => {
             if (!element) {
                 return;
             }
-            const isVisible = key === page;
+            const isVisible = key === scene;
             element.classList.toggle('hidden', !isVisible);
             element.classList.toggle('active', isVisible);
             element.setAttribute('aria-hidden', String(!isVisible));
         });
-        recordEvent(`nav:${page}`);
-        const ambientTarget = ambientByPage[page];
-        if (ambientTarget) {
-            if (audioManager.hasAsset(ambientTarget.track)) {
-                void audioManager.playAmbient(ambientTarget.track, ambientTarget.volume);
-            }
-            else {
-                void audioManager.stopAmbient(0.8);
-            }
+        recordEvent(`nav:${scene}`);
+        const ambientTarget = ambientByScene[scene];
+        if (ambientTarget && audioManager.hasAsset(ambientTarget.track)) {
+            void audioManager.playAmbient(ambientTarget.track, ambientTarget.volume);
         }
         else {
             void audioManager.stopAmbient();
         }
-        const shouldLock = page === 'home';
-        if (shouldLock) {
-            mainEl?.classList.add('no-scroll');
-            bodyEl.classList.add('no-scroll');
+        if (scene !== 'den') {
+            setDenJournalVisibility(false);
         }
-        else {
-            mainEl?.classList.remove('no-scroll');
-            bodyEl.classList.remove('no-scroll');
-        }
+        const shouldLock = scene === 'den';
+        mainEl?.classList.toggle('no-scroll', shouldLock);
+        bodyEl.classList.toggle('no-scroll', shouldLock);
     };
     navButtons.forEach(button => {
         button.addEventListener('click', () => {
-            const target = (button.dataset.page ?? 'home');
-            showPage(target);
-            window.location.hash = target === 'home' ? '' : `#${target}`;
+            const target = button.dataset.page ?? 'den';
+            if (target === 'stats') {
+                showScene('den');
+                setDenJournalVisibility(true);
+                window.location.hash = '#stats';
+                return;
+            }
+            if (!isSceneKey(target)) {
+                showScene('den');
+                window.location.hash = '';
+                return;
+            }
+            showScene(target);
+            window.location.hash = target === 'den' ? '' : `#${target}`;
         });
     });
     const applyHash = () => {
         const hash = window.location.hash.replace('#', '');
-        if (hash === 'shop' || hash === 'stats') {
-            showPage(hash);
+        if (hash === '' || hash === 'home' || hash === 'den') {
+            showScene('den');
             return;
         }
-        if (hash === 'home' || hash === '') {
-            showPage('home');
+        if (hash === 'stats') {
+            showScene('den');
+            setDenJournalVisibility(true);
             return;
         }
         if (hash === 'play') {
-            showPage('home');
+            showScene('games');
             window.setTimeout(() => $('playBtn')?.click(), 300);
             return;
         }
-        showPage('home');
+        if (isSceneKey(hash)) {
+            showScene(hash);
+            return;
+        }
+        showScene('den');
     };
     window.addEventListener('hashchange', applyHash);
     applyHash();
@@ -1013,7 +1109,9 @@ export function prepareUpdatePrompt(onConfirm, onDismiss) {
 }
 export function initUI() {
     initActionButtons();
+    initKitchenScene();
     initShop();
+    initDenJournal();
     initNavigation();
     initBlink();
     initAnalyticsToggle();
