@@ -229,7 +229,7 @@ function setDenJournalVisibility(visible: boolean): void {
   }
   if (toggleBtn) {
     toggleBtn.setAttribute('aria-expanded', String(visible));
-    toggleBtn.textContent = visible ? 'Chiudi diario e statistiche' : 'Apri diario e statistiche';
+    toggleBtn.textContent = visible ? 'Nascondi i regali della lontra' : 'Mostra i regali della lontra';
   }
 }
 
@@ -447,30 +447,37 @@ function setBar(element: HTMLElement | null, value: number): void {
 }
 
 function renderInventory(items: string[]): void {
-  const list = $('inventoryList');
-  const emptyState = $('inventoryEmpty');
-  if (!list || !emptyState) {
-    return;
-  }
+  const contexts = [
+    { list: $('inventoryList'), empty: $('inventoryEmpty') },
+    { list: $('denGiftList'), empty: $('denGiftEmpty') }
+  ] as const;
 
-  list.replaceChildren();
-  if (!items.length) {
-    emptyState.classList.remove('hidden');
-    list.classList.add('hidden');
-    return;
-  }
+  contexts.forEach(context => {
+    const list = context.list;
+    const emptyState = context.empty;
+    if (!list || !emptyState) {
+      return;
+    }
 
-  emptyState.classList.add('hidden');
-  list.classList.remove('hidden');
+    list.replaceChildren();
+    if (!items.length) {
+      emptyState.classList.remove('hidden');
+      list.classList.add('hidden');
+      return;
+    }
 
-  const fragment = document.createDocumentFragment();
-  items.forEach(item => {
-    const li = document.createElement('li');
-    li.setAttribute('role', 'listitem');
-    li.textContent = item;
-    fragment.appendChild(li);
+    emptyState.classList.add('hidden');
+    list.classList.remove('hidden');
+
+    const fragment = document.createDocumentFragment();
+    items.forEach(item => {
+      const li = document.createElement('li');
+      li.setAttribute('role', 'listitem');
+      li.textContent = item;
+      fragment.appendChild(li);
+    });
+    list.appendChild(fragment);
   });
-  list.appendChild(fragment);
 }
 
 function updateStatsView(): void {
@@ -922,8 +929,6 @@ function initNavigation(): void {
     games: $('gamesPage'),
     shop: $('shopPage')
   } satisfies Record<'den' | 'kitchen' | 'hygiene' | 'games' | 'shop', HTMLElement | null>;
-  const mainEl = document.querySelector<HTMLElement>('main');
-  const bodyEl = document.body;
 
   type SceneKey = keyof typeof scenes;
 
@@ -970,10 +975,6 @@ function initNavigation(): void {
     if (scene !== 'den') {
       setDenJournalVisibility(false);
     }
-
-    const shouldLock = scene === 'den';
-    mainEl?.classList.toggle('no-scroll', shouldLock);
-    bodyEl.classList.toggle('no-scroll', shouldLock);
   };
 
   navButtons.forEach(button => {

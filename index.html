@@ -114,9 +114,35 @@
           />
           <div id="accessories-container" aria-hidden="true"></div>
         </div>
+        <div class="status-container" role="list" aria-label="Stato della lontra">
+          <div class="status-item" role="listitem">
+            <div class="status-icon" aria-hidden="true">🍗</div>
+            <div class="progress-bar" aria-label="Fame">
+              <div id="hungerBar" class="progress-fill"></div>
+            </div>
+          </div>
+          <div class="status-item" role="listitem">
+            <div class="status-icon" aria-hidden="true">🎉</div>
+            <div class="progress-bar" aria-label="Felicità">
+              <div id="happyBar" class="progress-fill"></div>
+            </div>
+          </div>
+          <div class="status-item" role="listitem">
+            <div class="status-icon" aria-hidden="true">🧼</div>
+            <div class="progress-bar" aria-label="Pulizia">
+              <div id="cleanBar" class="progress-fill"></div>
+            </div>
+          </div>
+          <div class="status-item" role="listitem">
+            <div class="status-icon" aria-hidden="true">⚡</div>
+            <div class="progress-bar" aria-label="Energia">
+              <div id="energyBar" class="progress-fill"></div>
+            </div>
+          </div>
+        </div>
         <div class="den-actions">
           <button id="sleepBtn" class="primary-btn scene-action" type="button">Spegni le luci</button>
-          <button id="statsToggleBtn" class="secondary-btn scene-action" type="button">Apri diario e statistiche</button>
+          <button id="statsToggleBtn" class="secondary-btn scene-action" type="button">Mostra i regali della lontra</button>
         </div>
         <div class="actions-grid" aria-label="Azioni rapide">
           <button class="action-btn" data-action="feed" type="button">
@@ -179,36 +205,11 @@
       </div>
       <div id="denJournal" class="den-journal hidden" aria-hidden="true">
         <div class="den-journal__header">
-          <h2>Diario di Pebble</h2>
-          <p class="small-text">Statistiche rapide del tuo compagno di fiume.</p>
+          <h2>Tesori raccolti</h2>
+          <p class="small-text">Pebble ti porta piccoli trofei trovati lungo la riva.</p>
         </div>
-        <p class="den-journal__note">Controlla fame, energia, pulizia e felicità per capire cosa desidera Pebble.</p>
-        <div class="status-container" role="list">
-          <div class="status-item" role="listitem">
-            <div class="status-icon" aria-hidden="true">🍗</div>
-            <div class="progress-bar" aria-label="Fame">
-              <div id="hungerBar" class="progress-fill"></div>
-            </div>
-          </div>
-          <div class="status-item" role="listitem">
-            <div class="status-icon" aria-hidden="true">🎉</div>
-            <div class="progress-bar" aria-label="Felicità">
-              <div id="happyBar" class="progress-fill"></div>
-            </div>
-          </div>
-          <div class="status-item" role="listitem">
-            <div class="status-icon" aria-hidden="true">🧼</div>
-            <div class="progress-bar" aria-label="Pulizia">
-              <div id="cleanBar" class="progress-fill"></div>
-            </div>
-          </div>
-          <div class="status-item" role="listitem">
-            <div class="status-icon" aria-hidden="true">⚡</div>
-            <div class="progress-bar" aria-label="Energia">
-              <div id="energyBar" class="progress-fill"></div>
-            </div>
-          </div>
-        </div>
+        <p id="denGiftEmpty" class="den-journal__note">Nessun regalo ancora. Gioca e esplora con Pebble per scoprire nuove sorprese.</p>
+        <ul id="denGiftList" class="inventory-list hidden" role="list" aria-live="polite"></ul>
       </div>
     </section>
 

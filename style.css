@@ -82,10 +82,6 @@ body.settings-open {
   overflow: hidden;
 }
 
-body.no-scroll {
-  overflow: hidden;
-}
-
 body.theme-comfort {
   color-scheme: dark;
   --bg-gradient-start: #0A1B20;
@@ -263,9 +259,6 @@ main {
   scroll-padding-top: var(--header-offset);
 }
 
-main.no-scroll {
-  overflow: hidden;
-}
 
 .scene {
   display: none;
