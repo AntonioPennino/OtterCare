@@ -379,6 +379,7 @@ function renderInventory(items) {
     const fragment = document.createDocumentFragment();
     items.forEach(item => {
         const li = document.createElement('li');
+        li.setAttribute('role', 'listitem');
         li.textContent = item;
         fragment.appendChild(li);
     });
@@ -544,27 +545,56 @@ function triggerOtterAnimation(animation) {
     }
 }
 function initActionButtons() {
-    $('feedBtn')?.addEventListener('click', () => {
+    const handleFeed = () => {
         void resumeAudioContext();
         feedAction();
         triggerOtterAnimation('feed');
         void audioManager.playSFX('feed', true);
-    });
-    $('bathBtn')?.addEventListener('click', () => {
+    };
+    const handleBath = () => {
         void resumeAudioContext();
         batheAction();
         triggerOtterAnimation('bathe');
         void audioManager.playSFX('splash', true);
-    });
-    $('sleepBtn')?.addEventListener('click', () => {
+    };
+    const handleSleep = () => {
         void resumeAudioContext();
         sleepAction();
         triggerOtterAnimation('sleep');
-    });
-    $('playBtn')?.addEventListener('click', () => {
+    };
+    const handlePlay = () => {
         void resumeAudioContext();
         void audioManager.playSFX('happy', true);
         openMiniGame();
+    };
+    $('feedBtn')?.addEventListener('click', handleFeed);
+    $('bathBtn')?.addEventListener('click', handleBath);
+    $('sleepBtn')?.addEventListener('click', handleSleep);
+    $('playBtn')?.addEventListener('click', handlePlay);
+    const quickActions = document.querySelectorAll('.action-btn[data-action]');
+    quickActions.forEach(button => {
+        const action = button.dataset.action;
+        if (!action) {
+            return;
+        }
+        button.addEventListener('click', () => {
+            switch (action) {
+                case 'feed':
+                    handleFeed();
+                    break;
+                case 'bath':
+                    handleBath();
+                    break;
+                case 'sleep':
+                    handleSleep();
+                    break;
+                case 'play':
+                    handlePlay();
+                    break;
+                default:
+                    break;
+            }
+        });
     });
     $('resetBtn')?.addEventListener('click', () => {
         const confirmed = window.confirm('Sei sicuro di voler ricominciare da zero?');

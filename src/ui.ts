@@ -466,6 +466,7 @@ function renderInventory(items: string[]): void {
   const fragment = document.createDocumentFragment();
   items.forEach(item => {
     const li = document.createElement('li');
+    li.setAttribute('role', 'listitem');
     li.textContent = item;
     fragment.appendChild(li);
   });
@@ -640,30 +641,61 @@ function triggerOtterAnimation(animation: 'feed' | 'bathe' | 'sleep'): void {
 }
 
 function initActionButtons(): void {
-  $('feedBtn')?.addEventListener('click', () => {
+  const handleFeed = (): void => {
     void resumeAudioContext();
     feedAction();
     triggerOtterAnimation('feed');
     void audioManager.playSFX('feed', true);
-  });
+  };
 
-  $('bathBtn')?.addEventListener('click', () => {
+  const handleBath = (): void => {
     void resumeAudioContext();
     batheAction();
     triggerOtterAnimation('bathe');
     void audioManager.playSFX('splash', true);
-  });
+  };
 
-  $('sleepBtn')?.addEventListener('click', () => {
+  const handleSleep = (): void => {
     void resumeAudioContext();
     sleepAction();
     triggerOtterAnimation('sleep');
-  });
+  };
 
-  $('playBtn')?.addEventListener('click', () => {
+  const handlePlay = (): void => {
     void resumeAudioContext();
     void audioManager.playSFX('happy', true);
     openMiniGame();
+  };
+
+  $('feedBtn')?.addEventListener('click', handleFeed);
+  $('bathBtn')?.addEventListener('click', handleBath);
+  $('sleepBtn')?.addEventListener('click', handleSleep);
+  $('playBtn')?.addEventListener('click', handlePlay);
+
+  const quickActions = document.querySelectorAll<HTMLButtonElement>('.action-btn[data-action]');
+  quickActions.forEach(button => {
+    const action = button.dataset.action;
+    if (!action) {
+      return;
+    }
+    button.addEventListener('click', () => {
+      switch (action) {
+        case 'feed':
+          handleFeed();
+          break;
+        case 'bath':
+          handleBath();
+          break;
+        case 'sleep':
+          handleSleep();
+          break;
+        case 'play':
+          handlePlay();
+          break;
+        default:
+          break;
+      }
+    });
   });
 
   $('resetBtn')?.addEventListener('click', () => {

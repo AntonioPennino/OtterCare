@@ -7,6 +7,11 @@ function setupServiceWorker(): void {
     return;
   }
 
+  const nav = navigator as Navigator & { webdriver?: boolean };
+  if (nav.webdriver === true) {
+    return;
+  }
+
   let refreshing = false;
 
   navigator.serviceWorker.addEventListener('controllerchange', () => {

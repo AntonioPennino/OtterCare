@@ -118,6 +118,64 @@
           <button id="sleepBtn" class="primary-btn scene-action" type="button">Spegni le luci</button>
           <button id="statsToggleBtn" class="secondary-btn scene-action" type="button">Apri diario e statistiche</button>
         </div>
+        <div class="actions-grid" aria-label="Azioni rapide">
+          <button class="action-btn" data-action="feed" type="button">
+            <span class="btn-icon" aria-hidden="true">
+              <img
+                src="src/assets/menu-icons/icon-food.png"
+                srcset="src/assets/menu-icons/icon-food.png 1x, src/assets/menu-icons/icon-food@2x.png 2x, src/assets/menu-icons/icon-food@3x.png 3x"
+                alt=""
+                loading="lazy"
+                decoding="async"
+                width="48"
+                height="48"
+              />
+            </span>
+            <span class="btn-label">Nutri</span>
+          </button>
+          <button class="action-btn" data-action="play" type="button">
+            <span class="btn-icon" aria-hidden="true">
+              <img
+                src="src/assets/menu-icons/icon-games.png"
+                srcset="src/assets/menu-icons/icon-games.png 1x, src/assets/menu-icons/icon-games@2x.png 2x, src/assets/menu-icons/icon-games@3x.png 3x"
+                alt=""
+                loading="lazy"
+                decoding="async"
+                width="48"
+                height="48"
+              />
+            </span>
+            <span class="btn-label">Gioca</span>
+          </button>
+          <button class="action-btn" data-action="bath" type="button">
+            <span class="btn-icon" aria-hidden="true">
+              <img
+                src="src/assets/menu-icons/icon-hygiene.png"
+                srcset="src/assets/menu-icons/icon-hygiene.png 1x, src/assets/menu-icons/icon-hygiene@2x.png 2x, src/assets/menu-icons/icon-hygiene@3x.png 3x"
+                alt=""
+                loading="lazy"
+                decoding="async"
+                width="48"
+                height="48"
+              />
+            </span>
+            <span class="btn-label">Lava</span>
+          </button>
+          <button class="action-btn" data-action="sleep" type="button">
+            <span class="btn-icon" aria-hidden="true">
+              <img
+                src="src/assets/menu-icons/icon-health.png"
+                srcset="src/assets/menu-icons/icon-health.png 1x, src/assets/menu-icons/icon-health@2x.png 2x, src/assets/menu-icons/icon-health@3x.png 3x"
+                alt=""
+                loading="lazy"
+                decoding="async"
+                width="48"
+                height="48"
+              />
+            </span>
+            <span class="btn-label">Dormi</span>
+          </button>
+        </div>
       </div>
       <div id="denJournal" class="den-journal hidden" aria-hidden="true">
         <div class="den-journal__header">
@@ -349,6 +407,11 @@
             <input id="backupFileInput" class="visually-hidden" type="file" accept="application/json" aria-label="Seleziona file di backup" />
           </div>
           <button id="resetBtn" class="danger-btn">Reset Gioco</button>
+        </div>
+        <div class="inventory-card" aria-live="polite">
+          <h3>Inventario accessori</h3>
+          <p id="inventoryEmpty" class="small-text">Nessun accessorio sbloccato. Visita il mercante per personalizzare Pebble.</p>
+          <ul id="inventoryList" class="inventory-list hidden" role="list" aria-live="polite"></ul>
         </div>
       </div>
     </div>

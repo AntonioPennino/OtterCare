@@ -82,6 +82,10 @@ body.settings-open {
   overflow: hidden;
 }
 
+body.no-scroll {
+  overflow: hidden;
+}
+
 body.theme-comfort {
   color-scheme: dark;
   --bg-gradient-start: #0A1B20;
@@ -643,6 +647,21 @@ main.no-scroll {
 #happyBar { background: var(--color-happy); }
 #cleanBar { background: var(--color-clean); }
 #energyBar { background: var(--color-energy); }
+
+.progress-fill.low {
+  box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.45);
+  filter: saturate(1.05);
+}
+
+.progress-fill.critical {
+  animation: barPulse 0.9s ease-in-out infinite;
+  filter: saturate(1.12) brightness(1.05);
+}
+
+@keyframes barPulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.55; }
+}
 
 /* Actions Grid */
 .actions-grid {
@@ -1630,6 +1649,7 @@ body.theme-comfort .tutorial-overlay {
 @media (min-width: 768px) {
   main {
     background: var(--bottom-nav-bg);
+    display: flex;
     flex-direction: row;
     gap: 32px;
     padding: 32px;
@@ -1683,6 +1703,10 @@ body.theme-comfort .tutorial-overlay {
 
   .bottom-nav {
     display: none;
+  }
+
+  .desktop-nav {
+    display: flex;
   }
 }
 
@@ -1963,4 +1987,17 @@ body.theme-comfort .tutorial-overlay {
 @keyframes popUp {
   0% { transform: translateY(0) scale(1); opacity: 1; }
   100% { transform: translateY(-30px) scale(1.5); opacity: 0; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+
+  .progress-fill.critical {
+    animation: none !important;
+  }
 }
