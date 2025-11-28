@@ -447,6 +447,23 @@ function evaluateCriticalWarnings() {
         }
     });
 }
+function describeDenAtmosphere(core, state) {
+    if (core.energy < 30) {
+        return 'Luci soffuse: Pebble è pronta per riposare.';
+    }
+    if (state.clean < 35) {
+        return "Serve un passaggio al fiume: la tana è un po' impolverata.";
+    }
+    if (core.happiness > 80) {
+        return 'Atmosfera festosa: Pebble è entusiasta della tua compagnia!';
+    }
+    if (core.hunger < 40) {
+        return 'Pebble scruta la dispensa: forse è ora di uno snack.';
+    }
+    return state.theme === 'comfort'
+        ? 'La tana è avvolta da luci calde e rilassanti.'
+        : 'La tana è luminosa e accogliente, ideale per giocare.';
+}
 function render() {
     const state = getState();
     const coreManager = getGameStateInstance();
@@ -492,6 +509,10 @@ function render() {
     const coinsLabel = $('coins');
     if (coinsLabel) {
         coinsLabel.textContent = String(state.coins);
+    }
+    const denWindowLabel = $('denWindowLabel');
+    if (denWindowLabel) {
+        denWindowLabel.textContent = describeDenAtmosphere(coreStats, state);
     }
     const mood = computeMood(coreStats);
     const accessories = pickAccessories(state);
@@ -577,31 +598,6 @@ function initActionButtons() {
     $('bathBtn')?.addEventListener('click', handleBath);
     $('sleepBtn')?.addEventListener('click', handleSleep);
     $('playBtn')?.addEventListener('click', handlePlay);
-    const quickActions = document.querySelectorAll('.action-btn[data-action]');
-    quickActions.forEach(button => {
-        const action = button.dataset.action;
-        if (!action) {
-            return;
-        }
-        button.addEventListener('click', () => {
-            switch (action) {
-                case 'feed':
-                    handleFeed();
-                    break;
-                case 'bath':
-                    handleBath();
-                    break;
-                case 'sleep':
-                    handleSleep();
-                    break;
-                case 'play':
-                    handlePlay();
-                    break;
-                default:
-                    break;
-            }
-        });
-    });
     $('resetBtn')?.addEventListener('click', () => {
         const confirmed = window.confirm('Sei sicuro di voler ricominciare da zero?');
         if (confirmed) {

@@ -43,14 +43,15 @@ test('starts mini-gioco quando si preme gioca', async ({ page }) => {
     await startButton.click();
   }
 
-  await page.getByRole('button', { name: 'Gioca' }).click();
+  await page.getByRole('button', { name: 'Giochi' }).click();
+  await page.getByRole('button', { name: 'Acchiappa i pesci' }).click();
   const overlay = page.locator('#overlay');
   await expect(overlay).toBeVisible();
   await page.locator('#closeMini').click();
   await expect(overlay).toBeHidden();
 });
 
-test('mostra tutte le azioni nella griglia mobile', async ({ page }) => {
+test('ogni sezione espone la propria azione principale', async ({ page }) => {
   await page.setViewportSize({ width: 360, height: 740 });
   await page.goto(HOME_URL);
   await completeNamePrompt(page);
@@ -59,8 +60,15 @@ test('mostra tutte le azioni nella griglia mobile', async ({ page }) => {
     await startButton.click();
   }
 
-  const actions = ['Nutri', 'Gioca', 'Lava', 'Dormi'];
-  for (const label of actions) {
-    await expect(page.getByRole('button', { name: label })).toBeVisible();
-  }
+  await page.getByRole('button', { name: 'Cucina' }).click();
+  await expect(page.getByRole('button', { name: 'Servi uno snack rapido' })).toBeVisible();
+
+  await page.getByRole('button', { name: 'Fiume' }).click();
+  await expect(page.getByRole('button', { name: 'Passa la spugna' })).toBeVisible();
+
+  await page.getByRole('button', { name: 'Giochi' }).click();
+  await expect(page.getByRole('button', { name: 'Acchiappa i pesci' })).toBeVisible();
+
+  await page.getByRole('button', { name: 'Tana' }).click();
+  await expect(page.getByRole('button', { name: 'Spegni le luci' })).toBeVisible();
 });
