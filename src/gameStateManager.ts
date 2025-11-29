@@ -1,3 +1,4 @@
+import type { SupabaseClient } from '@supabase/supabase-js';
 import { getSupabaseClient } from './cloudSync.js';
 import { getState as getLegacyState, updateState as updateLegacyState } from './state.js';
 
@@ -67,14 +68,18 @@ export class GameState {
   private stats: CoreStats;
   private lastLoginDate: number;
   private inventory: string[];
-  private readonly playerId: string;
+  private playerId: string;
+  private bootstrappedFromStorage = false;
+  private hadStoredPlayerId = false;
+  private attemptedRemoteRecovery = false;
 
   private constructor() {
-    this.playerId = this.resolvePlayerId();
     const stored = this.readFromStorage();
-    this.stats = stored.stats;
-    this.lastLoginDate = stored.lastLoginDate;
-    this.inventory = stored.inventory;
+    this.bootstrappedFromStorage = stored.hadData;
+    this.stats = stored.state.stats;
+    this.lastLoginDate = stored.state.lastLoginDate;
+    this.inventory = stored.state.inventory;
+    this.playerId = this.resolvePlayerId();
     this.syncStatsToLegacyState({ silent: true });
   }
 
@@ -178,7 +183,11 @@ export class GameState {
         }
       }
 
-      const remote = (data ?? null) as SupabaseGameStateRow | null;
+      let remote = (data ?? null) as SupabaseGameStateRow | null;
+      if (!remote) {
+        remote = await this.tryRecoverPlayerIdFromSupabase(supabase);
+      }
+
       if (remote) {
         this.mergeRemoteState(remote);
       }
@@ -319,15 +328,60 @@ export class GameState {
       .filter(item => item.length > 0);
   }
 
-  private readFromStorage(): StoredGameState {
+  private async tryRecoverPlayerIdFromSupabase(client: SupabaseClient): Promise<SupabaseGameStateRow | null> {
+    if (this.attemptedRemoteRecovery) {
+      return null;
+    }
+    this.attemptedRemoteRecovery = true;
+
+    if (this.bootstrappedFromStorage || this.hadStoredPlayerId) {
+      return null;
+    }
+
+    try {
+      const { data, error } = await client
+        .from('pebble_game_state')
+        .select('id, stats, last_login, inventory, updated_at')
+        .order('updated_at', { ascending: false })
+        .limit(1);
+
+      if (error) {
+        if (GameState.isMissingTableError(error)) {
+          GameState.markSupabaseUnavailable();
+          return null;
+        }
+        console.warn('Impossibile recuperare lo stato remoto da Supabase', error);
+        return null;
+      }
+
+      const row = Array.isArray(data) && data.length > 0 ? data[0] as SupabaseGameStateRow : null;
+      if (!row || !row.id) {
+        return null;
+      }
+
+      if (row.id !== this.playerId) {
+        this.playerId = row.id;
+        this.hadStoredPlayerId = true;
+        this.persistPlayerId(this.playerId);
+        console.info('[Pebble] playerId recuperato da Supabase dopo reset locale');
+      }
+
+      return row;
+    } catch (error) {
+      console.warn('Errore inatteso nel tentativo di recupero stato Supabase', error);
+      return null;
+    }
+  }
+
+  private readFromStorage(): { state: StoredGameState; hadData: boolean } {
     const storage = this.getStorage();
     if (!storage) {
-      return this.createLegacyBackedState();
+      return { state: this.createLegacyBackedState(), hadData: false };
     }
     try {
       const raw = storage.getItem(LOCAL_STORAGE_KEY);
       if (!raw) {
-        return this.createLegacyBackedState();
+        return { state: this.createLegacyBackedState(), hadData: false };
       }
       const parsed = JSON.parse(raw) as Partial<StoredGameState>;
       const stats = this.sanitizeStats(parsed.stats);
@@ -335,10 +389,10 @@ export class GameState {
         ? parsed.lastLoginDate
         : Date.now();
       const inventory = this.sanitizeInventory(parsed.inventory);
-      return { stats, lastLoginDate, inventory };
+      return { state: { stats, lastLoginDate, inventory }, hadData: true };
     } catch (error) {
       console.warn('Impossibile leggere il GameState locale, verrà ricreato', error);
-      return this.createLegacyBackedState();
+      return { state: this.createLegacyBackedState(), hadData: false };
     }
   }
 
@@ -354,6 +408,8 @@ export class GameState {
         inventory: [...this.inventory]
       };
       storage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(payload));
+      this.bootstrappedFromStorage = true;
+      this.persistPlayerId(this.playerId, storage);
     } catch (error) {
       console.warn('Impossibile salvare il GameState locale', error);
     }
@@ -362,19 +418,34 @@ export class GameState {
   private resolvePlayerId(): string {
     const storage = this.getStorage();
     if (!storage) {
+      this.hadStoredPlayerId = false;
       return this.generatePlayerId();
     }
-    const existing = storage.getItem(PLAYER_ID_STORAGE_KEY);
-    if (existing && existing.trim().length > 0) {
-      return existing;
+    try {
+      const existing = storage.getItem(PLAYER_ID_STORAGE_KEY);
+      if (existing && existing.trim().length > 0) {
+        this.hadStoredPlayerId = true;
+        return existing;
+      }
+    } catch (error) {
+      console.warn('Impossibile leggere il playerId salvato, ne verrà generato uno nuovo', error);
     }
     const generated = this.generatePlayerId();
+    this.hadStoredPlayerId = false;
+    this.persistPlayerId(generated, storage);
+    return generated;
+  }
+
+  private persistPlayerId(id: string, storageOverride?: Storage | null): void {
+    const storage = storageOverride ?? this.getStorage();
+    if (!storage) {
+      return;
+    }
     try {
-      storage.setItem(PLAYER_ID_STORAGE_KEY, generated);
+      storage.setItem(PLAYER_ID_STORAGE_KEY, id);
     } catch (error) {
       console.warn('Impossibile salvare il playerId, verrà rigenerato a ogni avvio', error);
     }
-    return generated;
   }
 
   private getStorage(): Storage | null {
