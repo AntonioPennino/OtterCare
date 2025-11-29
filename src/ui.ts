@@ -93,6 +93,10 @@ interface InventoryEventDetail {
   inventory: string[];
 }
 
+interface PlayerIdChangeDetail {
+  playerId: string;
+}
+
 interface BeforeInstallPromptEvent extends Event {
   prompt(): Promise<void>;
   userChoice: Promise<{ outcome: 'accepted' | 'dismissed'; platform: string }>;
@@ -560,6 +564,10 @@ function render(): void {
   const state = getState();
   const coreManager = getGameStateInstance();
   const coreStats = coreManager.getStats();
+  const recoveryCode = $('cloudRecoveryCode');
+  if (recoveryCode) {
+    recoveryCode.textContent = coreManager.getPlayerId();
+  }
   applyTheme(state.theme);
   updateThemeButtons(state.theme);
   const tutorialOverlay = $('tutorialOverlay');
@@ -1165,6 +1173,98 @@ function initBackupControls(): void {
   }
 }
 
+function initCloudSyncControls(): void {
+  const codeLabel = $('cloudRecoveryCode');
+  const copyBtn = $('cloudCopyCodeBtn') as HTMLButtonElement | null;
+  const form = $('cloudRecoveryForm') as HTMLFormElement | null;
+  const input = $('cloudRecoveryInput') as HTMLInputElement | null;
+  const status = $('cloudRecoveryStatus');
+
+  if (!codeLabel || !form || !input || !status) {
+    return;
+  }
+
+  const manager = getGameStateInstance();
+
+  const updateCodeLabel = (): void => {
+    codeLabel.textContent = manager.getPlayerId();
+  };
+
+  const setStatus = (message: string, variant: 'info' | 'warning' = 'info'): void => {
+    status.textContent = message;
+    status.classList.toggle('warning-text', variant === 'warning');
+  };
+
+  updateCodeLabel();
+
+  copyBtn?.addEventListener('click', async () => {
+    const clipboard = navigator.clipboard;
+    if (!clipboard || typeof clipboard.writeText !== 'function') {
+      setStatus('Copia manualmente il codice mostrato qui sopra.', 'warning');
+      showAlert('Il tuo browser non consente la copia automatica. Seleziona e copia il codice.', 'warning');
+      return;
+    }
+    try {
+      await clipboard.writeText(manager.getPlayerId());
+      showAlert('Codice Pebble copiato negli appunti. Conservalo in un luogo sicuro.', 'info');
+      setStatus('Codice copiato. Salvalo per futuri ripristini.');
+    } catch (error) {
+      console.warn('Impossibile copiare il codice Supabase negli appunti', error);
+      setStatus('Non riesco a copiare automaticamente: seleziona e copia manualmente.', 'warning');
+      showAlert('Copia manualmente il codice mostrato nelle impostazioni.', 'warning');
+    }
+  });
+
+  window.addEventListener('pebble-player-id-changed', event => {
+    const detail = (event as CustomEvent<PlayerIdChangeDetail>).detail;
+    if (detail?.playerId) {
+      codeLabel.textContent = detail.playerId;
+      setStatus('Codice aggiornato per questo dispositivo.');
+    }
+  });
+
+  form.addEventListener('submit', async event => {
+    event.preventDefault();
+    const raw = input.value.trim();
+    if (!raw) {
+      setStatus('Inserisci un codice valido per collegare il salvataggio.', 'warning');
+      return;
+    }
+
+    setStatus('Collegamento in corso…');
+    const result = await manager.recoverFromCloudCode(raw);
+
+    if (result.ok) {
+      if (result.alreadyLinked) {
+        setStatus('Questo codice è già collegato a Pebble su questo dispositivo.');
+      } else {
+        setStatus('Salvataggio Supabase recuperato con successo!');
+        showAlert('Salvataggio cloud sincronizzato. Benvenuto di nuovo!', 'info');
+      }
+      input.value = '';
+      return;
+    }
+
+    switch (result.reason) {
+      case 'not_found':
+        setStatus('Codice non trovato. Verifica di averlo scritto correttamente.', 'warning');
+        showAlert('Nessun salvataggio corrisponde a quel codice.', 'warning');
+        break;
+      case 'disabled':
+        setStatus('Sincronizzazione cloud non configurata: controlla le variabili Supabase.', 'warning');
+        showAlert('Configura Supabase per usare il recupero cloud.', 'warning');
+        break;
+      case 'invalid':
+        setStatus('Il codice contiene caratteri non validi.', 'warning');
+        break;
+      default:
+        setStatus('Impossibile collegare il codice per un errore temporaneo.', 'warning');
+        showAlert('Errore nel collegamento al cloud, riprova più tardi.', 'warning');
+        break;
+    }
+  });
+}
+
 function initThemeControls(): void {
   const lightBtn = $('themeLightBtn') as HTMLButtonElement | null;
   const comfortBtn = $('themeComfortBtn') as HTMLButtonElement | null;
@@ -1348,6 +1448,7 @@ export function initUI(): void {
   initThemeControls();
   initNotificationControls();
   initBackupControls();
+  initCloudSyncControls();
   initInstallPrompt();
   initNamePrompt();
   initTutorial();

@@ -60,6 +60,10 @@ export interface OfflineProgressResult {
   gift?: string;
 }
 
+export type CloudRecoveryResult =
+  | { ok: true; alreadyLinked?: boolean }
+  | { ok: false; reason: 'disabled' | 'invalid' | 'not_found' | 'error' };
+
 export class GameState {
   private static instance: GameState | null = null;
   private static supabaseUnavailable = false;
@@ -81,6 +85,7 @@ export class GameState {
     this.inventory = stored.state.inventory;
     this.playerId = this.resolvePlayerId();
     this.syncStatsToLegacyState({ silent: true });
+    this.dispatchPlayerIdChange();
   }
 
   public static getInstance(): GameState {
@@ -100,6 +105,53 @@ export class GameState {
 
   public getInventory(): string[] {
     return [...this.inventory];
+  }
+
+  public async recoverFromCloudCode(rawCode: string): Promise<CloudRecoveryResult> {
+    const supabase = getSupabaseClient();
+    if (!supabase) {
+      return { ok: false, reason: 'disabled' };
+    }
+    const code = rawCode.trim();
+    if (!code) {
+      return { ok: false, reason: 'invalid' };
+    }
+
+    if (code === this.playerId) {
+      return { ok: true, alreadyLinked: true };
+    }
+
+    try {
+      const { data, error } = await supabase
+        .from('pebble_game_state')
+        .select('stats, last_login, inventory, updated_at')
+        .eq('id', code)
+        .maybeSingle();
+
+      if (error) {
+        const code = (error as { code?: string }).code;
+        if (GameState.isMissingTableError(error)) {
+          GameState.markSupabaseUnavailable();
+          return { ok: false, reason: 'disabled' };
+        }
+        if (code === 'PGRST116') {
+          return { ok: false, reason: 'not_found' };
+        }
+        throw error;
+      }
+
+      if (!data) {
+        return { ok: false, reason: 'not_found' };
+      }
+
+      const remote = data as SupabaseGameStateRow;
+      this.applyRecoveredSupabaseState(code, remote);
+      void this.syncWithSupabase();
+      return { ok: true };
+    } catch (error) {
+      console.warn('Errore nel recupero del GameState da Supabase tramite codice', error);
+      return { ok: false, reason: 'error' };
+    }
   }
 
   public setInventory(items: string[]): void {
@@ -328,7 +380,47 @@ export class GameState {
       .filter(item => item.length > 0);
   }
 
-  private async tryRecoverPlayerIdFromSupabase(client: SupabaseClient): Promise<SupabaseGameStateRow | null> {
+  private applyRecoveredSupabaseState(newPlayerId: string, remote: SupabaseGameStateRow): void {
+    this.applyPlayerId(newPlayerId, undefined, { forceNotify: true });
+
+    const remoteStats = this.sanitizeStats(remote.stats);
+    const remoteLogin = typeof remote.last_login === 'string' ? Date.parse(remote.last_login) : Number.NaN;
+    const remoteInventory = this.sanitizeInventory(remote.inventory);
+
+    this.stats = remoteStats;
+    this.lastLoginDate = Number.isFinite(remoteLogin) ? remoteLogin : Date.now();
+    this.inventory = remoteInventory;
+
+    this.writeToStorage();
+    this.syncStatsToLegacyState();
+    this.notifyInventoryChange();
+  }
+
+  private applyPlayerId(newId: string, storageOverride?: Storage | null, options: { forceNotify?: boolean } = {}): void {
+    const sanitized = newId.trim();
+    if (!sanitized) {
+      return;
+    }
+    const changed = sanitized !== this.playerId;
+    this.playerId = sanitized;
+    this.hadStoredPlayerId = true;
+    this.persistPlayerId(sanitized, storageOverride);
+    if (changed || options.forceNotify) {
+      this.dispatchPlayerIdChange();
+    }
+  }
+
+  private dispatchPlayerIdChange(): void {
+    if (typeof window === 'undefined' || typeof window.dispatchEvent !== 'function') {
+      return;
+    }
+    const event = new CustomEvent<{ playerId: string }>('pebble-player-id-changed', {
+      detail: { playerId: this.playerId }
+    });
+    window.dispatchEvent(event);
+  }
+
+  private async tryRecoverPlayerIdFromSupabase(_client: SupabaseClient): Promise<SupabaseGameStateRow | null> {
     if (this.attemptedRemoteRecovery) {
       return null;
     }
@@ -338,39 +430,8 @@ export class GameState {
       return null;
     }
 
-    try {
-      const { data, error } = await client
-        .from('pebble_game_state')
-        .select('id, stats, last_login, inventory, updated_at')
-        .order('updated_at', { ascending: false })
-        .limit(1);
-
-      if (error) {
-        if (GameState.isMissingTableError(error)) {
-          GameState.markSupabaseUnavailable();
-          return null;
-        }
-        console.warn('Impossibile recuperare lo stato remoto da Supabase', error);
-        return null;
-      }
-
-      const row = Array.isArray(data) && data.length > 0 ? data[0] as SupabaseGameStateRow : null;
-      if (!row || !row.id) {
-        return null;
-      }
-
-      if (row.id !== this.playerId) {
-        this.playerId = row.id;
-        this.hadStoredPlayerId = true;
-        this.persistPlayerId(this.playerId);
-        console.info('[Pebble] playerId recuperato da Supabase dopo reset locale');
-      }
-
-      return row;
-    } catch (error) {
-      console.warn('Errore inatteso nel tentativo di recupero stato Supabase', error);
-      return null;
-    }
+    console.info('[Pebble] playerId mancante: attendere il codice di recupero inserito dall’utente.');
+    return null;
   }
 
   private readFromStorage(): { state: StoredGameState; hadData: boolean } {

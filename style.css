@@ -757,7 +757,8 @@ main {
 
 .theme-section,
 .notification-section,
-.backup-section {
+.backup-section,
+.cloud-sync-section {
   display: flex;
   flex-direction: column;
   gap: 12px;
@@ -788,15 +789,64 @@ main {
 
 .theme-section h4,
 .notification-section h4,
-.backup-section h4 {
+.backup-section h4,
+.cloud-sync-section h4 {
   margin: 0;
   color: var(--primary-dark);
 }
 
 .theme-section .small-text,
 .notification-section .small-text,
-.backup-section .small-text {
+.backup-section .small-text,
+.cloud-sync-section .small-text {
   margin: 0;
+}
+
+.cloud-code-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 10px 14px;
+  border-radius: 14px;
+  border: 1px dashed rgba(92, 82, 72, 0.3);
+  background: var(--surface-glass);
+  color: var(--primary-dark);
+}
+
+.cloud-code-value {
+  font-family: 'Courier New', Courier, monospace;
+  font-weight: 700;
+  word-break: break-all;
+  flex: 1 1 auto;
+}
+
+.cloud-recovery-form {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.cloud-recovery-input {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.cloud-recovery-input input {
+  flex: 1 1 220px;
+  min-width: 180px;
+  padding: 10px 12px;
+  border-radius: 12px;
+  border: 1px solid var(--divider);
+  background: var(--surface-glass);
+  color: var(--primary-dark);
+}
+
+.cloud-recovery-input input:focus {
+  outline: none;
+  border-color: var(--accent-salmon);
+  box-shadow: 0 0 0 3px rgba(240, 105, 88, 0.25);
 }
 
 .small-text {

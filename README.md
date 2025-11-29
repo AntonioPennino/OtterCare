@@ -83,29 +83,31 @@ La sincronizzazione cloud è opzionale e richiede un progetto Supabase (piano fr
 2. Nella sezione SQL esegui:
 
 	 ```sql
-	 create table if not exists pebble_saves (
+	 create table if not exists pebble_game_state (
 		 id text primary key,
-		 state jsonb not null,
+		 stats jsonb not null,
+		 last_login timestamptz,
+		 inventory text[] not null default '{}'::text[],
 		 updated_at timestamptz not null default timezone('utc', now())
 	 );
 
-	 alter table pebble_saves enable row level security;
+	 alter table pebble_game_state enable row level security;
 
-	 create policy "anon upsert" on pebble_saves
+	 create policy "anon upsert" on pebble_game_state
 		 for insert with check (auth.role() = 'anon');
 
-	 create policy "anon update" on pebble_saves
+	 create policy "anon update" on pebble_game_state
 		 for update using (auth.role() = 'anon')
 		 with check (auth.role() = 'anon');
 
-	 create policy "anon select" on pebble_saves
+	 create policy "anon select" on pebble_game_state
 		 for select using (auth.role() = 'anon');
 
-	 create policy "anon delete" on pebble_saves
+	 create policy "anon delete" on pebble_game_state
 		 for delete using (auth.role() = 'anon');
 	 ```
 
-	 > I salvataggi sono protetti da un codice casuale a 16 byte; conservalo privatamente.
+	 > Ogni salvataggio è identificato da un codice casuale generato sul dispositivo. Copialo e custodiscilo: è l'unico modo per ripristinare una lontra dopo aver svuotato i dati del browser.
 
 3. Copia `config.example.js` in `config.js` (ignorato da git) e incolla le tue chiavi:
 
@@ -116,9 +118,9 @@ La sincronizzazione cloud è opzionale e richiede un progetto Supabase (piano fr
 	 };
 	 ```
 
-4. Rifai la build (`npm run build`) e apri l'app: nella sezione **Statistiche → Impostazioni** troverai la card “Sincronizzazione cloud”.
+4. Rifai la build (`npm run build`) e apri l'app: nella sezione **Statistiche → Impostazioni** troverai la card “Salvataggi Supabase”.
 
-Una volta attivata, Pebble genera un codice (es. `abcd-1234-efgh-5678`): usalo per collegare più dispositivi o ripristinare i progressi dopo un wipe completo. Puoi comunque esportare un backup manuale JSON per ulteriore sicurezza.
+Pebble mostra il tuo codice cloud e un pulsante **Copia**: annotalo (anche su carta) perché non richiede nessuna registrazione utente. Se reinstalli il gioco o svuoti la cronologia, incolla quel codice nel modulo “Collega” e i dati verranno recuperati dal progetto Supabase. Puoi comunque esportare un backup manuale JSON per ulteriore sicurezza.
 
 ## 🤖 Test automatici
 

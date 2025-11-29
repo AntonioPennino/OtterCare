@@ -25,12 +25,17 @@ const GIFT_POOL = [
 ];
 export class GameState {
     constructor() {
-        this.playerId = this.resolvePlayerId();
+        this.hadStoredStateOnBoot = false;
+        this.hadStoredPlayerId = false;
+        this.attemptedRemoteRecovery = false;
         const stored = this.readFromStorage();
-        this.stats = stored.stats;
-        this.lastLoginDate = stored.lastLoginDate;
-        this.inventory = stored.inventory;
+        this.hadStoredStateOnBoot = stored.hadData;
+        this.stats = stored.state.stats;
+        this.lastLoginDate = stored.state.lastLoginDate;
+        this.inventory = stored.state.inventory;
+        this.playerId = this.resolvePlayerId();
         this.syncStatsToLegacyState({ silent: true });
+        this.dispatchPlayerIdChange();
     }
     static getInstance() {
         if (!this.instance) {
@@ -46,6 +51,48 @@ export class GameState {
     }
     getInventory() {
         return [...this.inventory];
+    }
+    async recoverFromCloudCode(rawCode) {
+        const supabase = getSupabaseClient();
+        if (!supabase) {
+            return { ok: false, reason: 'disabled' };
+        }
+        const code = rawCode.trim();
+        if (!code) {
+            return { ok: false, reason: 'invalid' };
+        }
+        if (code === this.playerId) {
+            return { ok: true, alreadyLinked: true };
+        }
+        try {
+            const { data, error } = await supabase
+                .from('pebble_game_state')
+                .select('stats, last_login, inventory, updated_at')
+                .eq('id', code)
+                .maybeSingle();
+            if (error) {
+                const code = error.code;
+                if (GameState.isMissingTableError(error)) {
+                    GameState.markSupabaseUnavailable();
+                    return { ok: false, reason: 'disabled' };
+                }
+                if (code === 'PGRST116') {
+                    return { ok: false, reason: 'not_found' };
+                }
+                throw error;
+            }
+            if (!data) {
+                return { ok: false, reason: 'not_found' };
+            }
+            const remote = data;
+            this.applyRecoveredSupabaseState(code, remote);
+            void this.syncWithSupabase();
+            return { ok: true };
+        }
+        catch (error) {
+            console.warn('Errore nel recupero del GameState da Supabase tramite codice', error);
+            return { ok: false, reason: 'error' };
+        }
     }
     setInventory(items) {
         const sanitized = this.sanitizeInventory(items);
@@ -116,7 +163,10 @@ export class GameState {
                     throw error;
                 }
             }
-            const remote = (data ?? null);
+            let remote = (data ?? null);
+            if (!remote) {
+                remote = await this.tryRecoverPlayerIdFromSupabase(supabase);
+            }
             if (remote) {
                 this.mergeRemoteState(remote);
             }
@@ -240,15 +290,60 @@ export class GameState {
             .map(item => item.trim())
             .filter(item => item.length > 0);
     }
+    applyRecoveredSupabaseState(newPlayerId, remote) {
+        this.applyPlayerId(newPlayerId, undefined, { forceNotify: true });
+        const remoteStats = this.sanitizeStats(remote.stats);
+        const remoteLogin = typeof remote.last_login === 'string' ? Date.parse(remote.last_login) : Number.NaN;
+        const remoteInventory = this.sanitizeInventory(remote.inventory);
+        this.stats = remoteStats;
+        this.lastLoginDate = Number.isFinite(remoteLogin) ? remoteLogin : Date.now();
+        this.inventory = remoteInventory;
+        this.writeToStorage();
+        this.syncStatsToLegacyState();
+        this.notifyInventoryChange();
+    }
+    applyPlayerId(newId, storageOverride, options = {}) {
+        const sanitized = newId.trim();
+        if (!sanitized) {
+            return;
+        }
+        const changed = sanitized !== this.playerId;
+        this.playerId = sanitized;
+        this.hadStoredPlayerId = true;
+        this.persistPlayerId(sanitized, storageOverride);
+        if (changed || options.forceNotify) {
+            this.dispatchPlayerIdChange();
+        }
+    }
+    dispatchPlayerIdChange() {
+        if (typeof window === 'undefined' || typeof window.dispatchEvent !== 'function') {
+            return;
+        }
+        const event = new CustomEvent('pebble-player-id-changed', {
+            detail: { playerId: this.playerId }
+        });
+        window.dispatchEvent(event);
+    }
+    async tryRecoverPlayerIdFromSupabase(_client) {
+        if (this.attemptedRemoteRecovery) {
+            return null;
+        }
+        this.attemptedRemoteRecovery = true;
+        if (this.hadStoredStateOnBoot || this.hadStoredPlayerId) {
+            return null;
+        }
+        console.info('[Pebble] playerId mancante: attendere il codice di recupero inserito dall’utente.');
+        return null;
+    }
     readFromStorage() {
         const storage = this.getStorage();
         if (!storage) {
-            return this.createLegacyBackedState();
+            return { state: this.createLegacyBackedState(), hadData: false };
         }
         try {
             const raw = storage.getItem(LOCAL_STORAGE_KEY);
             if (!raw) {
-                return this.createLegacyBackedState();
+                return { state: this.createLegacyBackedState(), hadData: false };
             }
             const parsed = JSON.parse(raw);
             const stats = this.sanitizeStats(parsed.stats);
@@ -256,11 +351,11 @@ export class GameState {
                 ? parsed.lastLoginDate
                 : Date.now();
             const inventory = this.sanitizeInventory(parsed.inventory);
-            return { stats, lastLoginDate, inventory };
+            return { state: { stats, lastLoginDate, inventory }, hadData: true };
         }
         catch (error) {
             console.warn('Impossibile leggere il GameState locale, verrà ricreato', error);
-            return this.createLegacyBackedState();
+            return { state: this.createLegacyBackedState(), hadData: false };
         }
     }
     writeToStorage() {
@@ -275,6 +370,7 @@ export class GameState {
                 inventory: [...this.inventory]
             };
             storage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(payload));
+            this.persistPlayerId(this.playerId, storage);
         }
         catch (error) {
             console.warn('Impossibile salvare il GameState locale', error);
@@ -283,20 +379,35 @@ export class GameState {
     resolvePlayerId() {
         const storage = this.getStorage();
         if (!storage) {
+            this.hadStoredPlayerId = false;
             return this.generatePlayerId();
         }
-        const existing = storage.getItem(PLAYER_ID_STORAGE_KEY);
-        if (existing && existing.trim().length > 0) {
-            return existing;
+        try {
+            const existing = storage.getItem(PLAYER_ID_STORAGE_KEY);
+            if (existing && existing.trim().length > 0) {
+                this.hadStoredPlayerId = true;
+                return existing;
+            }
+        }
+        catch (error) {
+            console.warn('Impossibile leggere il playerId salvato, ne verrà generato uno nuovo', error);
         }
         const generated = this.generatePlayerId();
+        this.hadStoredPlayerId = false;
+        this.persistPlayerId(generated, storage);
+        return generated;
+    }
+    persistPlayerId(id, storageOverride) {
+        const storage = storageOverride ?? this.getStorage();
+        if (!storage) {
+            return;
+        }
         try {
-            storage.setItem(PLAYER_ID_STORAGE_KEY, generated);
+            storage.setItem(PLAYER_ID_STORAGE_KEY, id);
         }
         catch (error) {
             console.warn('Impossibile salvare il playerId, verrà rigenerato a ogni avvio', error);
         }
-        return generated;
     }
     getStorage() {
         if (typeof window === 'undefined') {
