@@ -69,13 +69,13 @@ export class GameState {
   private lastLoginDate: number;
   private inventory: string[];
   private playerId: string;
-  private bootstrappedFromStorage = false;
+  private hadStoredStateOnBoot = false;
   private hadStoredPlayerId = false;
   private attemptedRemoteRecovery = false;
 
   private constructor() {
     const stored = this.readFromStorage();
-    this.bootstrappedFromStorage = stored.hadData;
+    this.hadStoredStateOnBoot = stored.hadData;
     this.stats = stored.state.stats;
     this.lastLoginDate = stored.state.lastLoginDate;
     this.inventory = stored.state.inventory;
@@ -334,7 +334,7 @@ export class GameState {
     }
     this.attemptedRemoteRecovery = true;
 
-    if (this.bootstrappedFromStorage || this.hadStoredPlayerId) {
+    if (this.hadStoredStateOnBoot || this.hadStoredPlayerId) {
       return null;
     }
 
@@ -408,7 +408,6 @@ export class GameState {
         inventory: [...this.inventory]
       };
       storage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(payload));
-      this.bootstrappedFromStorage = true;
       this.persistPlayerId(this.playerId, storage);
     } catch (error) {
       console.warn('Impossibile salvare il GameState locale', error);
