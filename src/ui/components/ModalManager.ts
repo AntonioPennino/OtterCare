@@ -1,6 +1,6 @@
 import { $, toggleOverlayVisibility } from '../utils.js';
 import { InventoryView } from './InventoryView.js';
-import { recordEvent } from '../../analytics.js';
+import { recordEvent } from '../../core/analytics.js';
 import { GameState } from '../../types.js';
 
 export class ModalManager {

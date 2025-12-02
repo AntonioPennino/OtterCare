@@ -7,8 +7,8 @@ import { NotificationUI } from './components/NotificationUI.js';
 import { initMiniGame, openMiniGame, isMiniGameRunning } from '../minigame.js';
 import { getState, subscribe, setAccessoryState, setAnalyticsOptIn, setThemeMode, serializeBackup, restoreBackupFromString, setPetName, setTutorialSeen, setInstallPromptDismissed, setHatOwned, setSunglassesOwned, setScarfOwned } from '../state.js';
 import { feedAction, spendCoins, rewardItemPurchase } from '../gameActions.js';
-import { audioManager, resumeAudioContext } from '../audio.js';
-import { recordEvent } from '../analytics.js';
+import { audioManager, resumeAudioContext } from '../core/audio.js';
+import { recordEvent } from '../core/analytics.js';
 import { getGameStateInstance } from '../bootstrap.js';
 import { enableNotifications, disableNotifications } from '../notifications.js';
 import { mountStonePolishingActivity } from '../stonePolishing.js';
@@ -54,7 +54,6 @@ export class UIManager {
         const areaEl = $('fishArea');
         const scoreEl = $('miniScore');
         const closeButtonEl = $('closeMini');
-        console.log('UIManager: Initializing MiniGame elements', { overlayEl, areaEl, scoreEl, closeButtonEl });
         if (overlayEl && areaEl && scoreEl && closeButtonEl) {
             initMiniGame({
                 overlay: overlayEl,
@@ -67,9 +66,7 @@ export class UIManager {
                 }
             });
             const playBtn = $('playBtn');
-            console.log('UIManager: playBtn found?', playBtn);
             playBtn?.addEventListener('click', () => {
-                console.log('UIManager: playBtn clicked');
                 openMiniGame();
             });
         }

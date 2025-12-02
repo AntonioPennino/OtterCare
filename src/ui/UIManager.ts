@@ -28,8 +28,8 @@ import {
     spendCoins,
     rewardItemPurchase
 } from '../gameActions.js';
-import { audioManager, resumeAudioContext } from '../audio.js';
-import { recordEvent } from '../analytics.js';
+import { audioManager, resumeAudioContext } from '../core/audio.js';
+import { recordEvent } from '../core/analytics.js';
 import { getGameStateInstance } from '../bootstrap.js';
 import { enableNotifications, disableNotifications } from '../notifications.js';
 import { mountStonePolishingActivity, StonePolishingActivity } from '../stonePolishing.js';

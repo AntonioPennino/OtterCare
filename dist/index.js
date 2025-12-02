@@ -1,7 +1,7 @@
 import { advanceTick, ensurePersistentStorage, loadState, saveState } from './state.js';
 import { UIManager } from './ui/UIManager.js';
 import { calculateOfflineProgress as calculateCoreOfflineProgress, getGameStateInstance, syncManagerWithLegacyCoreStats, syncWithSupabase as syncCoreState } from './bootstrap.js';
-import { audioManager } from './audio.js';
+import { audioManager } from './core/audio.js';
 const uiManager = new UIManager();
 function setupServiceWorker() {
     if (!('serviceWorker' in navigator)) {
@@ -89,21 +89,8 @@ function bootstrap() {
     }).catch(err => {
         console.info('[Pebble] runtime config: import error', err);
     });
-    console.log('[Pebble] Starting UIManager init...');
-    try {
-        uiManager.init();
-        console.log('[Pebble] UIManager init completed.');
-    }
-    catch (error) {
-        console.error('[Pebble] UIManager init failed:', error);
-    }
+    uiManager.init();
     setupServiceWorker();
-    window.addEventListener('error', (event) => {
-        console.error('[Pebble] Global error:', event.error);
-    });
-    window.addEventListener('unhandledrejection', (event) => {
-        console.error('[Pebble] Unhandled rejection:', event.reason);
-    });
     document.addEventListener('visibilitychange', () => {
         if (document.visibilityState === 'hidden') {
             audioManager.suspend();

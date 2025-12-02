@@ -2,7 +2,7 @@ import { getReminderFunctionName, getVapidPublicKey, isCloudSyncConfigured, isPu
 import { getSupabaseClient } from './cloudSync.js';
 import { getState, markNotificationPrompted, markNotificationSent, updateNotificationSettings } from './state.js';
 import { getGameStateInstance } from './bootstrap.js';
-import { recordEvent } from './analytics.js';
+import { recordEvent } from './core/analytics.js';
 const LOW_STAT_MESSAGES = {
     hunger: {
         title: 'La lontra ha fame',

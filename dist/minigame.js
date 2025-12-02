@@ -1,5 +1,5 @@
 import { rewardFishCatch, rewardMiniGameStart } from './gameActions.js';
-import { audioManager, resumeAudioContext } from './audio.js';
+import { audioManager, resumeAudioContext } from './core/audio.js';
 let elements = null;
 let callbacks = null;
 let running = false;
@@ -86,7 +86,6 @@ export function initMiniGame(el, cb) {
     });
 }
 export function openMiniGame() {
-    console.log('minigame: openMiniGame called', { elements: !!elements, running });
     if (!elements || running) {
         return;
     }

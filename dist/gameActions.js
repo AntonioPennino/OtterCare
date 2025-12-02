@@ -1,4 +1,4 @@
-import { recordEvent } from './analytics.js';
+import { recordEvent } from './core/analytics.js';
 import { incrementStat, modifyCoins, updateState } from './state.js';
 import { syncManagerWithLegacyCoreStats } from './bootstrap.js';
 export function feedAction() {

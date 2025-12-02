@@ -1,5 +1,5 @@
 import { rewardFishCatch, rewardMiniGameStart } from './gameActions.js';
-import { audioManager, resumeAudioContext } from './audio.js';
+import { audioManager, resumeAudioContext } from './core/audio.js';
 
 interface MiniGameElements {
   overlay: HTMLElement;

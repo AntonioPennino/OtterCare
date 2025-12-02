@@ -2,7 +2,7 @@ import { advanceTick, ensurePersistentStorage, loadState, saveState } from './st
 import { UIManager } from './ui/UIManager.js';
 import { calculateOfflineProgress as calculateCoreOfflineProgress, getGameStateInstance, syncManagerWithLegacyCoreStats, syncWithSupabase as syncCoreState } from './bootstrap.js';
 import { PebbleGiftEventDetail } from './types.js';
-import { audioManager } from './audio.js';
+import { audioManager } from './core/audio.js';
 
 const uiManager = new UIManager();
 
