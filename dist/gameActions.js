@@ -1,6 +1,6 @@
 import { recordEvent } from './analytics.js';
 import { incrementStat, modifyCoins, updateState } from './state.js';
-import { syncManagerWithLegacyCoreStats } from './gameStateManager.js';
+import { syncManagerWithLegacyCoreStats } from './bootstrap.js';
 export function feedAction() {
     updateState(draft => {
         draft.hunger = Math.min(100, draft.hunger + 20);

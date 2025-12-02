@@ -86,6 +86,7 @@ export function initMiniGame(el, cb) {
     });
 }
 export function openMiniGame() {
+    console.log('minigame: openMiniGame called', { elements: !!elements, running });
     if (!elements || running) {
         return;
     }

@@ -105,6 +105,7 @@ export function initMiniGame(el: MiniGameElements, cb: MiniGameCallbacks): void 
 }
 
 export function openMiniGame(): void {
+  console.log('minigame: openMiniGame called', { elements: !!elements, running });
   if (!elements || running) {
     return;
   }

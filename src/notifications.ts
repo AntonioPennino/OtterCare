@@ -1,7 +1,7 @@
 import { getReminderFunctionName, getVapidPublicKey, isCloudSyncConfigured, isPushConfigured } from './config.js';
 import { getSupabaseClient } from './cloudSync.js';
 import { getState, markNotificationPrompted, markNotificationSent, updateNotificationSettings } from './state.js';
-import { getGameStateInstance } from './gameStateManager.js';
+import { getGameStateInstance } from './bootstrap.js';
 import { recordEvent } from './analytics.js';
 
 const LOW_STAT_MESSAGES: Record<'hunger' | 'happy' | 'clean' | 'energy', { title: string; body: string }> = {

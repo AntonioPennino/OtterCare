@@ -217,6 +217,13 @@ export function setScarfOwned(value) {
         draft.scarf = value;
     });
 }
+export function setAccessoryState(accessories) {
+    updateState(draft => {
+        draft.hat = accessories.hat;
+        draft.sunglasses = accessories.sunglasses;
+        draft.scarf = accessories.scarf;
+    });
+}
 export function setPetName(name) {
     const sanitized = name.replace(/[<>]/g, '').replace(/\s+/g, ' ').trim().slice(0, 24);
     updateState(draft => {

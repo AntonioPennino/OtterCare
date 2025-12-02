@@ -1,4 +1,4 @@
-import { getGameStateInstance } from './gameStateManager.js';
+import { getGameStateInstance } from './bootstrap.js';
 
 interface StonePolishingOptions {
   baseImage: string;

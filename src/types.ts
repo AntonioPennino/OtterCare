@@ -62,3 +62,29 @@ export interface TutorialStep {
   title: string;
   description: string;
 }
+
+export interface CoreStats {
+  hunger: number;
+  happiness: number;
+  energy: number;
+}
+
+export interface PebbleGiftEventDetail {
+  item: string;
+}
+
+export type AccessoryState = {
+  hat: boolean;
+  scarf: boolean;
+  sunglasses: boolean;
+};
+
+export type OutfitKey = 'base' | 'hat' | 'hatScarf' | 'hatScarfSunglasses';
+
+export interface InventoryEventDetail {
+  inventory: string[];
+}
+
+export interface PlayerIdChangeDetail {
+  playerId: string;
+}

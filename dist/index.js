@@ -1,7 +1,8 @@
 import { advanceTick, ensurePersistentStorage, loadState, saveState } from './state.js';
-import { initUI, prepareUpdatePrompt, showGiftModal } from './ui.js';
-import { calculateOfflineProgress as calculateCoreOfflineProgress, getGameStateInstance, syncManagerWithLegacyCoreStats, syncWithSupabase as syncCoreState } from './gameStateManager.js';
+import { UIManager } from './ui/UIManager.js';
+import { calculateOfflineProgress as calculateCoreOfflineProgress, getGameStateInstance, syncManagerWithLegacyCoreStats, syncWithSupabase as syncCoreState } from './bootstrap.js';
 import { audioManager } from './audio.js';
+const uiManager = new UIManager();
 function setupServiceWorker() {
     if (!('serviceWorker' in navigator)) {
         return;
@@ -49,7 +50,7 @@ function setupServiceWorker() {
     });
 }
 function promptForUpdate(worker) {
-    prepareUpdatePrompt(() => {
+    uiManager.prepareUpdatePrompt(() => {
         worker.postMessage({ type: 'SKIP_WAITING' });
     }, () => {
         // Nessuna azione aggiuntiva per ora
@@ -62,14 +63,14 @@ function bootstrap() {
     window.addEventListener('pebble-gift-found', event => {
         const customEvent = event;
         const item = customEvent.detail?.item ?? 'dono misterioso';
-        showGiftModal(item);
+        uiManager.showGiftModal(item);
     });
     const offlineProgress = calculateCoreOfflineProgress();
     if (offlineProgress) {
         const hoursText = offlineProgress.hoursAway.toFixed(2);
         console.info(`[Pebble] Sei stato via per ${hoursText} ore.`);
         if (offlineProgress.gift) {
-            showGiftModal(offlineProgress.gift);
+            uiManager.showGiftModal(offlineProgress.gift);
         }
     }
     void syncCoreState();
@@ -88,7 +89,7 @@ function bootstrap() {
     }).catch(err => {
         console.info('[Pebble] runtime config: import error', err);
     });
-    initUI();
+    uiManager.init();
     setupServiceWorker();
     document.addEventListener('visibilitychange', () => {
         if (document.visibilityState === 'hidden') {

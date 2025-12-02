@@ -1,7 +1,10 @@
 import { advanceTick, ensurePersistentStorage, loadState, saveState } from './state.js';
-import { initUI, prepareUpdatePrompt, showGiftModal } from './ui.js';
-import { calculateOfflineProgress as calculateCoreOfflineProgress, getGameStateInstance, syncManagerWithLegacyCoreStats, syncWithSupabase as syncCoreState, type PebbleGiftEventDetail } from './gameStateManager.js';
+import { UIManager } from './ui/UIManager.js';
+import { calculateOfflineProgress as calculateCoreOfflineProgress, getGameStateInstance, syncManagerWithLegacyCoreStats, syncWithSupabase as syncCoreState } from './bootstrap.js';
+import { PebbleGiftEventDetail } from './types.js';
 import { audioManager } from './audio.js';
+
+const uiManager = new UIManager();
 
 function setupServiceWorker(): void {
   if (!('serviceWorker' in navigator)) {
@@ -59,7 +62,7 @@ function setupServiceWorker(): void {
 }
 
 function promptForUpdate(worker: ServiceWorker): void {
-  prepareUpdatePrompt(() => {
+  uiManager.prepareUpdatePrompt(() => {
     worker.postMessage({ type: 'SKIP_WAITING' });
   }, () => {
     // Nessuna azione aggiuntiva per ora
@@ -74,7 +77,7 @@ function bootstrap(): void {
   window.addEventListener('pebble-gift-found', event => {
     const customEvent = event as CustomEvent<PebbleGiftEventDetail>;
     const item = customEvent.detail?.item ?? 'dono misterioso';
-    showGiftModal(item);
+    uiManager.showGiftModal(item);
   });
 
   const offlineProgress = calculateCoreOfflineProgress();
@@ -82,7 +85,7 @@ function bootstrap(): void {
     const hoursText = offlineProgress.hoursAway.toFixed(2);
     console.info(`[Pebble] Sei stato via per ${hoursText} ore.`);
     if (offlineProgress.gift) {
-      showGiftModal(offlineProgress.gift);
+      uiManager.showGiftModal(offlineProgress.gift);
     }
   }
 
@@ -101,7 +104,8 @@ function bootstrap(): void {
   }).catch(err => {
     console.info('[Pebble] runtime config: import error', err);
   });
-  initUI();
+
+  uiManager.init();
   setupServiceWorker();
 
   document.addEventListener('visibilitychange', () => {

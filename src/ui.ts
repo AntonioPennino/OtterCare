@@ -23,7 +23,8 @@ import { initMiniGame, isMiniGameRunning, openMiniGame } from './minigame.js';
 import { mountStonePolishingActivity, StonePolishingActivity } from './stonePolishing.js';
 import { applyTheme } from './theme.js';
 import { disableNotifications, enableNotifications, notifyLowStat, notificationsSupported } from './notifications.js';
-import { type CoreStats, getGameStateInstance, syncManagerWithLegacyCoreStats } from './gameStateManager.js';
+import { getGameStateInstance, syncManagerWithLegacyCoreStats } from './bootstrap.js';
+import { type CoreStats } from './types.js';
 
 type AccessoryState = {
   hat: boolean;
@@ -1125,14 +1126,14 @@ function initBackupControls(): void {
   exportBtn?.addEventListener('click', () => {
     try {
       const backupJson = serializeBackup();
-          const petName = getState().petName.trim() || 'Pebble';
-          const normalized = petName.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '') || 'pebble';
-          const timestamp = new Date().toISOString().replace(/[:]/g, '-');
-          const blob = new Blob([backupJson], { type: 'application/json' });
-          const url = URL.createObjectURL(blob);
-          const anchor = document.createElement('a');
-          anchor.href = url;
-          anchor.download = `pebble-backup-${normalized}-${timestamp}.json`;
+      const petName = getState().petName.trim() || 'Pebble';
+      const normalized = petName.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '') || 'pebble';
+      const timestamp = new Date().toISOString().replace(/[:]/g, '-');
+      const blob = new Blob([backupJson], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const anchor = document.createElement('a');
+      anchor.href = url;
+      anchor.download = `pebble-backup-${normalized}-${timestamp}.json`;
       document.body.appendChild(anchor);
       anchor.click();
       anchor.remove();
@@ -1159,7 +1160,7 @@ function initBackupControls(): void {
       try {
         const text = await file.text();
         const summary = restoreBackupFromString(text);
-          const name = summary.petName || 'Pebble';
+        const name = summary.petName || 'Pebble';
         showAlert(`Backup ripristinato! Bentornato ${name}.`, 'info');
         recordEvent('backup:import');
       } catch (error) {

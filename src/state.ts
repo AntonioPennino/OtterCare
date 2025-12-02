@@ -249,6 +249,14 @@ export function setScarfOwned(value: boolean): void {
   });
 }
 
+export function setAccessoryState(accessories: { hat: boolean; sunglasses: boolean; scarf: boolean }): void {
+  updateState(draft => {
+    draft.hat = accessories.hat;
+    draft.sunglasses = accessories.sunglasses;
+    draft.scarf = accessories.scarf;
+  });
+}
+
 export function setPetName(name: string): void {
   const sanitized = name.replace(/[<>]/g, '').replace(/\s+/g, ' ').trim().slice(0, 24);
   updateState(draft => {

@@ -1,4 +1,4 @@
-import { getGameStateInstance } from './gameStateManager.js';
+import { getGameStateInstance } from './bootstrap.js';
 const DEFAULT_OPTIONS = {
     width: 320,
     height: 320,

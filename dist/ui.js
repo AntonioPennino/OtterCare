@@ -6,7 +6,7 @@ import { initMiniGame, isMiniGameRunning, openMiniGame } from './minigame.js';
 import { mountStonePolishingActivity } from './stonePolishing.js';
 import { applyTheme } from './theme.js';
 import { disableNotifications, enableNotifications, notifyLowStat, notificationsSupported } from './notifications.js';
-import { getGameStateInstance, syncManagerWithLegacyCoreStats } from './gameStateManager.js';
+import { getGameStateInstance, syncManagerWithLegacyCoreStats } from './bootstrap.js';
 const OTTER_ASSET_BASE = 'src/assets/otter';
 const OUTFIT_VARIANTS = [
     { key: 'hatScarfSunglasses', suffix: '-hatScarfSunglasses', required: ['hat', 'scarf', 'sunglasses'] },
