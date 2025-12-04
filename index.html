@@ -156,6 +156,25 @@
     <section id="kitchenPage" class="scene kitchen-scene hidden" aria-hidden="true" aria-label="La roccia del picnic">
       <div class="scene-frame">
         <div class="kitchen-otter" aria-live="polite">
+          <img
+            class="otter-img"
+            src="src/assets/otter/otter_neutral.png"
+            alt="Pebble attende uno spuntino"
+          />
+        </div>
+        <p class="scene-instructions">Trascina un alimento direttamente sulla lontra per nutrirla.</p>
+      </div>
+      <div class="food-drawer" aria-label="Dispensa del picnic">
+        <button class="food-item" draggable="true" data-food="fish">🐟 Pesce fresco</button>
+        <button class="food-item" draggable="true" data-food="berry">🍓 Frutti di bosco</button>
+        <button class="food-item" draggable="true" data-food="clam">🦪 Vongola</button>
+      </div>
+      <div class="kitchen-shortcuts">
+        <p class="kitchen-tip">Suggerimento: trascina e rilascia gli alimenti sulla lontra per variare la dieta.</p>
+      </div>
+    </section>
+
+    <section id="hygienePage" class="scene hygiene-scene hidden" aria-hidden="true" aria-label="Il fiume basso">
       <div class="scene-frame">
         <div class="hygiene-river">
           <div class="hygiene-otter" aria-live="polite">
@@ -387,12 +406,12 @@
     </div>
   </div>
 
-  <nav class="bottom-nav" id="bottomNav">
+  <nav class="mobile-nav" aria-label="Navigazione mobile">
     <button class="nav-item active" data-page="den" aria-pressed="true">
       <span class="nav-icon" aria-hidden="true">
         <img
-          src="src/assets/menu-icons/icon-home.png"
-          srcset="src/assets/menu-icons/icon-home.png 1x, src/assets/menu-icons/icon-home@2x.png 2x, src/assets/menu-icons/icon-home@3x.png 3x"
+          src="src/assets/menu-icons/icon-den.png"
+          srcset="src/assets/menu-icons/icon-den.png 1x, src/assets/menu-icons/icon-den@2x.png 2x, src/assets/menu-icons/icon-den@3x.png 3x"
           alt=""
           loading="lazy"
           decoding="async"
@@ -405,8 +424,8 @@
     <button class="nav-item" data-page="kitchen" aria-pressed="false">
       <span class="nav-icon" aria-hidden="true">
         <img
-          src="src/assets/menu-icons/icon-food.png"
-          srcset="src/assets/menu-icons/icon-food.png 1x, src/assets/menu-icons/icon-food@2x.png 2x, src/assets/menu-icons/icon-food@3x.png 3x"
+          src="src/assets/menu-icons/icon-kitchen.png"
+          srcset="src/assets/menu-icons/icon-kitchen.png 1x, src/assets/menu-icons/icon-kitchen@2x.png 2x, src/assets/menu-icons/icon-kitchen@3x.png 3x"
           alt=""
           loading="lazy"
           decoding="async"
