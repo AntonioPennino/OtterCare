@@ -219,7 +219,8 @@ export class UIManager {
 
             dropZone.addEventListener('drop', (e) => {
                 e.preventDefault();
-                const foodKey = e.dataTransfer?.getData('text/plain');
+                const dragEvent = e as DragEvent;
+                const foodKey = dragEvent.dataTransfer?.getData('text/plain');
                 if (foodKey) {
                     this.feedWithSnack(foodKey);
                 }
