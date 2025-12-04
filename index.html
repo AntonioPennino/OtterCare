@@ -18,6 +18,83 @@
   </script>
 </head>
 <body>
+  <header>
+    <div class="header-content">
+      <h1 class="brand-lowercase">pebble</h1>
+    </div>
+  </header>
+
+  <main id="worldContainer">
+    <!-- Scene 1: Tana (Den) -->
+    <section id="denPage" class="scene" data-scene="den">
+      <div class="otter-container">
+        <div class="otter-wrapper">
+          <img id="otterImage" class="otter-img" src="src/assets/otter/otter_neutral.png" alt="Pebble" />
+          <div id="accessories-container"></div>
+        </div>
+      </div>
+      <!-- The Journal Trigger (Diegetic Object) -->
+      <div id="journalTrigger" class="journal-trigger" role="button" aria-label="Apri il diario">
+        📔
+      </div>
+    </section>
+
+    <!-- Scene 2: Cucina (Kitchen) -->
+    <section id="kitchenPage" class="scene" data-scene="kitchen">
+      <div class="kitchen-otter">
+        <img class="otter-img" src="src/assets/otter/otter_neutral.png" alt="Pebble affamata" />
+      </div>
+      <!-- Floating Context Panel for Food -->
+      <div class="context-panel">
+        <div class="draggable-item" draggable="true" data-food="fish">🐟</div>
+        <div class="draggable-item" draggable="true" data-food="berry">🍓</div>
+        <div class="draggable-item" draggable="true" data-food="clam">🦪</div>
+      </div>
+    </section>
+
+    <!-- Scene 3: Fiume (Hygiene) -->
+    <section id="hygienePage" class="scene" data-scene="hygiene">
+      <div class="hygiene-otter">
+        <img class="otter-img" src="src/assets/otter/otter_neutral.png" alt="Pebble nel fiume" />
+      </div>
+      <div class="context-panel">
+        <div id="sponge" class="draggable-item" draggable="true">🧽</div>
+      </div>
+    </section>
+
+    <!-- Scene 4: Giochi (Games) -->
+    <section id="gamesPage" class="scene" data-scene="games">
+      <div class="merchant-container">
+        <!-- The Merchant (Turtle or Beaver) -->
+        <div class="merchant-character">🐢</div> 
+        
+        <!-- The Rug (Item Display) -->
+        <div class="merchant-rug">
+          <div class="rug-item" data-item="shell_pink" data-cost="10">🐚</div>
+          <div class="rug-item" data-item="stone_smooth" data-cost="15">🪨</div>
+          <div class="rug-item" data-item="hat_straw" data-cost="50">👒</div>
+        </div>
+
+        <!-- Ritual Triggers -->
+        <div class="context-panel">
+          <div class="draggable-item" id="stonePolishingStartBtn">🪨</div>
+          <div class="draggable-item" id="currentRitualStartBtn">🌊</div>
+          <div class="draggable-item" id="fireflyRitualStartBtn">✨</div>
+        </div>
+      </div>
+      
+      <!-- Sea Glass Display -->
+      <div class="sea-glass-display">
+        <span class="glass-icon">💎</span>
+        <span id="seaGlassCount">0</span>
+      </div>
+    </section>
+  </main>
+
+  <!-- The Journal Overlay -->
+  <div id="journalOverlay" class="overlay hidden">
+    <div class="journal-book">
+      <button id="journalCloseBtn" class="journal-close">✕</button>
       
       <!-- Page 1: Memories (Stats) -->
       <div class="journal-page active" data-page="memories">
@@ -71,10 +148,46 @@
         </div>
         <div class="page-nav">
           <button class="prev-page-btn" data-target="calm">←</button>
+          <span>3/3</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Stone Stacking Ritual Overlay -->
+  <div id="stoneStackingOverlay" class="overlay hidden">
+    <div class="ritual-container">
+      <h2 class="ritual-title">Equilibrio</h2>
+      <div id="stoneDropZone" class="stone-drop-zone">
+        <!-- Stones will be placed here -->
+        <div class="base-stone"></div>
+      </div>
+      <div id="stoneSource" class="stone-source">
+        <div class="stone draggable-stone" draggable="true" data-size="large">🪨</div>
         <div class="stone draggable-stone" draggable="true" data-size="medium">🪨</div>
         <div class="stone draggable-stone" draggable="true" data-size="small">🪨</div>
       </div>
       <button id="closeStoneStacking" class="close-ritual-btn">✕</button>
+    </div>
+  </div>
+
+  <!-- The Current Ritual Overlay -->
+  <div id="currentRitualOverlay" class="overlay hidden">
+    <div class="ritual-container water-container">
+      <h2 class="ritual-title" style="color: #E0F7FA;">La Corrente</h2>
+      <div id="currentCanvas" class="current-canvas"></div>
+      <div class="current-instruction" style="color: #B2EBF2;">Tocca l'acqua per muoverla</div>
+      <button id="closeCurrentRitual" class="close-ritual-btn" style="color: #E0F7FA;">✕</button>
+    </div>
+  </div>
+
+  <!-- Firefly Connection Ritual Overlay -->
+  <div id="fireflyRitualOverlay" class="overlay hidden">
+    <div class="ritual-container firefly-container">
+      <h2 class="ritual-title" style="color: #E0F7FA;">Costellazioni</h2>
+      <canvas id="fireflyCanvas" class="firefly-canvas"></canvas>
+      <div class="current-instruction" style="color: #B2EBF2;">Unisci le stelle</div>
+      <button id="closeFireflyRitual" class="close-ritual-btn" style="color: #E0F7FA;">✕</button>
     </div>
   </div>
 
