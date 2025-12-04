@@ -1964,3 +1964,50 @@ body.theme-comfort .tutorial-overlay {
     animation: none !important;
   }
 }
+
+/* Mobile Drag and Drop Feedback */
+.drag-clone {
+  position: fixed;
+  pointer-events: none;
+  z-index: 1000;
+  opacity: 0.9;
+  transform: scale(1.1);
+  filter: drop-shadow(0 10px 20px rgba(0,0,0,0.2));
+  transition: transform 0.1s;
+}
+
+/* Sponge Tool */
+.sponge-tool {
+  font-size: 3.5rem;
+  cursor: grab;
+  user-select: none;
+  touch-action: none;
+  transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
+  filter: drop-shadow(0 4px 8px rgba(0,0,0,0.15));
+}
+
+.sponge-tool:active {
+  cursor: grabbing;
+  transform: scale(0.9);
+}
+
+.sponge-tool.dragging {
+  opacity: 0; /* Hide original while dragging clone */
+}
+
+/* Bubbles Animation */
+@keyframes bubblePop {
+  0% { transform: scale(0); opacity: 0; }
+  50% { opacity: 1; }
+  100% { transform: scale(1.5) translateY(-20px); opacity: 0; }
+}
+
+.bubble-particle {
+  position: absolute;
+  pointer-events: none;
+  background: radial-gradient(circle at 30% 30%, rgba(255, 255, 255, 0.9), rgba(255, 255, 255, 0.4));
+  border-radius: 50%;
+  animation: bubblePop 0.8s ease-out forwards;
+  z-index: 100;
+}
+

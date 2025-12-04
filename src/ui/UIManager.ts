@@ -48,6 +48,7 @@ export class UIManager {
         this.initTutorial();
         this.initUpdateBanner();
         this.initKitchenScene();
+        this.initHygieneScene();
         this.initSleep();
         this.initActionButtons();
         this.initShop();
@@ -210,109 +211,152 @@ export class UIManager {
 
     private initKitchenScene(): void {
         const foodButtons = document.querySelectorAll<HTMLElement>('.food-item');
-        const dropTargets = document.querySelectorAll<HTMLElement>('.otter-container, .otter-img');
-        // quickFeedBtn removed
 
-        const setActiveFood = (button: HTMLElement | null) => {
-            foodButtons.forEach(btn => btn.classList.remove('selected', 'dragging'));
-            if (button) {
-                button.classList.add('selected');
-            }
+        // Helper to create a ghost element
+        const createGhost = (source: HTMLElement, x: number, y: number) => {
+            const ghost = source.cloneNode(true) as HTMLElement;
+            ghost.classList.add('drag-clone');
+            ghost.style.left = `${x}px`;
+            ghost.style.top = `${y}px`;
+            // Center it
+            const rect = source.getBoundingClientRect();
+            ghost.style.width = `${rect.width}px`;
+            ghost.style.height = `${rect.height}px`;
+            ghost.style.margin = '0';
+            document.body.appendChild(ghost);
+            return ghost;
         };
-
-        const toggleDropHover = (active: boolean) => {
-            dropTargets.forEach(t => t.classList.toggle('drop-hover', active));
-        };
-
-        const resetDragState = () => {
-            foodButtons.forEach(btn => btn.classList.remove('dragging', 'selected'));
-            toggleDropHover(false);
-            this.currentFood = null;
-            this.touchDrag = null;
-        };
-
-        const isTouchPointer = (e: PointerEvent) => e.pointerType === 'touch' || e.pointerType === 'pen';
-        const isPointInsideDropTargets = (x: number, y: number): boolean => {
-            return Array.from(dropTargets).some(target => {
-                const rect = target.getBoundingClientRect();
-                return x >= rect.left && x <= rect.right && y >= rect.top && y <= rect.bottom;
-            });
-        };
-
-        const finishTouchDrag = (event: PointerEvent, shouldDrop: boolean) => {
-            if (!this.touchDrag) return;
-            const { button, foodKey } = this.touchDrag;
-            button.classList.remove('dragging');
-            try {
-                button.releasePointerCapture(event.pointerId);
-            } catch { /* ignore */ }
-
-            if (shouldDrop) {
-                this.feedWithSnack(foodKey);
-                this.suppressNextClick = true;
-                setTimeout(() => { this.suppressNextClick = false; }, 50);
-            }
-            this.touchDrag = null;
-            resetDragState();
-        };
-
-        // Bind events
-        dropTargets.forEach(target => {
-            target.addEventListener('dragenter', e => { e.preventDefault(); toggleDropHover(true); });
-            target.addEventListener('dragover', e => { e.preventDefault(); toggleDropHover(true); });
-            target.addEventListener('dragleave', () => toggleDropHover(false));
-            target.addEventListener('drop', e => {
-                e.preventDefault();
-                const transferred = e.dataTransfer?.getData('text/plain') || this.currentFood;
-                this.feedWithSnack(transferred ?? null);
-                resetDragState();
-            });
-        });
 
         foodButtons.forEach(button => {
             button.addEventListener('pointerdown', event => {
-                if (!isTouchPointer(event)) return;
-                this.touchDrag = { button, pointerId: event.pointerId, foodKey: button.dataset.food ?? null };
-                this.currentFood = this.touchDrag.foodKey;
-                setActiveFood(button);
-                button.classList.add('dragging');
-                try { button.setPointerCapture(event.pointerId); } catch { /* ignore */ }
-                toggleDropHover(isPointInsideDropTargets(event.clientX, event.clientY));
+                const foodKey = button.dataset.food;
+                if (!foodKey) return;
+
+                // Prevent default touch actions (scrolling) if we are dragging
+                // But we want to allow scrolling if not dragging? 
+                // Actually, for a game-like interaction, preventing default on the item is usually good.
                 event.preventDefault();
-            });
 
-            button.addEventListener('pointermove', event => {
-                if (!this.touchDrag || this.touchDrag.pointerId !== event.pointerId) return;
-                toggleDropHover(isPointInsideDropTargets(event.clientX, event.clientY));
-            });
-
-            button.addEventListener('pointerup', event => {
-                if (!this.touchDrag || this.touchDrag.pointerId !== event.pointerId) return;
-                finishTouchDrag(event, isPointInsideDropTargets(event.clientX, event.clientY));
-            });
-
-            button.addEventListener('pointercancel', event => {
-                if (!this.touchDrag || this.touchDrag.pointerId !== event.pointerId) return;
-                finishTouchDrag(event, false);
-            });
-
-            button.addEventListener('dragstart', event => {
-                const foodKey = button.dataset.food ?? null;
-                this.currentFood = foodKey;
-                setActiveFood(button);
                 button.classList.add('dragging');
-                if (event.dataTransfer && foodKey) {
-                    event.dataTransfer.setData('text/plain', foodKey);
-                    event.dataTransfer.effectAllowed = 'move';
+                const ghost = createGhost(button, event.clientX, event.clientY);
+
+                // Center ghost on pointer
+                const updateGhost = (x: number, y: number) => {
+                    ghost.style.left = `${x - ghost.offsetWidth / 2}px`;
+                    ghost.style.top = `${y - ghost.offsetHeight / 2}px`;
+                };
+                updateGhost(event.clientX, event.clientY);
+
+                const moveHandler = (e: PointerEvent) => {
+                    updateGhost(e.clientX, e.clientY);
+                };
+
+                const upHandler = (e: PointerEvent) => {
+                    button.classList.remove('dragging');
+                    ghost.remove();
+                    document.removeEventListener('pointermove', moveHandler);
+                    document.removeEventListener('pointerup', upHandler);
+                    document.removeEventListener('pointercancel', upHandler);
+
+                    // Check drop
+                    const elementUnder = document.elementFromPoint(e.clientX, e.clientY);
+                    if (elementUnder && (elementUnder.closest('.otter-container') || elementUnder.closest('.kitchen-otter'))) {
+                        this.feedWithSnack(foodKey);
+                    }
+                };
+
+                document.addEventListener('pointermove', moveHandler);
+                document.addEventListener('pointerup', upHandler);
+                document.addEventListener('pointercancel', upHandler);
+            });
+
+            // Remove click listener or keep it as backup? User said "click doesn't work well", so maybe remove.
+            // But for accessibility/desktop click might be nice?
+            // User said "funziona se premi sul cibo, ma non va bene". So I should probably remove the simple click-to-feed.
+        });
+    }
+
+    private initHygieneScene(): void {
+        const sponge = $('sponge');
+        const otterContainer = document.querySelector('.hygiene-otter');
+        const bubblesContainer = document.querySelector('.hygiene-bubbles');
+
+        if (!sponge || !otterContainer || !bubblesContainer) return;
+
+        let rubProgress = 0;
+
+        sponge.addEventListener('pointerdown', event => {
+            event.preventDefault();
+            sponge.classList.add('dragging');
+
+            const ghost = sponge.cloneNode(true) as HTMLElement;
+            ghost.classList.add('drag-clone');
+            ghost.style.position = 'fixed';
+            ghost.style.zIndex = '1000';
+            document.body.appendChild(ghost);
+
+            const updateGhost = (x: number, y: number) => {
+                ghost.style.left = `${x - ghost.offsetWidth / 2}px`;
+                ghost.style.top = `${y - ghost.offsetHeight / 2}px`;
+            };
+            updateGhost(event.clientX, event.clientY);
+
+            let lastX = event.clientX;
+            let lastY = event.clientY;
+
+            const moveHandler = (e: PointerEvent) => {
+                updateGhost(e.clientX, e.clientY);
+
+                // Check collision
+                const ghostRect = ghost.getBoundingClientRect();
+                const otterRect = otterContainer.getBoundingClientRect();
+
+                const overlap = !(ghostRect.right < otterRect.left ||
+                    ghostRect.left > otterRect.right ||
+                    ghostRect.bottom < otterRect.top ||
+                    ghostRect.top > otterRect.bottom);
+
+                if (overlap) {
+                    const delta = Math.hypot(e.clientX - lastX, e.clientY - lastY);
+                    if (delta > 5) {
+                        rubProgress += delta;
+                        // Spawn bubble
+                        const bubble = document.createElement('div');
+                        bubble.className = 'bubble-particle';
+                        const bx = e.clientX + (Math.random() - 0.5) * 40;
+                        const by = e.clientY + (Math.random() - 0.5) * 40;
+                        // Relative to container
+                        const contRect = bubblesContainer.getBoundingClientRect();
+                        bubble.style.left = `${bx - contRect.left}px`;
+                        bubble.style.top = `${by - contRect.top}px`;
+                        bubblesContainer.appendChild(bubble);
+                        setTimeout(() => bubble.remove(), 1000);
+
+                        if (rubProgress > 1000) { // Threshold
+                            getGameServiceInstance().bathe();
+                            this.otterRenderer.triggerAnimation('bathe', getGameStateInstance().getEquipped(), () => { });
+                            this.notificationUI.showAlert('Che bel bagnetto! La lontra è pulita.', 'info');
+                            rubProgress = 0;
+                            // Force drop to reset
+                            upHandler(e);
+                        }
+                    }
                 }
-            });
+                lastX = e.clientX;
+                lastY = e.clientY;
+            };
 
-            button.addEventListener('dragend', () => resetDragState());
+            const upHandler = (e: PointerEvent) => {
+                sponge.classList.remove('dragging');
+                ghost.remove();
+                document.removeEventListener('pointermove', moveHandler);
+                document.removeEventListener('pointerup', upHandler);
+                document.removeEventListener('pointercancel', upHandler);
+            };
 
-            button.addEventListener('click', () => {
-                // Click to feed disabled in favor of drag and drop
-                this.notificationUI.showAlert('Trascina il cibo sulla lontra per nutrirla!', 'info');
-            });
+            document.addEventListener('pointermove', moveHandler);
+            document.addEventListener('pointerup', upHandler);
+            document.addEventListener('pointercancel', upHandler);
         });
     }
 
