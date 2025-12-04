@@ -25,44 +25,51 @@ export class OtterRenderer {
         });
     }
     triggerAnimation(animation, accessories, onComplete) {
-        const target = this.getActiveOtterElement();
-        if (!target) {
-            return;
-        }
-        const previousTimer = this.otterAnimationTimers.get(target);
-        if (typeof previousTimer === 'number') {
-            window.clearTimeout(previousTimer);
-            this.otterAnimationTimers.delete(target);
-        }
-        target.classList.remove('hop', 'eating', 'bathing', 'rest');
-        target.classList.remove('happy', 'sad', 'sleepy');
-        target.dataset.animating = animation;
-        const applyAction = (assetBase, classes, duration) => {
-            const { src } = this.buildOtterImage(assetBase, accessories);
-            this.otterRenderCache.delete(target);
-            target.src = src;
-            if (classes.length) {
-                target.classList.add(...classes);
-            }
-            const timerId = window.setTimeout(() => {
-                if (classes.length) {
-                    target.classList.remove(...classes);
-                }
-                delete target.dataset.animating;
-                this.otterAnimationTimers.delete(target);
+        this.collectOtterElements();
+        let completionCalled = false;
+        const handleCompletion = () => {
+            if (!completionCalled) {
+                completionCalled = true;
                 onComplete();
-            }, duration);
-            this.otterAnimationTimers.set(target, timerId);
+            }
         };
-        if (animation === 'feed') {
-            applyAction('otter_eat', ['hop', 'eating'], 1500);
-        }
-        else if (animation === 'bathe') {
-            applyAction('otter_bath', ['bathing'], 1600);
-        }
-        else if (animation === 'sleep') {
-            applyAction('otter_sleepy', ['rest'], 4000);
-        }
+        this.otterElements.forEach(target => {
+            const previousTimer = this.otterAnimationTimers.get(target);
+            if (typeof previousTimer === 'number') {
+                window.clearTimeout(previousTimer);
+                this.otterAnimationTimers.delete(target);
+            }
+            target.classList.remove('hop', 'eating', 'bathing', 'rest');
+            target.classList.remove('happy', 'sad', 'sleepy');
+            target.dataset.animating = animation;
+            const applyAction = (assetBase, classes, duration) => {
+                const { src } = this.buildOtterImage(assetBase, accessories);
+                this.otterRenderCache.delete(target);
+                target.src = src;
+                if (classes.length) {
+                    target.classList.add(...classes);
+                }
+                const timerId = window.setTimeout(() => {
+                    if (classes.length) {
+                        target.classList.remove(...classes);
+                    }
+                    delete target.dataset.animating;
+                    this.otterAnimationTimers.delete(target);
+                    // Only call completion once, after the first animation finishes (they are synced)
+                    handleCompletion();
+                }, duration);
+                this.otterAnimationTimers.set(target, timerId);
+            };
+            if (animation === 'feed') {
+                applyAction('otter_eat', ['hop', 'eating'], 1500);
+            }
+            else if (animation === 'bathe') {
+                applyAction('otter_bath', ['bathing'], 1600);
+            }
+            else if (animation === 'sleep') {
+                applyAction('otter_sleepy', ['rest'], 4000);
+            }
+        });
     }
     collectOtterElements() {
         this.otterElements.clear();
