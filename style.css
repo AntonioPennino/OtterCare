@@ -1,61 +1,54 @@
 :root {
   --font-base: 'Nunito', 'Nunito Sans', system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
   
-  /* Brand Colors (Preserved) */
-  --bg-gradient-start: #CFEDEA;
-  --bg-gradient-end: #F2E3C6;
-  --primary: #8D5B3E;
-  --primary-dark: #5F3C28;
-  --accent: #6ABFAB;
-  --accent-light: #B3E3D8;
-  --accent-salmon: #FF9B85;
-  --status-mud: #5C5248;
+  /* Brand Colors - Refined & Softer */
+  --bg-gradient-start: #E0F7FA; /* Lighter, airier cyan */
+  --bg-gradient-end: #FFF8E1; /* Softer cream */
+  --primary: #5D4037; /* Deep warm brown */
+  --primary-dark: #3E2723;
+  --accent: #4DB6AC; /* Teal */
+  --accent-light: #B2DFDB;
+  --accent-salmon: #FFAB91; /* Softer salmon */
+  --status-mud: #795548;
   
   /* Text Colors */
-  --text-main: #5F3C28; /* Slightly darker for better contrast */
-  --text-muted: #9C7B68;
+  --text-main: #37474F; /* Dark blue-grey for better readability than pure black/brown */
+  --text-muted: #78909C;
   
-  /* Surfaces & Glass */
-  --card-bg: rgba(255, 249, 241, 0.95);
-  --surface-glass: rgba(255, 249, 241, 0.7);
-  --surface-glass-strong: rgba(255, 249, 241, 0.95);
-  --header-bg: rgba(255, 249, 241, 0.8);
-  --bottom-nav-bg: rgba(255, 249, 241, 0.9);
+  /* Surfaces & Glass - Flatter, less transparency reliance */
+  --card-bg: #FFFFFF;
+  --surface-glass: rgba(255, 255, 255, 0.6);
+  --surface-glass-strong: rgba(255, 255, 255, 0.9);
+  --header-bg: rgba(255, 255, 255, 0.85);
+  --bottom-nav-bg: rgba(255, 255, 255, 0.95);
   
-  /* Shadows & Depth (Premium Feel) */
-  --card-shadow: 
-    0 4px 6px -1px rgba(92, 82, 72, 0.05),
-    0 10px 15px -3px rgba(92, 82, 72, 0.1),
-    0 20px 25px -5px rgba(92, 82, 72, 0.05);
-  --header-shadow: 0 4px 30px rgba(0, 0, 0, 0.03);
-  --bottom-nav-shadow: 0 -4px 30px rgba(0, 0, 0, 0.04);
-  --modal-shadow: 0 25px 50px -12px rgba(92, 82, 72, 0.25);
+  /* Shadows & Depth - Minimalist */
+  --card-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+  --header-shadow: 0 1px 0 rgba(0, 0, 0, 0.05);
+  --bottom-nav-shadow: 0 -1px 0 rgba(0, 0, 0, 0.05);
+  --modal-shadow: 0 8px 32px rgba(0, 0, 0, 0.08);
+  --btn-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
   
   /* UI Metrics */
-  --card-radius: 32px; /* Softer, rounder corners */
-  --btn-radius: 20px;
-  --bottom-nav-height: 84px;
+  --card-radius: 24px;
+  --btn-radius: 16px;
+  --bottom-nav-height: 80px;
   --safe-area-bottom: env(safe-area-inset-bottom, 20px);
   --header-offset: calc(64px + env(safe-area-inset-top, 0px));
   
   /* Interactive */
-  --secondary-btn-bg: #FFF5E6;
-  --secondary-btn-color: var(--primary);
-  --secondary-btn-border: rgba(141, 91, 62, 0.15);
-  --secondary-btn-active-bg: var(--accent);
-  --secondary-btn-active-color: #05312C;
-  --input-border: rgba(141, 91, 62, 0.2);
+  --secondary-btn-bg: #F5F5F5;
+  --secondary-btn-color: var(--text-main);
+  --secondary-btn-border: transparent;
+  --secondary-btn-active-bg: var(--accent-light);
+  --secondary-btn-active-color: #004D40;
+  --input-border: #E0E0E0;
   
   /* Status Colors */
-  --color-hunger: #FF9B85;
-  --color-happy: #FFD08A;
-  --color-clean: #6ABFAB;
-  --color-energy: #B5C47B;
-}
-
-* {
-  box-sizing: border-box;
-  -webkit-tap-highlight-color: transparent;
+  --color-hunger: #FFCCBC;
+  --color-happy: #FFE082;
+  --color-clean: #80CBC4;
+  --color-energy: #C5E1A5;
 }
 
 body {
@@ -158,14 +151,13 @@ header {
   padding: 16px 24px;
   padding-top: max(16px, env(safe-area-inset-top));
   background: var(--header-bg);
-  -webkit-backdrop-filter: blur(20px) saturate(180%);
-  backdrop-filter: blur(20px) saturate(180%);
+  backdrop-filter: blur(12px);
   position: sticky;
   top: 0;
   z-index: 100;
   box-shadow: var(--header-shadow);
   transition: background 0.3s ease, box-shadow 0.3s ease;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+  border-bottom: 1px solid rgba(0,0,0,0.03);
 }
 
 @media (max-width: 400px) {
@@ -295,7 +287,7 @@ main {
   flex-direction: column;
   gap: 24px;
   position: relative;
-  border: 1px solid rgba(255, 255, 255, 0.4);
+  border: 1px solid rgba(0,0,0,0.02); /* Very subtle border */
 }
 
 .scene-instructions {
@@ -456,7 +448,7 @@ main {
   gap: 10px;
   align-items: center;
   transition: transform 0.2s ease, box-shadow 0.2s ease;
-  border: 1px solid rgba(255, 255, 255, 0.4);
+  border: 1px solid rgba(0,0,0,0.02);
   touch-action: none;
 }
 
@@ -548,7 +540,7 @@ main {
   gap: 12px;
   text-align: left;
   transition: transform 0.2s ease, box-shadow 0.2s ease;
-  border: 1px solid rgba(255, 255, 255, 0.4);
+  border: 1px solid rgba(0,0,0,0.02);
 }
 
 .game-card:hover,
@@ -577,9 +569,8 @@ main {
 }
 
 /* Home Page - Game Area */
-#denPage {
-  /* Padding handled by main */
-}
+/* Home Page - Game Area */
+/* #denPage padding handled by main */
 
 .otter-container {
   display: flex;
@@ -614,14 +605,14 @@ main {
 /* Status Bars */
 .status-container {
   background: var(--card-bg);
-  padding: 20px;
+  padding: 24px;
   border-radius: var(--card-radius);
   box-shadow: var(--card-shadow);
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 16px;
+  gap: 20px;
   margin-bottom: 24px;
-  border: 1px solid rgba(255, 255, 255, 0.4);
+  border: 1px solid rgba(0,0,0,0.02);
 }
 
 .status-item {
@@ -1126,59 +1117,6 @@ input[type="checkbox"]:checked + .toggle-switch::after {
   height: 200px;
   background: rgba(106, 191, 171, 0.25);
   border-radius: 16px;
-  position: relative;
-  overflow: hidden;
-  margin-bottom: 16px;
-}
-
-.fish {
-  position: absolute;
-  font-size: 2rem;
-  cursor: pointer;
-  -webkit-user-select: none;
-  user-select: none;
-  animation: swim 3s linear infinite;
-}
-
-@keyframes swim {
-  from { transform: translateX(-20px) rotate(5deg); }
-  to { transform: translateX(20px) rotate(-5deg); }
-}
-
-.minigame-footer {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-}
-
-.score {
-  font-weight: 700;
-  font-size: 1.1rem;
-}
-
-.secondary-btn {
-  background: var(--secondary-btn-bg);
-  color: var(--secondary-btn-color);
-  padding: 12px 20px;
-  border-radius: var(--btn-radius);
-  font-weight: 700;
-  border: 1px solid var(--secondary-btn-border);
-  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
-}
-
-.secondary-btn:hover {
-  background: var(--secondary-btn-active-bg);
-  color: var(--secondary-btn-active-color);
-}
-
-.secondary-btn.active {
-  background: var(--secondary-btn-active-bg);
-  color: var(--secondary-btn-active-color);
-  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.15);
-}
-
-.secondary-btn.danger {
-  color: var(--accent-salmon);
   border-color: rgba(255, 155, 133, 0.35);
 }
 
@@ -1437,25 +1375,29 @@ body.theme-comfort .tutorial-overlay {
 }
 
 .primary-btn {
-  background: linear-gradient(135deg, var(--accent), #4F9F93);
+  background: var(--primary);
   color: white;
-  padding: 16px 24px;
+  padding: 12px 24px;
   border-radius: var(--btn-radius);
-  font-weight: 800;
-  font-size: 1.05rem;
+  font-weight: 700;
+  font-size: 1rem;
   transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
-  min-height: 56px;
-  box-shadow: 0 4px 12px rgba(106, 191, 171, 0.4);
-  letter-spacing: 0.02em;
-}
-
-.primary-btn:active {
-  transform: scale(0.96);
-  box-shadow: 0 2px 6px rgba(106, 191, 171, 0.3);
+  box-shadow: var(--btn-shadow);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
 }
 
 .primary-btn:hover {
-  background: #4F9F93;
+  background: var(--primary-dark);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(93, 64, 55, 0.2);
+}
+
+.primary-btn:active {
+  transform: translateY(1px);
+  box-shadow: none;
 }
 
 .full-width {
