@@ -20,7 +20,6 @@
 <body>
   <header>
     <div class="header-content">
-      <button id="settingsBtn" class="icon-btn" aria-label="Impostazioni">⚙️</button>
       <h1 class="brand-lowercase">pebble</h1>
       <div class="coins-display">
         <span>🪙</span>
@@ -38,9 +37,9 @@
           <div id="accessories-container"></div>
         </div>
       </div>
-      <!-- Minimal Status Overlay -->
-      <div class="status-dots">
-        <!-- Visual indicators for stats could go here, or just be subtle environment cues -->
+      <!-- The Journal Trigger (Diegetic Object) -->
+      <div id="journalTrigger" class="journal-trigger" role="button" aria-label="Apri il diario">
+        📔
       </div>
     </section>
 
@@ -88,9 +87,67 @@
     </section>
   </main>
 
-  <!-- Overlays (Settings, etc.) remain similar but styled with glass -->
-  <div id="settingsOverlay" class="overlay hidden">
-    <!-- ... settings content ... -->
+  <!-- The Journal Overlay -->
+  <div id="journalOverlay" class="overlay hidden">
+    <div class="journal-book">
+      <button id="journalCloseBtn" class="journal-close">✕</button>
+      
+      <!-- Page 1: Memories (Stats) -->
+      <div class="journal-page active" data-page="memories">
+        <h2>Ricordi</h2>
+        <div class="polaroid-grid">
+          <div class="polaroid">
+            <div class="polaroid-img" style="background-color: #eee;">🦦</div>
+            <span class="polaroid-caption">Giorni insieme: <span id="daysCount">12</span></span>
+          </div>
+        </div>
+        <div class="stats-handwritten">
+          <p>Felicità: <span id="journalHappy">Alta</span></p>
+          <p>Pancia: <span id="journalHunger">Piena</span></p>
+        </div>
+        <div class="page-nav">
+          <span>1/3</span>
+          <button class="next-page-btn" data-target="calm">→</button>
+        </div>
+      </div>
+
+      <!-- Page 2: Calm (Settings) -->
+      <div class="journal-page hidden" data-page="calm">
+        <h2>La Calma</h2>
+        <div class="settings-handwritten">
+          <label class="checkbox-handwritten">
+            <input type="checkbox" id="zenModeToggle">
+            <span class="checkmark"></span>
+            Zen Mode (Nascondi tutto)
+          </label>
+          <label class="checkbox-handwritten">
+            <input type="checkbox" id="musicToggle" checked>
+            <span class="checkmark"></span>
+            Suoni della natura
+          </label>
+        </div>
+        <div class="page-nav">
+          <button class="prev-page-btn" data-target="memories">←</button>
+          <span>2/3</span>
+          <button class="next-page-btn" data-target="bond">→</button>
+        </div>
+      </div>
+
+      <!-- Page 3: Bond (Profile) -->
+      <div class="journal-page hidden" data-page="bond">
+        <h2>Il Legame</h2>
+        <div class="bond-section">
+          <p>Questo diario appartiene a:</p>
+          <input type="text" id="playerNameInput" class="handwritten-input" placeholder="Il tuo nome" />
+          <p>Amico di:</p>
+          <p class="pet-name-display" id="journalPetName">Pebble</p>
+        </div>
+        <div class="page-nav">
+          <button class="prev-page-btn" data-target="calm">←</button>
+          <span>3/3</span>
+        </div>
+      </div>
+    </div>
   </div>
 
   <script src="config.js" defer></script>
