@@ -1,4 +1,5 @@
 import { $ } from './utils.js';
+import { applyTheme } from './theme.js';
 import { HUD } from './components/HUD.js';
 import { InventoryView } from './components/InventoryView.js';
 import { OtterRenderer } from './components/OtterRenderer.js';
@@ -37,7 +38,8 @@ export class UIManager {
         this.initNamePrompt();
         this.initTutorial();
         this.initUpdateBanner();
-        this.initStonePolishing();
+        this.initKitchenScene();
+        this.initSleep();
         this.initActionButtons();
         this.initShop();
         // Listen for inventory changes from GameState
@@ -99,19 +101,11 @@ export class UIManager {
         const coreStats = gameState.getStats();
         const equipped = gameState.getEquipped();
         const settings = settingsState.getSettings();
-        // Construct a legacy-like state object for components that might still expect it, 
-        // or update components to accept separate stats/settings.
-        // For now, let's adapt the data to what HUD/ModalManager/NotificationUI expect.
-        // HUD expects (state, coreStats). 'state' was the full legacy state.
-        // We need to check what HUD uses from 'state'.
-        // Let's assume we need to pass relevant data.
-        // Ideally we should refactor HUD etc too, but let's do it progressively.
-        // We can mock the legacy state object using our new sources.
         const pseudoState = {
             ...coreStats,
             ...equipped,
             petName: gameState.getPetName(),
-            petNameConfirmed: !!gameState.getPetName(), // Simplified
+            petNameConfirmed: !!gameState.getPetName(),
             theme: settings.theme,
             notifications: settings.notifications,
             tutorialSeen: settings.tutorialSeen,
@@ -137,9 +131,24 @@ export class UIManager {
         this.otterRenderer.sync(mood, equipped);
         this.inventoryView.render(gameState.getInventory());
         // Apply theme
-        document.body.className = settings.theme;
+        applyTheme(settings.theme);
     }
     // --- Initialization Methods ---
+    initSleep() {
+        const sleepBtn = $('sleepBtn');
+        sleepBtn?.addEventListener('click', () => {
+            const { energy } = getGameStateInstance().getStats();
+            if (energy >= 100) {
+                this.notificationUI.showAlert('La lontra non è stanca!', 'warning');
+                return;
+            }
+            getGameServiceInstance().sleep();
+            this.otterRenderer.triggerAnimation('sleep', getGameStateInstance().getEquipped(), () => {
+                // Animation complete
+            });
+            this.notificationUI.showAlert('Zzz... la lontra riposa.', 'info');
+        });
+    }
     initActionButtons() {
         const hatToggle = $('hatToggle');
         const scarfToggle = $('scarfToggle');
