@@ -122,7 +122,10 @@ export class UIManager {
         this.notificationUI.refresh(pseudoState);
         // Sync otter appearance
         let mood = 'neutral';
-        if (coreStats.happiness > 80 && coreStats.hunger > 80 && coreStats.energy > 80) {
+        if (gameState.getIsSleeping()) {
+            mood = 'sleepy'; // Force sleepy if sleeping
+        }
+        else if (coreStats.happiness > 80 && coreStats.hunger > 80 && coreStats.energy > 80) {
             mood = 'happy';
         }
         else if (coreStats.happiness < 30 || coreStats.hunger < 30) {
@@ -179,12 +182,17 @@ export class UIManager {
         const lantern = document.getElementById('denLantern');
         if (!lantern)
             return;
-        let isNight = false;
+        // Sync initial state from GameState
+        let isNight = getGameStateInstance().getIsSleeping();
+        if (isNight) {
+            document.body.classList.add('night-mode');
+        }
         lantern.addEventListener('click', () => {
             isNight = !isNight;
             if (isNight) {
                 // Goodnight
                 getGameServiceInstance().sleep();
+                // Renderer updates automatically via subscription, but we can trigger animation too
                 this.otterRenderer.triggerAnimation('sleep', getGameStateInstance().getEquipped(), () => { });
                 document.body.classList.add('night-mode');
                 this.notificationUI.showAlert('Buonanotte, Pebble...', 'info');
@@ -193,9 +201,11 @@ export class UIManager {
             }
             else {
                 // Good morning
+                getGameServiceInstance().wakeUp();
                 document.body.classList.remove('night-mode');
-                // Wake up animation? For now just neutral/happy
-                // this.otterRenderer.sync('happy', getGameStateInstance().getEquipped()); 
+                // Trigger happy animation on wake up
+                this.otterRenderer.triggerAnimation('feed', getGameStateInstance().getEquipped(), () => { }); // Reusing feed animation for "happy jump" or similar? Or just let sync handle it.
+                // Actually, just letting sync handle 'happy' mood (if stats are good) is better.
                 this.notificationUI.showAlert('Buongiorno!', 'info');
                 if (navigator.vibrate)
                     navigator.vibrate([20, 50, 20]);

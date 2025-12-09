@@ -676,17 +676,40 @@ body.zen-mode .coins-display {
     filter: drop-shadow(0 0 15px rgba(255, 165, 0, 0.8));
 }
 
+/* Night Mode Overlay */
+.night-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(3, 10, 24, 0.9); /* Deep blue-black */
+    z-index: 999; /* Below lantern (1000) but above everything else */
+    pointer-events: none; /* Click through to lantern */
+    opacity: 0;
+    transition: opacity 1.5s ease-in-out;
+}
+
+body.night-mode .night-overlay {
+    opacity: 1;
+}
+
+/* Lantern specific override so it doesn't get dimmed by the overlay since it's above it?
+   Actually z-index 1000 > 999 so it should be bright.
+   But user wanted it dimmed when OFF.
+*/
 body.night-mode .lantern-trigger {
-    filter: grayscale(0.8) brightness(0.5); /* Dim the lantern itself when off */
+    filter: none; /* Let the lantern shine or be its own thing */
+    /* Wait, if it's night, the lantern is OFF? Or ON?
+       User metaphor: Lantern Click -> Lights OFF (Sleep). Lantern Click -> Lights ON (Wake).
+       So when Night Mode is active, the lantern image should probably look like it's off (dark) or glowing as the only light?
+       "When off" -> if lights are off (night), the lantern shouldn't be bright?
+       Let's stick to the previous filter for the lantern itself for now.
+    */
+    filter: drop-shadow(0 0 2px rgba(255, 165, 0, 0.3)); /* Dim glow */
 }
 
-/* Night Mode Animation */
+/* Remove old body filters */
 body.night-mode {
-    filter: brightness(0.1) contrast(1.1); /* Much darker */
-    background-color: #000; /* Ensure background is black */
-    transition: filter 2s ease, background-color 2s ease;
-}
-
-body:not(.night-mode) {
-    transition: filter 2s ease, background-color 2s ease;
+    /* No filter on body, use overlay */
 }

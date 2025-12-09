@@ -26,12 +26,20 @@ export class GameService {
         recordEvent('azione:bagno');
     }
     sleep() {
+        this.gameState.setIsSleeping(true);
+        recordEvent('azione:sonno_inizio');
+    }
+    wakeUp() {
+        this.gameState.setIsSleeping(false);
+        // Restore energy on wake up specific amount?
+        // Or should energy restore over time while sleeping?
+        // Let's give a bulk restore on wake up for "good night's sleep"
         const stats = this.gameState.getStats();
         this.gameState.setStats({
-            energy: Math.min(100, stats.energy + 40),
-            happiness: Math.min(100, stats.happiness + 3)
+            energy: Math.min(100, stats.energy + 100), // Fully rested!
+            happiness: Math.min(100, stats.happiness + 10)
         });
-        recordEvent('azione:sonno');
+        recordEvent('azione:sveglia');
     }
     spendCoins(amount) {
         const stats = this.gameState.getStats();

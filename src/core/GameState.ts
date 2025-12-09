@@ -25,6 +25,7 @@ interface StoredGameState {
     equipped: AccessoryState;
     metrics: GameStats;
     firstLoginDate?: number;
+    isSleeping?: boolean; // Persisted sleep state
 }
 
 export class GameState {
@@ -42,6 +43,7 @@ export class GameState {
     private attemptedRemoteRecovery = false;
     private listeners: Array<() => void> = [];
     private syncTimeout: any = null; // For debounce
+    private isSleeping: boolean = false; // Sleep state
 
     constructor(
         private storageService: IStorageService,
@@ -58,6 +60,7 @@ export class GameState {
         this.playerName = stored.state.playerName;
         this.equipped = stored.state.equipped;
         this.metrics = stored.state.metrics;
+        this.isSleeping = !!stored.state.isSleeping; // Restore sleep state
         this.playerId = this.resolvePlayerId();
         this.dispatchPlayerIdChange();
     }
@@ -139,9 +142,22 @@ export class GameState {
     }
 
     public setPlayerName(name: string): void {
-        const sanitized = name.trim().slice(0, 32);
+        const sanitized = name.trim().slice(0, 24);
         if (sanitized !== this.playerName) {
-            this.playerName = sanitized;
+            this.playerName = sanitized; // No default needed here, UI handles it
+            this.writeToStorage();
+            this.notifyListeners();
+        }
+    }
+
+    // Creating this as a persisted state because user wants it to stick
+    public getIsSleeping(): boolean {
+        return this.isSleeping;
+    }
+
+    public setIsSleeping(sleeping: boolean): void {
+        if (this.isSleeping !== sleeping) {
+            this.isSleeping = sleeping;
             this.writeToStorage();
             this.notifyListeners();
         }
@@ -372,8 +388,9 @@ export class GameState {
             const equipped = parsed.equipped || { hat: false, scarf: false, sunglasses: false };
             const metrics = parsed.metrics || { gamesPlayed: 0, fishCaught: 0, itemsBought: 0 };
             const firstLoginDate = typeof parsed.firstLoginDate === 'number' ? parsed.firstLoginDate : Date.now();
+            const isSleeping = !!parsed.isSleeping;
 
-            return { state: { stats, lastLoginDate, inventory, petName, playerName, equipped, metrics, firstLoginDate }, hadData: true };
+            return { state: { stats, lastLoginDate, inventory, petName, playerName, equipped, metrics, firstLoginDate, isSleeping }, hadData: true };
         } catch (error) {
             console.warn('Impossibile leggere il GameState locale, verrà ricreato', error);
             return { state: this.createDefaultState(), hadData: false };
@@ -389,7 +406,8 @@ export class GameState {
             petName: this.petName,
             playerName: this.playerName,
             equipped: { ...this.equipped },
-            metrics: { ...this.metrics }
+            metrics: { ...this.metrics },
+            isSleeping: this.isSleeping // Save sleep state
         };
         this.storageService.setItem(LOCAL_STORAGE_KEY, JSON.stringify(payload));
         this.persistPlayerId(this.playerId);
