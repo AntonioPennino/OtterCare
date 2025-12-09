@@ -510,6 +510,17 @@ export class UIManager {
                     const angle = Math.atan2(dy, dx);
                     p.x += Math.cos(angle) * 5;
                     p.y += Math.sin(angle) * 5;
+
+                    // Chance to find glass
+                    if (getGameServiceInstance().rewardTheCurrent()) {
+                        // Visual feedback? maybe a sparkle or just notification
+                        // Keep it subtle to not spam alerts
+                        if (Math.random() < 0.1) { // Debounce alerts slightly if desired, or just let it notify
+                            // Actually we can't easily access UIManager instance inside this anonymous loop if 'this' context issues exist?
+                            // Arrow function preserves 'this'.
+                            this.notificationUI.showAlert('+1 Glass', 'info');
+                        }
+                    }
                 }
 
                 // Reset if out of bounds
@@ -542,6 +553,14 @@ export class UIManager {
         closeBtn.parentNode?.replaceChild(newCloseBtn, closeBtn);
 
         newCloseBtn.addEventListener('click', () => {
+            // Check for reward before closing
+            // Calculate height in "pixels above base" approx
+            const relativeHeight = stackHeight - 40;
+            const reward = getGameServiceInstance().rewardStoneStacking(relativeHeight);
+            if (reward > 0) {
+                this.notificationUI.showAlert(`Hai trovato ${reward} river glass!`, 'info');
+            }
+
             overlay.classList.add('hidden');
             dropZone.innerHTML = '<div class="base-stone"></div>';
             stackHeight = 40; // Reset stack height
@@ -731,20 +750,23 @@ export class UIManager {
                 const targetStar = getStarAt(x, y);
                 if (targetStar && targetStar.id !== startStar) {
                     // Connect!
-                    // Check if already connected
-                    const exists = this.connections.some(c =>
+                    const alreadyConnected = this.connections.some(c =>
                         (c.from === startStar && c.to === targetStar.id) ||
                         (c.from === targetStar.id && c.to === startStar)
                     );
 
-                    if (!exists) {
+                    if (!alreadyConnected) {
                         this.connections.push({ from: startStar, to: targetStar.id });
-                        if (navigator.vibrate) navigator.vibrate([10, 30, 10]);
+                        if (navigator.vibrate) navigator.vibrate(10);
 
-                        // Check completion (simple: 7 connections for 8 stars = tree)
-                        if (this.connections.length >= this.stars.length - 1) {
-                            this.notificationUI.showAlert('Una nuova costellazione!', 'info');
-                        }
+                        // Reward!
+                        getGameServiceInstance().rewardFireflyConnection();
+                        this.notificationUI.showAlert('+1 Glass', 'info'); // Use info, not star
+                    }
+
+                    // Check completion (simple: 7 connections for 8 stars = tree)
+                    if (this.connections.length >= this.stars.length - 1) {
+                        this.notificationUI.showAlert('Una nuova costellazione!', 'info');
                     }
                 }
             }

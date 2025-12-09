@@ -88,4 +88,44 @@ export class GameService {
             this.gameState.setEquipped({ sunglasses: true });
         }
     }
+
+    public rewardStoneStacking(height: number): number {
+        let reward = 0;
+        if (height > 300) reward = 5;
+        else if (height > 200) reward = 3;
+        else if (height > 100) reward = 1;
+
+        if (reward > 0) {
+            const stats = this.gameState.getStats();
+            this.gameState.setStats({
+                seaGlass: stats.seaGlass + reward,
+                happiness: Math.min(100, stats.happiness + 5)
+            });
+            recordEvent(`minigioco:pietre:reward:${reward}`);
+        }
+        return reward;
+    }
+
+    public rewardTheCurrent(): boolean {
+        // 5% chance to find a sea glass piece per interaction tick
+        if (Math.random() < 0.05) {
+            const stats = this.gameState.getStats();
+            this.gameState.setStats({
+                seaGlass: stats.seaGlass + 1,
+                clean: Math.min(100, stats.clean + 2)
+            });
+            recordEvent('minigioco:corrente:trovato');
+            return true;
+        }
+        return false;
+    }
+
+    public rewardFireflyConnection(): void {
+        const stats = this.gameState.getStats();
+        this.gameState.setStats({
+            seaGlass: stats.seaGlass + 1, // Generous: 1 per connection
+            happiness: Math.min(100, stats.happiness + 2)
+        });
+        recordEvent('minigioco:lucciole:connesso');
+    }
 }
