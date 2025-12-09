@@ -660,6 +660,26 @@ body.zen-mode .coins-display {
     display: block;
 }
 
+/* Lantern Trigger */
+.lantern-trigger {
+    position: absolute;
+    top: 20px;
+    right: 20px;
+    font-size: 2.5rem;
+    cursor: pointer;
+    transition: transform 0.3s ease, filter 0.3s ease;
+    z-index: 100;
+}
+
+.lantern-trigger:hover {
+    transform: scale(1.1) rotate(5deg);
+    filter: drop-shadow(0 0 10px rgba(255, 165, 0, 0.6));
+}
+
+body.night-mode .lantern-trigger {
+    filter: grayscale(0.8) brightness(0.5); /* Dim the lantern itself when off */
+}
+
 /* Night Mode Animation */
 body.night-mode {
     filter: brightness(0.4) contrast(1.2);

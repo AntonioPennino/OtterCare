@@ -202,20 +202,29 @@ export class UIManager {
     }
 
     private initDenScene(): void {
-        const otter = document.getElementById('otterImage');
-        if (!otter) return;
+        const lantern = document.getElementById('denLantern');
+        if (!lantern) return;
 
-        otter.addEventListener('click', () => {
-            getGameServiceInstance().sleep();
-            this.otterRenderer.triggerAnimation('sleep', getGameStateInstance().getEquipped(), () => { });
+        let isNight = false;
 
-            // Visual feedback for sleep
-            document.body.classList.add('night-mode');
-            setTimeout(() => {
+        lantern.addEventListener('click', () => {
+            isNight = !isNight;
+
+            if (isNight) {
+                // Goodnight
+                getGameServiceInstance().sleep();
+                this.otterRenderer.triggerAnimation('sleep', getGameStateInstance().getEquipped(), () => { });
+                document.body.classList.add('night-mode');
+                this.notificationUI.showAlert('Buonanotte, Pebble...', 'info');
+                if (navigator.vibrate) navigator.vibrate(50);
+            } else {
+                // Good morning
                 document.body.classList.remove('night-mode');
-            }, 4000);
-
-            this.notificationUI.showAlert('Sogni d\'oro, Pebble...', 'info');
+                // Wake up animation? For now just neutral/happy
+                // this.otterRenderer.sync('happy', getGameStateInstance().getEquipped()); 
+                this.notificationUI.showAlert('Buongiorno!', 'info');
+                if (navigator.vibrate) navigator.vibrate([20, 50, 20]);
+            }
         });
     }
 
