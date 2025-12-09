@@ -316,7 +316,7 @@ export class UIManager {
         }
     }
 
-    private handleTouchDrag(source: HTMLElement, touch: Touch, scene: 'kitchen' | 'hygiene'): void {
+    private handleTouchDrag(source: HTMLElement, touch: Touch, scene: 'kitchen' | 'hygiene' | 'stone', onDrop?: (elementUnder: Element | null) => void): void {
         const ghost = source.cloneNode(true) as HTMLElement;
         ghost.style.position = 'fixed';
         ghost.style.zIndex = '1000';
@@ -331,6 +331,7 @@ export class UIManager {
         updateGhost(touch.clientX, touch.clientY);
 
         const moveHandler = (e: TouchEvent) => {
+            e.preventDefault(); // Prevent scrolling while dragging
             updateGhost(e.touches[0].clientX, e.touches[0].clientY);
         };
 
@@ -342,6 +343,11 @@ export class UIManager {
             // Check drop
             const changedTouch = e.changedTouches[0];
             const elementUnder = document.elementFromPoint(changedTouch.clientX, changedTouch.clientY);
+
+            if (onDrop) {
+                onDrop(elementUnder);
+                return;
+            }
 
             if (scene === 'kitchen') {
                 if (elementUnder && elementUnder.closest('.kitchen-otter')) {
@@ -608,25 +614,7 @@ export class UIManager {
 
         let stackHeight = 40; // Base stone height
 
-        sourceStones.forEach(stone => {
-            stone.addEventListener('dragstart', (e) => {
-                const dragEvent = e as DragEvent;
-                dragEvent.dataTransfer?.setData('text/plain', (stone as HTMLElement).dataset.size || 'medium');
-                dragEvent.dataTransfer?.setData('source', 'stone');
-            });
-        });
-
-        dropZone.addEventListener('dragover', (e) => {
-            e.preventDefault();
-        });
-
-        dropZone.addEventListener('drop', (e) => {
-            e.preventDefault();
-            const size = e.dataTransfer?.getData('text/plain');
-            const source = e.dataTransfer?.getData('source');
-
-            if (source !== 'stone' || !size) return;
-
+        const placeStone = (size: string) => {
             const newStone = document.createElement('div');
             newStone.classList.add('stone', 'stacked-stone');
             newStone.textContent = '🪨';
@@ -663,6 +651,40 @@ export class UIManager {
                 this.notificationUI.showAlert('Che equilibrio perfetto...', 'info');
                 void audioManager.playSFX('happy');
             }
+        };
+
+        sourceStones.forEach(stone => {
+            // Desktop Drag
+            stone.addEventListener('dragstart', (e) => {
+                const dragEvent = e as DragEvent;
+                dragEvent.dataTransfer?.setData('text/plain', (stone as HTMLElement).dataset.size || 'medium');
+                dragEvent.dataTransfer?.setData('source', 'stone');
+            });
+
+            // Mobile Touch
+            stone.addEventListener('touchstart', (e) => {
+                const touchEvent = e as TouchEvent;
+                touchEvent.preventDefault();
+                const size = (stone as HTMLElement).dataset.size || 'medium';
+                this.handleTouchDrag(stone as HTMLElement, touchEvent.touches[0], 'stone', (elementUnder) => {
+                    if (elementUnder && (elementUnder === dropZone || dropZone.contains(elementUnder))) {
+                        placeStone(size);
+                    }
+                });
+            });
+        });
+
+        dropZone.addEventListener('dragover', (e) => {
+            e.preventDefault();
+        });
+
+        dropZone.addEventListener('drop', (e) => {
+            e.preventDefault();
+            const size = e.dataTransfer?.getData('text/plain');
+            const source = e.dataTransfer?.getData('source');
+
+            if (source !== 'stone' || !size) return;
+            placeStone(size);
         });
     }
 
