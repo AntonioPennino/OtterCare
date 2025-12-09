@@ -923,6 +923,17 @@ export class UIManager {
                 }
             });
         }
+
+        // Player Name Input
+        const playerNameInput = $('playerNameInput') as HTMLInputElement;
+        if (playerNameInput) {
+            // Load initial value
+            playerNameInput.value = getGameStateInstance().getPlayerName();
+
+            playerNameInput.addEventListener('change', () => {
+                getGameStateInstance().setPlayerName(playerNameInput.value);
+            });
+        }
     }
 
     private updateJournalStats(): void {
@@ -937,7 +948,7 @@ export class UIManager {
         if (happyEl) happyEl.textContent = stats.happiness > 70 ? 'Molto Felice' : stats.happiness > 30 ? 'Serena' : 'Triste';
         if (hungerEl) hungerEl.textContent = stats.hunger > 70 ? 'Piena' : stats.hunger > 30 ? 'Soddisfatta' : 'Affamata';
         if (nameEl) nameEl.textContent = petName || 'Pebble';
-        if (daysEl) daysEl.textContent = '1'; // Placeholder for now, need to track days in GameState
+        if (daysEl) daysEl.textContent = String(getGameStateInstance().getDaysPlayed());
     }
 
     private tempShowUI(): void {

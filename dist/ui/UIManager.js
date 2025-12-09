@@ -798,6 +798,15 @@ export class UIManager {
                 }
             });
         }
+        // Player Name Input
+        const playerNameInput = $('playerNameInput');
+        if (playerNameInput) {
+            // Load initial value
+            playerNameInput.value = getGameStateInstance().getPlayerName();
+            playerNameInput.addEventListener('change', () => {
+                getGameStateInstance().setPlayerName(playerNameInput.value);
+            });
+        }
     }
     updateJournalStats() {
         const stats = getGameStateInstance().getStats();
@@ -813,7 +822,7 @@ export class UIManager {
         if (nameEl)
             nameEl.textContent = petName || 'Pebble';
         if (daysEl)
-            daysEl.textContent = '1'; // Placeholder for now, need to track days in GameState
+            daysEl.textContent = String(getGameStateInstance().getDaysPlayed());
     }
     tempShowUI() {
         document.body.classList.remove('zen-mode');

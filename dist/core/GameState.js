@@ -18,12 +18,15 @@ export class GameState {
         this.hadStoredPlayerId = false;
         this.attemptedRemoteRecovery = false;
         this.listeners = [];
+        this.syncTimeout = null; // For debounce
         const stored = this.readFromStorage();
         this.hadStoredStateOnBoot = stored.hadData;
         this.stats = stored.state.stats;
         this.lastLoginDate = stored.state.lastLoginDate;
+        this.firstLoginDate = stored.state.firstLoginDate || Date.now(); // Default to now if missing
         this.inventory = stored.state.inventory;
         this.petName = stored.state.petName;
+        this.playerName = stored.state.playerName;
         this.equipped = stored.state.equipped;
         this.metrics = stored.state.metrics;
         this.playerId = this.resolvePlayerId();
@@ -46,6 +49,9 @@ export class GameState {
     }
     getPetName() {
         return this.petName;
+    }
+    getPlayerName() {
+        return this.playerName;
     }
     getEquipped() {
         return { ...this.equipped };
@@ -89,6 +95,14 @@ export class GameState {
             this.notifyListeners();
         }
     }
+    setPlayerName(name) {
+        const sanitized = name.trim().slice(0, 32);
+        if (sanitized !== this.playerName) {
+            this.playerName = sanitized;
+            this.writeToStorage();
+            this.notifyListeners();
+        }
+    }
     setEquipped(equipped) {
         this.equipped = { ...this.equipped, ...equipped };
         this.writeToStorage();
@@ -101,6 +115,12 @@ export class GameState {
         this.stats = this.mergeStats(this.stats, partial);
         this.writeToStorage();
         this.notifyListeners();
+    }
+    getDaysPlayed() {
+        const now = Date.now();
+        const diff = now - this.firstLoginDate;
+        // Convert ms to days, rounding up (day 1 starts at 0ms)
+        return Math.floor(diff / (24 * 60 * 60 * 1000)) + 1;
     }
     calculateOfflineProgress(now = Date.now()) {
         const previousLogin = this.lastLoginDate;
@@ -135,11 +155,8 @@ export class GameState {
         };
     }
     async syncWithSupabase() {
-        // Note: We currently only sync stats and inventory. PetName and Equipped are local-only for now,
-        // or we need to update the Supabase schema. For now, let's keep them local or assume they are part of 'stats' if we change the schema.
-        // The current SupabaseCloudService expects CoreStats.
-        // TODO: Update Supabase schema to include petName and equipped if needed.
-        const remote = await this.cloudService.syncWithSupabase(this.playerId, this.stats, this.lastLoginDate, this.inventory);
+        // Sync stats, inventory, petName, and playerName
+        const remote = await this.cloudService.syncWithSupabase(this.playerId, this.stats, this.lastLoginDate, this.inventory, this.petName, this.playerName);
         if (remote) {
             this.mergeRemoteState(remote);
             this.writeToStorage();
@@ -157,6 +174,29 @@ export class GameState {
         const mergedInventory = new Set([...this.inventory, ...remoteInventory]);
         const beforeSize = this.inventory.length;
         this.inventory = Array.from(mergedInventory);
+        // Sync petName if remote has one and local is default or different (conflict resolution: remote wins if newer login? actually simpler: let's trust remote if set)
+        if (remote.pet_name && remote.pet_name !== 'Pebble' && this.petName === 'Pebble') {
+            this.petName = remote.pet_name;
+        }
+        // Sync playerName
+        if (remote.player_name && !this.playerName) {
+            this.playerName = remote.player_name;
+        }
+        else if (remote.player_name && this.playerName && remote.player_name !== this.playerName) {
+            // Conflict: We can't easily know which is newer without per-field timestamps. 
+            // For now, let's assume local is fresher if they differ, or trust remote.
+            // Let's trust local if it's set, because the user might just have typed it.
+            // Actually, syncWithSupabase *pushes* local to remote. 
+            // mergeRemoteState usually happens if we pulled data. 
+            // If we are recovering, we want remote.
+        }
+        // Sync created_at for accurate days count
+        if (remote.created_at) {
+            const created = Date.parse(remote.created_at);
+            if (Number.isFinite(created) && created < this.firstLoginDate) {
+                this.firstLoginDate = created; // Use the oldest known date
+            }
+        }
         if (this.inventory.length !== beforeSize) {
             this.notifyInventoryChange();
         }
@@ -255,9 +295,11 @@ export class GameState {
                 : Date.now();
             const inventory = this.sanitizeInventory(parsed.inventory);
             const petName = typeof parsed.petName === 'string' ? parsed.petName : 'Pebble';
+            const playerName = typeof parsed.playerName === 'string' ? parsed.playerName : '';
             const equipped = parsed.equipped || { hat: false, scarf: false, sunglasses: false };
             const metrics = parsed.metrics || { gamesPlayed: 0, fishCaught: 0, itemsBought: 0 };
-            return { state: { stats, lastLoginDate, inventory, petName, equipped, metrics }, hadData: true };
+            const firstLoginDate = typeof parsed.firstLoginDate === 'number' ? parsed.firstLoginDate : Date.now();
+            return { state: { stats, lastLoginDate, inventory, petName, playerName, equipped, metrics, firstLoginDate }, hadData: true };
         }
         catch (error) {
             console.warn('Impossibile leggere il GameState locale, verrà ricreato', error);
@@ -268,13 +310,26 @@ export class GameState {
         const payload = {
             stats: this.cloneStats(this.stats),
             lastLoginDate: this.lastLoginDate,
+            firstLoginDate: this.firstLoginDate, // Persist this
             inventory: [...this.inventory],
             petName: this.petName,
+            playerName: this.playerName,
             equipped: { ...this.equipped },
             metrics: { ...this.metrics }
         };
         this.storageService.setItem(LOCAL_STORAGE_KEY, JSON.stringify(payload));
         this.persistPlayerId(this.playerId);
+        this.triggerAutoSync();
+    }
+    triggerAutoSync() {
+        if (this.syncTimeout) {
+            clearTimeout(this.syncTimeout);
+        }
+        // Debounce sync to avoid spamming Supabase on every stat change
+        this.syncTimeout = setTimeout(() => {
+            void this.syncWithSupabase();
+            this.syncTimeout = null;
+        }, 5000); // 5 seconds debounce
     }
     resolvePlayerId() {
         const existing = this.storageService.getItem(PLAYER_ID_STORAGE_KEY);
@@ -294,8 +349,10 @@ export class GameState {
         return {
             stats: this.cloneStats(DEFAULT_STATS),
             lastLoginDate: Date.now(),
+            firstLoginDate: Date.now(), // New state starts now
             inventory: [],
             petName: 'Pebble',
+            playerName: '',
             equipped: { hat: false, scarf: false, sunglasses: false },
             metrics: { gamesPlayed: 0, fishCaught: 0, itemsBought: 0 }
         };

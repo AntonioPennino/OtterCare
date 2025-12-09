@@ -55,7 +55,7 @@ export class SupabaseCloudService implements ICloudService {
         }
     }
 
-    public async syncWithSupabase(playerId: string, stats: CoreStats, lastLoginDate: number, inventory: string[]): Promise<SupabaseGameStateRow | null> {
+    public async syncWithSupabase(playerId: string, stats: CoreStats, lastLoginDate: number, inventory: string[], petName: string, playerName: string): Promise<SupabaseGameStateRow | null> {
         const supabase = getSupabaseClient();
         if (!supabase || this.supabaseUnavailable) {
             return null;
@@ -64,7 +64,7 @@ export class SupabaseCloudService implements ICloudService {
         try {
             const { data, error } = await supabase
                 .from('pebble_game_state')
-                .select('stats, last_login, inventory, updated_at')
+                .select('stats, last_login, inventory, updated_at, pet_name, created_at, player_name')
                 .eq('id', playerId)
                 .maybeSingle();
 
@@ -86,7 +86,10 @@ export class SupabaseCloudService implements ICloudService {
                 stats: stats,
                 last_login: new Date(lastLoginDate).toISOString(),
                 inventory: inventory,
-                updated_at: new Date().toISOString()
+                updated_at: new Date().toISOString(),
+                pet_name: petName,
+                player_name: playerName, // Sync player name
+                created_at: remote?.created_at || new Date().toISOString()
             };
 
             const { error: upsertError } = await supabase

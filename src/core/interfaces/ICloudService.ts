@@ -6,6 +6,9 @@ export interface SupabaseGameStateRow {
     last_login: string | null;
     inventory: string[] | null;
     updated_at: string | null;
+    pet_name: string | null;
+    created_at: string | null;
+    player_name: string | null;
 }
 
 export interface CloudRecoveryResult {
@@ -16,6 +19,6 @@ export interface CloudRecoveryResult {
 
 export interface ICloudService {
     recoverFromCloudCode(code: string, currentPlayerId: string): Promise<CloudRecoveryResult>;
-    syncWithSupabase(playerId: string, stats: CoreStats, lastLoginDate: number, inventory: string[]): Promise<SupabaseGameStateRow | null>;
+    syncWithSupabase(playerId: string, stats: CoreStats, lastLoginDate: number, inventory: string[], petName: string, playerName: string): Promise<SupabaseGameStateRow | null>;
     isAvailable(): boolean;
 }

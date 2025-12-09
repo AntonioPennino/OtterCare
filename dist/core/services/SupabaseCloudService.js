@@ -46,7 +46,7 @@ export class SupabaseCloudService {
             return { ok: false, reason: 'error' };
         }
     }
-    async syncWithSupabase(playerId, stats, lastLoginDate, inventory) {
+    async syncWithSupabase(playerId, stats, lastLoginDate, inventory, petName, playerName) {
         const supabase = getSupabaseClient();
         if (!supabase || this.supabaseUnavailable) {
             return null;
@@ -54,7 +54,7 @@ export class SupabaseCloudService {
         try {
             const { data, error } = await supabase
                 .from('pebble_game_state')
-                .select('stats, last_login, inventory, updated_at')
+                .select('stats, last_login, inventory, updated_at, pet_name, created_at, player_name')
                 .eq('id', playerId)
                 .maybeSingle();
             if (error) {
@@ -73,7 +73,10 @@ export class SupabaseCloudService {
                 stats: stats,
                 last_login: new Date(lastLoginDate).toISOString(),
                 inventory: inventory,
-                updated_at: new Date().toISOString()
+                updated_at: new Date().toISOString(),
+                pet_name: petName,
+                player_name: playerName, // Sync player name
+                created_at: remote?.created_at || new Date().toISOString()
             };
             const { error: upsertError } = await supabase
                 .from('pebble_game_state')
