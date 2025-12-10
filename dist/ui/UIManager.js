@@ -41,6 +41,7 @@ export class UIManager {
         this.initHygieneScene();
         this.initGamesScene();
         this.initMerchant();
+        this.initDailyBonus();
         this.initJournal(); // New Journal Init
         // Listen for inventory changes from GameState
         window.addEventListener('pebble-inventory-changed', event => {
@@ -685,42 +686,17 @@ export class UIManager {
                             navigator.vibrate(10);
                         // Reward!
                         getGameServiceInstance().rewardFireflyConnection();
-                        this.notificationUI.showAlert('+1 Glass', 'info'); // Use info, not star
-                    }
-                    // Check completion (simple: 7 connections for 8 stars = tree)
-                    if (this.connections.length >= this.stars.length - 1) {
-                        this.notificationUI.showAlert('Una nuova costellazione!', 'info');
                     }
                 }
+                draw();
             }
-            isDragging = false;
-            startStar = null;
-            draw();
-        };
-        // Events
-        canvas.onmousedown = e => startHandler(e.offsetX, e.offsetY);
-        canvas.onmousemove = e => moveHandler(e.offsetX, e.offsetY);
-        canvas.onmouseup = e => endHandler(e.offsetX, e.offsetY);
-        canvas.ontouchstart = e => {
-            e.preventDefault();
-            const rect = canvas.getBoundingClientRect();
-            startHandler(e.touches[0].clientX - rect.left, e.touches[0].clientY - rect.top);
-        };
-        canvas.ontouchmove = e => {
-            e.preventDefault();
-            const rect = canvas.getBoundingClientRect();
-            moveHandler(e.touches[0].clientX - rect.left, e.touches[0].clientY - rect.top);
-        };
-        canvas.ontouchend = e => {
-            e.preventDefault();
-            const rect = canvas.getBoundingClientRect();
-            // Use changedTouches for end
-            endHandler(e.changedTouches[0].clientX - rect.left, e.changedTouches[0].clientY - rect.top);
         };
         const draw = () => {
+            if (!ctx)
+                return;
             ctx.clearRect(0, 0, canvas.width, canvas.height);
             // Draw connections
-            ctx.strokeStyle = 'rgba(255, 255, 255, 0.4)';
+            ctx.strokeStyle = 'rgba(255, 255, 255, 0.3)';
             ctx.lineWidth = 2;
             this.connections.forEach(c => {
                 const s1 = this.stars.find(s => s.id === c.from);
@@ -732,31 +708,160 @@ export class UIManager {
                     ctx.stroke();
                 }
             });
-            // Draw active line
-            if (isDragging && startStar !== null) {
-                const s = this.stars.find(s => s.id === startStar);
+            // Draw drag line
+            if (isDragging) {
+                const s = this.stars.find(star => star.id === startStar);
                 if (s) {
                     ctx.beginPath();
                     ctx.moveTo(s.x, s.y);
                     ctx.lineTo(currentMouse.x, currentMouse.y);
                     ctx.strokeStyle = 'rgba(255, 255, 255, 0.8)';
-                    ctx.setLineDash([5, 5]);
                     ctx.stroke();
-                    ctx.setLineDash([]);
                 }
             }
             // Draw stars
-            this.stars.forEach(s => {
-                ctx.fillStyle = '#FFF';
-                ctx.shadowBlur = 10;
-                ctx.shadowColor = '#FFF';
+            this.stars.forEach(star => {
+                ctx.fillStyle = 'white';
                 ctx.beginPath();
-                ctx.arc(s.x, s.y, 6, 0, Math.PI * 2);
+                ctx.arc(star.x, star.y, 4, 0, Math.PI * 2);
                 ctx.fill();
-                ctx.shadowBlur = 0;
+                // Glow
+                ctx.fillStyle = 'rgba(255, 255, 255, 0.3)';
+                ctx.beginPath();
+                ctx.arc(star.x, star.y, 10, 0, Math.PI * 2);
+                ctx.fill();
             });
         };
+        canvas.addEventListener('mousedown', (e) => startHandler(e.offsetX, e.offsetY));
+        canvas.addEventListener('mousemove', (e) => moveHandler(e.offsetX, e.offsetY));
+        canvas.addEventListener('mouseup', (e) => {
+            isDragging = false;
+            endHandler(e.offsetX, e.offsetY);
+            draw();
+        });
+        canvas.addEventListener('touchstart', (e) => {
+            e.preventDefault();
+            const rect = canvas.getBoundingClientRect();
+            startHandler(e.touches[0].clientX - rect.left, e.touches[0].clientY - rect.top);
+        }, { passive: false });
+        canvas.addEventListener('touchmove', (e) => {
+            e.preventDefault();
+            const rect = canvas.getBoundingClientRect();
+            moveHandler(e.touches[0].clientX - rect.left, e.touches[0].clientY - rect.top);
+        }, { passive: false });
+        canvas.addEventListener('touchend', (e) => {
+            e.preventDefault();
+            const rect = canvas.getBoundingClientRect();
+            const t = e.changedTouches[0];
+            isDragging = false;
+            endHandler(t.clientX - rect.left, t.clientY - rect.top);
+            draw();
+        }); // Missing bracket fix? No, endHandler call matches logic
         draw();
+    }
+    initDailyBonus() {
+        const overlay = $('dailyBonusOverlay');
+        const closeBtn = $('closeDailyBonusBtn');
+        const claimBtn = $('claimDailyBonusBtn');
+        const grid = $('dailyGrid');
+        if (!overlay || !closeBtn || !claimBtn || !grid)
+            return;
+        // Open/Close logic
+        closeBtn.addEventListener('click', () => {
+            overlay.classList.add('hidden');
+        });
+        const gameState = getGameStateInstance();
+        // Render UI
+        const renderBonusUI = () => {
+            grid.innerHTML = '';
+            // Assume 1-7 Day Cycle for Visuals
+            const currentStreak = gameState.getDailyStreak();
+            const status = gameState.getDailyBonusStatus();
+            // Cycle visual logic
+            // If checking future days, we want to show 1..7.
+            // If streak is 0, we show 1..7.
+            // If streak is 7 and claimed, we show 1..7 all claimed.
+            // If streak is 7 and NOT claimed, we show 1..7 with 7 active.
+            // Calculate "Visual Cycle" base (0, 7, 14...)
+            // If (streak % 7 == 0) and !canClaim: we finished a cycle. Show the FINISHED cycle (streak-7 to streak).
+            // Else show the CURRENT cycle (containing next claim).
+            let cycleBase = Math.floor(currentStreak / 7) * 7;
+            if (currentStreak > 0 && currentStreak % 7 === 0 && !status.canClaim) {
+                cycleBase = currentStreak - 7;
+            }
+            for (let i = 1; i <= 7; i++) {
+                const dayNum = cycleBase + i;
+                const reward = gameState.getDailyRewardPreview(dayNum);
+                const el = document.createElement('div');
+                el.className = 'daily-day';
+                // Determine State
+                // Claimed: dayNum <= currentStreak
+                // Active: dayNum == currentStreak + 1 (AND canClaim) -> Actually status.currentDay handles this logic?
+                // Let's rely on comparisons with currentStreak.
+                let isClaimed = dayNum <= currentStreak;
+                let isActive = false;
+                let isLocked = dayNum > currentStreak;
+                if (status.canClaim && dayNum === status.currentDay) {
+                    isClaimed = false;
+                    isActive = true;
+                    isLocked = false;
+                }
+                if (isClaimed)
+                    el.classList.add('claimed');
+                if (isActive)
+                    el.classList.add('active');
+                if (isLocked && !isActive)
+                    el.classList.add('locked');
+                // Content
+                let icon = reward.type === 'seaGlass' ? '💎' : '🎁';
+                if (reward.type === 'item')
+                    icon = '🎒'; // Specific icon?
+                el.innerHTML = `
+                    <div class="day-box-label">Giorno ${i}</div>
+                    <div class="day-box-reward">${icon}</div>
+                    <div style="font-size: 0.8rem; font-weight:bold;">${typeof reward.value === 'number' ? reward.value : ''}</div>
+                `;
+                grid.appendChild(el);
+            }
+            if (status.canClaim) {
+                claimBtn.disabled = false;
+                claimBtn.textContent = 'Riscatta';
+            }
+            else {
+                claimBtn.disabled = true;
+                claimBtn.textContent = 'Torna Domani';
+            }
+        };
+        // Claim Action
+        claimBtn.addEventListener('click', () => {
+            const result = gameState.claimDailyBonus();
+            if (result) {
+                if (result.type === 'seaGlass') {
+                    this.notificationUI.showAlert(`Bonus riscosso: ${result.value} Sea Glass!`, 'info');
+                }
+                else {
+                    this.notificationUI.showAlert(`Bonus riscosso: ${result.value}!`, 'info');
+                }
+                void audioManager.playSFX('happy', true);
+                if (navigator.vibrate)
+                    navigator.vibrate(100);
+                renderBonusUI(); // Re-render to show checkmark
+                // Close after delay
+                setTimeout(() => {
+                    overlay.classList.add('hidden');
+                }, 1500);
+            }
+        });
+        // Initialize
+        renderBonusUI();
+        // Auto-show if available
+        if (gameState.getDailyBonusStatus().canClaim) {
+            // Tiny delay to ensure load
+            setTimeout(() => {
+                overlay.classList.remove('hidden');
+                void audioManager.playSFX('pop', true);
+            }, 1000);
+        }
     }
     initBlink() {
         window.setInterval(() => {

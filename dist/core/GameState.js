@@ -20,6 +20,8 @@ export class GameState {
         this.listeners = [];
         this.syncTimeout = null; // For debounce
         this.isSleeping = false; // Sleep state
+        this.lastDailyBonusClaim = 0;
+        this.dailyStreak = 0;
         const stored = this.readFromStorage();
         this.hadStoredStateOnBoot = stored.hadData;
         this.stats = stored.state.stats;
@@ -31,6 +33,8 @@ export class GameState {
         this.equipped = stored.state.equipped;
         this.metrics = stored.state.metrics;
         this.isSleeping = !!stored.state.isSleeping; // Restore sleep state
+        this.lastDailyBonusClaim = stored.state.lastDailyBonusClaim || 0;
+        this.dailyStreak = stored.state.dailyStreak || 0;
         this.playerId = this.resolvePlayerId();
         this.dispatchPlayerIdChange();
     }
@@ -96,6 +100,56 @@ export class GameState {
             this.writeToStorage();
             this.notifyListeners();
         }
+    }
+    getDailyBonusStatus() {
+        const now = Date.now();
+        const last = new Date(this.lastDailyBonusClaim);
+        const today = new Date(now);
+        // Reset hours to compare calendar days
+        last.setHours(0, 0, 0, 0);
+        today.setHours(0, 0, 0, 0);
+        const diffTime = today.getTime() - last.getTime();
+        const diffDays = diffTime / (1000 * 60 * 60 * 24);
+        if (diffDays === 0) {
+            // Already claimed today
+            return { canClaim: false, currentDay: this.dailyStreak };
+        }
+        let nextDay = this.dailyStreak + 1;
+        if (diffDays > 1) {
+            // Missed a day, reset logic? 
+            // Standard user-friendly logic: Reset to 1.
+            nextDay = 1;
+        }
+        const reward = this.gameRulesService.getDailyReward(nextDay);
+        return { canClaim: true, currentDay: nextDay, reward };
+    }
+    getDailyStreak() {
+        return this.dailyStreak;
+    }
+    getDailyRewardPreview(day) {
+        return this.gameRulesService.getDailyReward(day);
+    }
+    claimDailyBonus() {
+        const status = this.getDailyBonusStatus();
+        if (!status.canClaim || !status.reward) {
+            return null;
+        }
+        this.lastDailyBonusClaim = Date.now();
+        this.dailyStreak = status.currentDay;
+        if (status.reward.type === 'seaGlass') {
+            const val = typeof status.reward.value === 'number' ? status.reward.value : 0;
+            this.stats.seaGlass += val;
+        }
+        else if (status.reward.type === 'item') {
+            const item = String(status.reward.value);
+            if (!this.inventory.includes(item)) {
+                this.inventory.push(item);
+                this.notifyInventoryChange();
+            }
+        }
+        this.writeToStorage();
+        this.notifyListeners(); // Update UI
+        return status.reward;
     }
     setPlayerName(name) {
         const sanitized = name.trim().slice(0, 24);
@@ -330,7 +384,9 @@ export class GameState {
             playerName: this.playerName,
             equipped: { ...this.equipped },
             metrics: { ...this.metrics },
-            isSleeping: this.isSleeping // Save sleep state
+            isSleeping: this.isSleeping, // Save sleep state
+            lastDailyBonusClaim: this.lastDailyBonusClaim,
+            dailyStreak: this.dailyStreak
         };
         this.storageService.setItem(LOCAL_STORAGE_KEY, JSON.stringify(payload));
         this.persistPlayerId(this.playerId);

@@ -884,7 +884,7 @@ export class UIManager {
     private initDailyBonus(): void {
         const overlay = $('dailyBonusOverlay');
         const closeBtn = $('closeDailyBonusBtn');
-        const claimBtn = $('claimDailyBonusBtn');
+        const claimBtn = $('claimDailyBonusBtn') as HTMLButtonElement;
         const grid = $('dailyGrid');
 
         if (!overlay || !closeBtn || !claimBtn || !grid) return;
