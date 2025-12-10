@@ -201,52 +201,24 @@ export class UIManager {
             if (isNight) {
                 // Goodnight
                 getGameServiceInstance().sleep();
-                // Renderer updates automatically via subscription
                 // Trigger sleep animation
                 this.otterRenderer.triggerAnimation('sleep', getGameStateInstance().getEquipped(), () => { });
                 document.body.classList.add('night-mode');
                 this.notificationUI.showAlert('Buonanotte, Pebble...', 'info');
                 if (navigator.vibrate)
                     navigator.vibrate(50);
-                // Play quiet sound?
-                // Maybe stop birds? handleSceneChange handles "den" -> fireplace.
-                // We could switch track here?
-                // For now relying on scene ambient is safer.
             }
             else {
                 // Good morning
                 getGameServiceInstance().wakeUp();
                 document.body.classList.remove('night-mode');
-                this.otterRenderer.triggerAnimation('feed', getGameStateInstance().getEquipped(), () => { });
+                // Just let the mood sync handle the visual state (happy/neutral)
+                // removing explicit 'feed' animation which looked like eating.
                 this.notificationUI.showAlert('Buongiorno!', 'info');
                 if (navigator.vibrate)
                     navigator.vibrate([20, 50, 20]);
                 // Play happy sound
                 void audioManager.playSFX('happy');
-            }
-        });
-        lantern.addEventListener('click', () => {
-            isNight = !isNight;
-            if (isNight) {
-                // Goodnight
-                getGameServiceInstance().sleep();
-                // Renderer updates automatically via subscription, but we can trigger animation too
-                this.otterRenderer.triggerAnimation('sleep', getGameStateInstance().getEquipped(), () => { });
-                document.body.classList.add('night-mode');
-                this.notificationUI.showAlert('Buonanotte, Pebble...', 'info');
-                if (navigator.vibrate)
-                    navigator.vibrate(50);
-            }
-            else {
-                // Good morning
-                getGameServiceInstance().wakeUp();
-                document.body.classList.remove('night-mode');
-                // Trigger happy animation on wake up
-                this.otterRenderer.triggerAnimation('feed', getGameStateInstance().getEquipped(), () => { }); // Reusing feed animation for "happy jump" or similar? Or just let sync handle it.
-                // Actually, just letting sync handle 'happy' mood (if stats are good) is better.
-                this.notificationUI.showAlert('Buongiorno!', 'info');
-                if (navigator.vibrate)
-                    navigator.vibrate([20, 50, 20]);
             }
         });
     }
