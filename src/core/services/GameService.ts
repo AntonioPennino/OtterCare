@@ -157,5 +157,8 @@ export class GameService {
         recordEvent('minigioco:lucciole:connesso');
         return true;
     }
+    public getDailyUsage(activity: 'current' | 'firefly' | 'stones'): number {
+        return this.gameState.getDailyUsage(activity);
+    }
 }
 
