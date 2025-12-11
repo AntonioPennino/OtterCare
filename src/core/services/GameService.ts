@@ -19,6 +19,12 @@ export class GameService {
 
         recordEvent('azione:cibo');
         void audioManager.playSFX('eat');
+
+        // Bond
+        if (this.gameState.addBondXP(5)) {
+            // Level up logic handled by UI listeners usually, or we can dispatch event
+            recordEvent('bond:levelup');
+        }
     }
 
     public bathe(): void {
@@ -28,6 +34,7 @@ export class GameService {
             happiness: Math.min(100, stats.happiness + 4)
         });
         recordEvent('azione:bagno');
+        this.gameState.addBondXP(5);
     }
 
     public sleep(): void {
@@ -46,6 +53,7 @@ export class GameService {
             happiness: Math.min(100, stats.happiness + 10)
         });
         recordEvent('azione:sveglia');
+        this.gameState.addBondXP(10);
     }
 
     public spendCoins(amount: number): boolean {
@@ -96,17 +104,30 @@ export class GameService {
         else if (height > 100) reward = 1;
 
         if (reward > 0) {
+            // Check limit
+            if (this.gameState.getDailyUsage('stones') + reward > 25) {
+                // Partial or no reward logic? 
+                // Simple cap: If total usage >= 25, return 0.
+                if (this.gameState.getDailyUsage('stones') >= 25) return 0;
+            }
+
             const stats = this.gameState.getStats();
             this.gameState.setStats({
                 seaGlass: stats.seaGlass + reward,
                 happiness: Math.min(100, stats.happiness + 5)
             });
+            this.gameState.incrementDailyUsage('stones', reward);
             recordEvent(`minigioco:pietre:reward:${reward}`);
         }
         return reward;
     }
 
     public rewardTheCurrent(): boolean {
+        // Daily Limit: 10
+        if (this.gameState.getDailyUsage('current') >= 10) {
+            return false; // The river is calm
+        }
+
         // 5% chance to find a sea glass piece per interaction tick
         if (Math.random() < 0.05) {
             const stats = this.gameState.getStats();
@@ -114,18 +135,27 @@ export class GameService {
                 seaGlass: stats.seaGlass + 1,
                 clean: Math.min(100, stats.clean + 2)
             });
+            this.gameState.incrementDailyUsage('current');
             recordEvent('minigioco:corrente:trovato');
             return true;
         }
         return false;
     }
 
-    public rewardFireflyConnection(): void {
+    public rewardFireflyConnection(): boolean {
+        // Daily Limit: 15
+        if (this.gameState.getDailyUsage('firefly') >= 15) {
+            return false;
+        }
+
         const stats = this.gameState.getStats();
         this.gameState.setStats({
             seaGlass: stats.seaGlass + 1, // Generous: 1 per connection
             happiness: Math.min(100, stats.happiness + 2)
         });
+        this.gameState.incrementDailyUsage('firefly');
         recordEvent('minigioco:lucciole:connesso');
+        return true;
     }
 }
+

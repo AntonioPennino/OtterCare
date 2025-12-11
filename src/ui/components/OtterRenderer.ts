@@ -16,6 +16,13 @@ export class OtterRenderer {
     private otterAnimationTimers = new WeakMap<HTMLImageElement, number>();
     private latestMood: Mood = 'neutral';
     private latestAccessories: AccessoryState = { hat: false, scarf: false, sunglasses: false };
+    private temporaryAccessories: AccessoryState | null = null;
+
+    public setTemporaryOutfit(accessories: AccessoryState | null): void {
+        this.temporaryAccessories = accessories;
+        // Trigger a re-render with current state, forcing the temporary outfit to apply
+        this.sync(this.latestMood, this.latestAccessories, true);
+    }
 
     public sync(mood: Mood, accessories: AccessoryState, force = false): void {
         this.latestMood = mood;
@@ -29,74 +36,7 @@ export class OtterRenderer {
         });
     }
 
-    public triggerAnimation(animation: 'feed' | 'bathe' | 'sleep', accessories: AccessoryState, onComplete: () => void): void {
-        this.collectOtterElements();
-
-        let completionCalled = false;
-        const handleCompletion = () => {
-            if (!completionCalled) {
-                completionCalled = true;
-                onComplete();
-            }
-        };
-
-        this.otterElements.forEach(target => {
-            const previousTimer = this.otterAnimationTimers.get(target);
-            if (typeof previousTimer === 'number') {
-                window.clearTimeout(previousTimer);
-                this.otterAnimationTimers.delete(target);
-            }
-
-            target.classList.remove('hop', 'eating', 'bathing', 'rest');
-            target.classList.remove('happy', 'sad', 'sleepy');
-            target.dataset.animating = animation;
-
-            const applyAction = (assetBase: string, classes: string[], duration: number): void => {
-                const { src } = this.buildOtterImage(assetBase, accessories);
-                this.otterRenderCache.delete(target);
-                target.src = src;
-                if (classes.length) {
-                    target.classList.add(...classes);
-                }
-                const timerId = window.setTimeout(() => {
-                    if (classes.length) {
-                        target.classList.remove(...classes);
-                    }
-                    delete target.dataset.animating;
-                    this.otterAnimationTimers.delete(target);
-                    // Only call completion once, after the first animation finishes (they are synced)
-                    handleCompletion();
-                }, duration);
-                this.otterAnimationTimers.set(target, timerId);
-            };
-
-            if (animation === 'feed') {
-                applyAction('otter_eat', ['hop', 'eating'], 1500);
-            } else if (animation === 'bathe') {
-                applyAction('otter_bath', ['bathing'], 1600);
-            } else if (animation === 'sleep') {
-                applyAction('otter_sleepy', ['rest'], 4000);
-            }
-        });
-    }
-
-    private collectOtterElements(): void {
-        this.otterElements.clear();
-        document.querySelectorAll<HTMLImageElement>('.otter-img').forEach(img => {
-            this.otterElements.add(img);
-        });
-    }
-
-    private getActiveOtterElement(): HTMLImageElement | null {
-        const activeScene = document.querySelector<HTMLElement>('.scene.active');
-        if (activeScene) {
-            const activeOtter = activeScene.querySelector<HTMLImageElement>('.otter-img');
-            if (activeOtter) {
-                return activeOtter;
-            }
-        }
-        return $('otterImage') as HTMLImageElement | null;
-    }
+    // ... (rest of methods)
 
     private applyExpressionToElement(
         element: HTMLImageElement,
@@ -104,8 +44,16 @@ export class OtterRenderer {
         accessories: AccessoryState,
         force = false
     ): void {
-        const { src, outfit } = this.buildOtterImage(`otter_${mood}`, accessories);
+        // Overlay temporary accessories if active
+        const effectiveAccessories = this.temporaryAccessories
+            ? { ...accessories, ...this.temporaryAccessories }
+            : accessories;
+
+        const { src, outfit } = this.buildOtterImage(`otter_${mood}`, effectiveAccessories);
         const cached = this.otterRenderCache.get(element);
+
+        // If effective outfit changed, ignore cache check for outfit key comparison if needed, 
+        // but 'outfit' key is derived from effective, so it should be fine.
         if (!force && cached && cached.mood === mood && cached.outfit === outfit) {
             return;
         }

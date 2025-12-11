@@ -28,6 +28,16 @@ interface StoredGameState {
     isSleeping?: boolean; // Persisted sleep state
     lastDailyBonusClaim?: number;
     dailyStreak?: number;
+    dailyLimits?: {
+        date: string; // To check if we need to reset
+        current: number;
+        firefly: number;
+        stones: number;
+    };
+    bond?: {
+        xp: number;
+        level: number;
+    };
 }
 
 export class GameState {
@@ -48,6 +58,8 @@ export class GameState {
     private isSleeping: boolean = false; // Sleep state
     private lastDailyBonusClaim: number = 0;
     private dailyStreak: number = 0;
+    private dailyLimits: { date: string; current: number; firefly: number; stones: number };
+    private bond: { xp: number; level: number };
 
     constructor(
         private storageService: IStorageService,
@@ -67,6 +79,13 @@ export class GameState {
         this.isSleeping = !!stored.state.isSleeping; // Restore sleep state
         this.lastDailyBonusClaim = stored.state.lastDailyBonusClaim || 0;
         this.dailyStreak = stored.state.dailyStreak || 0;
+
+        // Init Limits & Bond
+        this.dailyLimits = stored.state.dailyLimits || { date: new Date().toDateString(), current: 0, firefly: 0, stones: 0 };
+        this.bond = stored.state.bond || { xp: 0, level: 1 };
+
+        this.checkDailyReset(); // Reset limits if new day
+
         this.playerId = this.resolvePlayerId();
         this.dispatchPlayerIdChange();
     }
@@ -259,6 +278,53 @@ export class GameState {
         const diff = now - this.firstLoginDate;
         // Convert ms to days, rounding up (day 1 starts at 0ms)
         return Math.floor(diff / (24 * 60 * 60 * 1000)) + 1;
+    }
+
+    private checkDailyReset(): void {
+        const today = new Date().toDateString();
+        if (this.dailyLimits.date !== today) {
+            this.dailyLimits = {
+                date: today,
+                current: 0,
+                firefly: 0,
+                stones: 0
+            };
+            this.writeToStorage();
+        }
+    }
+
+    public getDailyUsage(activity: 'current' | 'firefly' | 'stones'): number {
+        this.checkDailyReset(); // Ensure fresh
+        return this.dailyLimits[activity];
+    }
+
+    public incrementDailyUsage(activity: 'current' | 'firefly' | 'stones', amount = 1): void {
+        this.checkDailyReset();
+        this.dailyLimits[activity] += amount;
+        this.writeToStorage();
+    }
+
+    public getBond(): { xp: number; level: number } {
+        return { ...this.bond };
+    }
+
+    public addBondXP(amount: number): boolean { // Returns true if leveled up
+        this.bond.xp += amount;
+        let leveledUp = false;
+
+        // Simple Level Curve: Level * 100 XP required
+        const xpReq = this.bond.level * 100;
+        if (this.bond.xp >= xpReq) {
+            this.bond.level++;
+            this.bond.xp -= xpReq; // Rolling over XP or just resetting? Let's keep it cumulative-ish or simple
+            // Actually standard RPG: XP resets or threshold grows. 
+            // Let's do: XP carries over for simplicity in display (0..100)
+            leveledUp = true;
+        }
+
+        this.writeToStorage();
+        if (leveledUp) this.notifyListeners();
+        return leveledUp;
     }
 
     public calculateOfflineProgress(now: number = Date.now()): { hoursAway: number; statsBefore: CoreStats; statsAfter: CoreStats; gift?: string } | null {
@@ -492,7 +558,9 @@ export class GameState {
             metrics: { ...this.metrics },
             isSleeping: this.isSleeping, // Save sleep state
             lastDailyBonusClaim: this.lastDailyBonusClaim,
-            dailyStreak: this.dailyStreak
+            dailyStreak: this.dailyStreak,
+            dailyLimits: { ...this.dailyLimits },
+            bond: { ...this.bond }
         };
         this.storageService.setItem(LOCAL_STORAGE_KEY, JSON.stringify(payload));
         this.persistPlayerId(this.playerId);

@@ -504,6 +504,7 @@ export class UIManager {
 
         let mouseX = -1000;
         let mouseY = -1000;
+        let lastCalmRequest = 0;
 
         canvas.addEventListener('mousemove', (e) => {
             const rect = canvas.getBoundingClientRect();
@@ -532,13 +533,15 @@ export class UIManager {
                     p.y += Math.sin(angle) * 5;
 
                     // Chance to find glass
-                    if (getGameServiceInstance().rewardTheCurrent()) {
-                        // Visual feedback? maybe a sparkle or just notification
-                        // Keep it subtle to not spam alerts
-                        if (Math.random() < 0.1) { // Debounce alerts slightly if desired, or just let it notify
-                            // Actually we can't easily access UIManager instance inside this anonymous loop if 'this' context issues exist?
-                            // Arrow function preserves 'this'.
-                            this.notificationUI.showAlert('+1 Glass', 'info');
+                    const rewardResult = getGameServiceInstance().rewardTheCurrent();
+                    if (rewardResult) {
+                        if (Math.random() < 0.1) this.notificationUI.showAlert('+1 Glass', 'info');
+                    } else if (getGameServiceInstance().getDailyUsage('current') >= 10) {
+                        // Notification for Calm River (debounced)
+                        const now = Date.now();
+                        if (now - lastCalmRequest > 5000) {
+                            this.notificationUI.showAlert('La corrente si è calmata...', 'warning');
+                            lastCalmRequest = now;
                         }
                     }
                 }
@@ -579,6 +582,8 @@ export class UIManager {
             const reward = getGameServiceInstance().rewardStoneStacking(relativeHeight);
             if (reward > 0) {
                 this.notificationUI.showAlert(`Hai trovato ${reward} river glass!`, 'info');
+            } else if (relativeHeight > 100 && getGameServiceInstance().getDailyUsage('stones') >= 25) {
+                this.notificationUI.showAlert('Hai trovato l\'equilibrio (ma niente cristalli).', 'info');
             }
 
             overlay.classList.add('hidden');
@@ -813,7 +818,12 @@ export class UIManager {
                         if (navigator.vibrate) navigator.vibrate(10);
 
                         // Reward!
-                        getGameServiceInstance().rewardFireflyConnection();
+                        if (getGameServiceInstance().rewardFireflyConnection()) {
+                            // Sparkle or sound
+                        } else {
+                            // Limit reached
+                            this.notificationUI.showAlert('Le lucciole riposano...', 'warning');
+                        }
                     }
                 }
                 draw();
