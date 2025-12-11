@@ -76,7 +76,12 @@ export class GameState {
     async recoverFromCloudCode(code) {
         const result = await this.cloudService.recoverFromCloudCode(code, this.playerId);
         if (result.ok) {
+            // CRITICAL: Switch to the recovered ID before syncing!
+            this.applyPlayerId(code, { forceNotify: true });
+            // Now sync to pull down the data for this new ID
             await this.syncWithSupabase();
+            // Force save to persist the new ID and data locally immediately
+            this.writeToStorage();
             return { ok: true, alreadyLinked: result.alreadyLinked };
         }
         return { ok: false, reason: result.reason };

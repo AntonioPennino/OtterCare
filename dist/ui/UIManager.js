@@ -10,6 +10,7 @@ import { audioManager, resumeAudioContext } from '../core/audio.js';
 import { recordEvent } from '../core/analytics.js';
 import { getGameStateInstance, getSettingsStateInstance, getGameServiceInstance } from '../bootstrap.js';
 import { enableNotifications, disableNotifications } from '../core/services/notifications.js';
+import { Seagull } from './components/Seagull.js';
 export class UIManager {
     constructor() {
         this.deferredInstallPrompt = null;
@@ -24,6 +25,7 @@ export class UIManager {
         this.otterRenderer = new OtterRenderer();
         this.modalManager = new ModalManager(this.inventoryView);
         this.notificationUI = new NotificationUI();
+        this.seagull = new Seagull(this.notificationUI);
     }
     init() {
         this.initScrollObserver(); // New scroll-based navigation
@@ -998,8 +1000,38 @@ export class UIManager {
         if (playerNameInput) {
             // Load initial value
             playerNameInput.value = getGameStateInstance().getPlayerName();
-            playerNameInput.addEventListener('change', () => {
-                getGameStateInstance().setPlayerName(playerNameInput.value);
+            playerNameInput.addEventListener('change', (e) => {
+                const name = e.target.value;
+                getGameStateInstance().setPlayerName(name);
+            });
+        }
+        // Backup Logic
+        const idDisplay = $('playerIdDisplay');
+        const copyBtn = $('copyIdBtn');
+        const restoreBtn = $('restoreSaveBtn');
+        if (idDisplay)
+            idDisplay.value = getGameStateInstance().getPlayerId();
+        if (copyBtn && idDisplay) {
+            copyBtn.addEventListener('click', () => {
+                idDisplay.select();
+                navigator.clipboard.writeText(idDisplay.value);
+                this.notificationUI.showAlert('ID copiato negli appunti!', 'success');
+            });
+        }
+        if (restoreBtn) {
+            restoreBtn.addEventListener('click', async () => {
+                const code = prompt('Inserisci il codice di recupero (ID):\nATTENZIONE: Questo sovrascriverà i dati attuali!');
+                if (code) {
+                    const result = await getGameStateInstance().recoverFromCloudCode(code);
+                    if (result.ok) {
+                        alert('Salvataggio recuperato con successo! Il gioco verrà ricaricato.');
+                        window.location.reload();
+                    }
+                    else {
+                        const msg = result.reason === 'not_found' ? 'Codice non trovato' : 'Errore nel recupero';
+                        this.notificationUI.showAlert(msg, 'error');
+                    }
+                }
             });
         }
     }

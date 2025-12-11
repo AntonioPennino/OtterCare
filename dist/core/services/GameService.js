@@ -118,4 +118,11 @@ export class GameService {
         });
         recordEvent('minigioco:lucciole:connesso');
     }
+    addSeaGlass(amount) {
+        const stats = this.gameState.getStats();
+        this.gameState.setStats({
+            seaGlass: stats.seaGlass + amount
+        });
+        recordEvent(`reward:admob:${amount}`);
+    }
 }
