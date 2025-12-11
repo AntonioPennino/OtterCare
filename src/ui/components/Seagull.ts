@@ -29,9 +29,8 @@ export class Seagull {
 
     private scheduleNextSpawn(): void {
         // Random time between 5 and 15 minutes
-        // For DEBUG: 1 minute
-        // const delay = (Math.random() * (15 - 5) + 5) * 60 * 1000;
-        const delay = 60 * 1000; // 1 min for testing
+        const delay = (Math.random() * (15 - 5) + 5) * 60 * 1000;
+        // const delay = 60 * 1000; // 1 min for testing
 
         setTimeout(() => {
             this.spawn();
