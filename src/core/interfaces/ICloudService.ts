@@ -19,6 +19,6 @@ export interface CloudRecoveryResult {
 
 export interface ICloudService {
     recoverFromCloudCode(code: string, currentPlayerId: string): Promise<CloudRecoveryResult>;
-    syncWithSupabase(playerId: string, stats: CoreStats, lastLoginDate: number, inventory: string[], petName: string, playerName: string): Promise<SupabaseGameStateRow | null>;
+    syncWithSupabase(playerId: string, stats: CoreStats, lastLoginDate: number, inventory: string[], petName: string, playerName: string, firstLoginDate: number): Promise<SupabaseGameStateRow | null>;
     isAvailable(): boolean;
 }

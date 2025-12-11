@@ -712,17 +712,14 @@ body.night-mode .lantern-trigger {
 }
 
 /* Remove old body filters */
-body.night-mode {
-    /* No filter on body, use overlay */
-}
 
 /* Daily Bonus Styles */
 .daily-bonus-container {
-    width: 90vw;
+    width: 95vw; /* Slightly wider on mobile */
     max-width: 500px;
     background: #FDFBF7;
     border-radius: 20px;
-    padding: 32px;
+    padding: 24px 16px; /* Reduced horizontal padding */
     position: relative;
     display: flex;
     flex-direction: column;
@@ -736,16 +733,17 @@ body.night-mode {
 
 .bonus-subtitle {
     color: var(--text-soft);
-    margin-bottom: 32px;
+    margin-bottom: 24px;
     text-align: center;
+    font-size: 0.9rem;
 }
 
 .daily-grid {
     display: grid;
     grid-template-columns: repeat(4, 1fr);
-    gap: 12px;
+    gap: 8px; /* Reduced gap */
     width: 100%;
-    margin-bottom: 32px;
+    margin-bottom: 24px;
 }
 
 .daily-day {

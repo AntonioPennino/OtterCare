@@ -55,7 +55,7 @@ export class SupabaseCloudService implements ICloudService {
         }
     }
 
-    public async syncWithSupabase(playerId: string, stats: CoreStats, lastLoginDate: number, inventory: string[], petName: string, playerName: string): Promise<SupabaseGameStateRow | null> {
+    public async syncWithSupabase(playerId: string, stats: CoreStats, lastLoginDate: number, inventory: string[], petName: string, playerName: string, firstLoginDate: number): Promise<SupabaseGameStateRow | null> {
         const supabase = getSupabaseClient();
         if (!supabase || this.supabaseUnavailable) {
             return null;
@@ -93,6 +93,17 @@ export class SupabaseCloudService implements ICloudService {
                 }
             }
 
+            // Determine accurate creation date
+            // If remote has created_at, use MIN(remote.created_at, local.firstLoginDate)
+            // This ensures if we restore a very old save, we keep the old date.
+            let creationDate = new Date(firstLoginDate).toISOString();
+            if (remote && remote.created_at) {
+                const remoteCreation = new Date(remote.created_at).getTime();
+                if (remoteCreation < firstLoginDate) {
+                    creationDate = remote.created_at;
+                }
+            }
+
             const payload: SupabaseGameStateRow = {
                 id: playerId,
                 stats: stats,
@@ -101,7 +112,7 @@ export class SupabaseCloudService implements ICloudService {
                 updated_at: new Date().toISOString(),
                 pet_name: petName,
                 player_name: playerName, // Sync player name
-                created_at: remote?.created_at || new Date().toISOString()
+                created_at: creationDate
             };
 
             const { error: upsertError } = await supabase
