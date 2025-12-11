@@ -465,9 +465,9 @@ body.zen-mode .coins-display {
 }
 
 .merchant-character {
-  width: 300px;
-  height: 300px;
-  margin-bottom: 20px; /* Lifted up */
+  width: 220px;
+  height: 220px;
+  margin-bottom: 0px;
   z-index: 2;
   display: flex;
   align-items: center;
@@ -477,15 +477,12 @@ body.zen-mode .coins-display {
 }
 
 .merchant-rug {
-  background: #D7CCC8; /* Light brown rug */
-  border: 4px dashed #8D6E63;
-  border-radius: 50% 50% 10% 10%; /* Semi-circleish */
-  padding: 40px 20px 20px 20px;
+  /* Removed rug styling */
+  padding: 10px;
   display: flex;
   gap: 24px;
-  box-shadow: 0 10px 20px rgba(0,0,0,0.1);
-  transform: perspective(500px) rotateX(20deg);
   z-index: 1;
+  margin-bottom: 40px; /* Space for buttons */
 }
 
 .rug-content {
@@ -496,10 +493,11 @@ body.zen-mode .coins-display {
 }
 
 .shop-trigger-img {
-  width: 200px; /* Size of the pile of things */
+  width: 140px; 
   max-width: 100%;
   cursor: pointer;
   transition: transform 0.2s;
+  filter: drop-shadow(0 4px 8px rgba(0,0,0,0.15));
 }
 
 .shop-trigger-img:hover {
