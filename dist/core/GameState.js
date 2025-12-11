@@ -223,7 +223,8 @@ export class GameState {
     }
     async syncWithSupabase() {
         // Sync stats, inventory, petName, and playerName
-        const remote = await this.cloudService.syncWithSupabase(this.playerId, this.stats, this.lastLoginDate, this.inventory, this.petName, this.playerName);
+        const remote = await this.cloudService.syncWithSupabase(this.playerId, this.stats, this.lastLoginDate, this.inventory, this.petName, this.playerName, this.firstLoginDate // Add this!
+        );
         if (remote) {
             this.mergeRemoteState(remote);
             this.writeToStorage();

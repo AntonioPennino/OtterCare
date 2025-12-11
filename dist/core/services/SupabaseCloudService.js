@@ -46,7 +46,7 @@ export class SupabaseCloudService {
             return { ok: false, reason: 'error' };
         }
     }
-    async syncWithSupabase(playerId, stats, lastLoginDate, inventory, petName, playerName) {
+    async syncWithSupabase(playerId, stats, lastLoginDate, inventory, petName, playerName, firstLoginDate) {
         const supabase = getSupabaseClient();
         if (!supabase || this.supabaseUnavailable) {
             return null;
@@ -79,6 +79,16 @@ export class SupabaseCloudService {
                     return remote;
                 }
             }
+            // Determine accurate creation date
+            // If remote has created_at, use MIN(remote.created_at, local.firstLoginDate)
+            // This ensures if we restore a very old save, we keep the old date.
+            let creationDate = new Date(firstLoginDate).toISOString();
+            if (remote && remote.created_at) {
+                const remoteCreation = new Date(remote.created_at).getTime();
+                if (remoteCreation < firstLoginDate) {
+                    creationDate = remote.created_at;
+                }
+            }
             const payload = {
                 id: playerId,
                 stats: stats,
@@ -87,7 +97,7 @@ export class SupabaseCloudService {
                 updated_at: new Date().toISOString(),
                 pet_name: petName,
                 player_name: playerName, // Sync player name
-                created_at: remote?.created_at || new Date().toISOString()
+                created_at: creationDate
             };
             const { error: upsertError } = await supabase
                 .from('pebble_game_state')

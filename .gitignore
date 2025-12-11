@@ -37,8 +37,9 @@ yarn.lock
 # Optional eslint cache
 .eslintcache
 
-# Build folders (if you add a build step later)
+# Build folders
 build
+dist
 
 # Temporary files
 *.tmp
@@ -50,11 +51,17 @@ build
 .env.*.local
 config.js
 
-# Capacitor
-android/
-ios/
-capacitor.config.json
-capacitor.config.ts
+# Capacitor - Recommended ignores
+# We DO want to commit the android/ios folders, but NOT the build artifacts inside them.
+android/app/build
+android/.gradle
+android/captures
+android/local.properties
+ios/App/App.xcarchive
+ios/App/App.xcodeproj/project.xcworkspace/xcuserdata
+ios/App/App.xcodeproj/xcuserdata
+ios/App/Pods
+ios/DerivedData
 
 # Generated icons (keep icon-192.png and icon-512.png if you want)
 # Uncomment to ignore:

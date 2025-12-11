@@ -1,37 +1,8 @@
-function getRuntimeConfig() {
-    const globalConfig = globalThis.PEBBLE_CONFIG;
-    return globalConfig ?? null;
-}
-const maybeProcess = typeof globalThis === 'object' && globalThis !== null && 'process' in globalThis
-    ? globalThis.process
-    : undefined;
-const envSupabaseUrl = maybeProcess?.env?.SUPABASE_URL ?? '';
-const envSupabaseAnon = maybeProcess?.env?.SUPABASE_ANON_KEY ?? '';
-const envVapidKey = maybeProcess?.env?.VAPID_PUBLIC_KEY ?? '';
-const envReminderFunction = maybeProcess?.env?.SUPABASE_REMINDER_FUNCTION ?? '';
-function resolveConfigValue(runtimeValue, envValue) {
-    const normalizedRuntime = typeof runtimeValue === 'string' ? runtimeValue.trim() : '';
-    if (normalizedRuntime) {
-        return normalizedRuntime;
-    }
-    const normalizedEnv = envValue.trim();
-    return normalizedEnv;
-}
-export function getSupabaseUrl() {
-    return resolveConfigValue(getRuntimeConfig()?.supabaseUrl, envSupabaseUrl);
-}
-export function getSupabaseAnonKey() {
-    return resolveConfigValue(getRuntimeConfig()?.supabaseAnonKey, envSupabaseAnon);
-}
-export function getVapidPublicKey() {
-    return resolveConfigValue(getRuntimeConfig()?.vapidPublicKey, envVapidKey);
-}
-export function getReminderFunctionName() {
-    return resolveConfigValue(getRuntimeConfig()?.reminderFunction, envReminderFunction);
-}
-export function isCloudSyncConfigured() {
-    return Boolean(getSupabaseUrl() && getSupabaseAnonKey());
-}
-export function isPushConfigured() {
-    return Boolean(getVapidPublicKey());
-}
+// Configurazione locale: sostituisci i placeholder con i tuoi valori reali.
+// Questo file è ignorato da git: non condividere mai le credenziali.
+window.PEBBLE_CONFIG = {
+  supabaseUrl: "https://ghpuyxrhfxibmwkcfaku.supabase.co",
+  supabaseAnonKey: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdocHV5eHJoZnhpYm13a2NmYWt1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjM5OTI4MDQsImV4cCI6MjA3OTU2ODgwNH0.YBIZycZzlqy7S2fRznRxk4pdo5pWiWIgDwNAfp1yWvA",
+  vapidPublicKey: "BPltncXuzHQTMOvzA3WL9dAaT2jIUx4XfOg-pOTA5f8OqQ7VcOsikxrXKeOm9H4hEDNKA655420Fqcu6JfxBaI4",
+  reminderFunction: "otter-reminder"
+};

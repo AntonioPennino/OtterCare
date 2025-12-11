@@ -6,6 +6,7 @@
   "main": "dist/index.js",
   "scripts": {
     "build": "tsc",
+    "build:mobile": "node scripts/build-mobile.cjs",
     "watch": "tsc --watch",
     "serve": "http-server . -p 4173",
     "dev": "http-server . -p 4173",
@@ -29,6 +30,10 @@
   },
   "homepage": "https://github.com/AntonioPennino/Pebble#readme",
   "dependencies": {
+    "@capacitor/android": "^8.0.0",
+    "@capacitor/cli": "^8.0.0",
+    "@capacitor/core": "^8.0.0",
+    "@capacitor/ios": "^8.0.0",
     "@supabase/supabase-js": "^2.45.2"
   },
   "devDependencies": {
