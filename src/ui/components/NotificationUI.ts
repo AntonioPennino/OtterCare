@@ -67,7 +67,7 @@ export class NotificationUI {
         }
     }
 
-    public showAlert(message: string, variant: 'info' | 'warning' = 'warning'): void {
+    public showAlert(message: string, variant: 'info' | 'warning' | 'success' | 'error' = 'warning'): void {
         const banner = $('alertBanner');
         if (!banner) {
             return;

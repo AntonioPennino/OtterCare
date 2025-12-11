@@ -19,6 +19,7 @@
 </head>
 <body>
   <div id="nightOverlay" class="night-overlay"></div>
+  <div id="alertBanner" class="alert-banner hidden"></div>
   <header>
     <div class="header-content">
       <h1 class="brand-lowercase">pebble</h1>
@@ -133,6 +134,15 @@
             <span class="checkmark"></span>
             Suoni della natura
           </label>
+          
+          <div class="backup-section" style="margin-top: 20px; border-top: 1px dashed #A1887F; padding-top: 10px;">
+            <p style="font-size: 0.9em; color: #5D4037; margin-bottom: 5px;">Salvataggio Cloud:</p>
+            <div style="display: flex; gap: 5px; margin-bottom: 10px;">
+              <input type="text" id="playerIdDisplay" readonly value="Caricamento..." style="flex: 1; padding: 5px; border: 1px solid #D7CCC8; border-radius: 5px; font-family: monospace; background: #EFEBE9; color: #5D4037;">
+              <button id="copyIdBtn" class="action-btn small-btn">Copia</button>
+            </div>
+            <button id="restoreSaveBtn" class="action-btn small-btn" style="width: 100%; background: #D7CCC8; color: #3E2723;">Ripristina da ID</button>
+          </div>
         </div>
         <div class="page-nav">
           <button class="prev-page-btn" data-target="memories">←</button>

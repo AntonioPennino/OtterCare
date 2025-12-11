@@ -836,3 +836,36 @@ body.night-mode .lantern-trigger {
 .main-btn:not(:disabled):active {
     transform: translateY(1px);
 }
+
+/* Alert Banner */
+.alert-banner {
+    position: fixed;
+    top: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    padding: 12px 24px;
+    border-radius: 50px;
+    background: white;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+    z-index: 10000;
+    font-weight: bold;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    animation: slideDown 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    border: 2px solid transparent;
+}
+
+.alert-banner[data-variant="info"] { border-color: #29B6F6; color: #0277BD; }
+.alert-banner[data-variant="warning"] { border-color: #FFA726; color: #EF6C00; }
+.alert-banner[data-variant="success"] { border-color: #66BB6A; color: #2E7D32; }
+.alert-banner[data-variant="error"] { border-color: #EF5350; color: #C62828; }
+
+.alert-banner.hidden {
+    display: none;
+}
+
+@keyframes slideDown {
+    from { transform: translate(-50%, -100%); opacity: 0; }
+    to { transform: translate(-50%, 0); opacity: 1; }
+}
