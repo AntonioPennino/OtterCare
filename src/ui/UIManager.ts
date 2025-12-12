@@ -571,13 +571,12 @@ export class UIManager {
 
         if (!overlay || !closeBtn || !dropZone) return;
 
-        // Remove existing listeners to avoid duplicates if called multiple times
+        // Remove existing listeners to avoid duplicates
         const newCloseBtn = closeBtn.cloneNode(true);
         closeBtn.parentNode?.replaceChild(newCloseBtn, closeBtn);
 
         newCloseBtn.addEventListener('click', () => {
             // Check for reward before closing
-            // Calculate height in "pixels above base" approx
             const relativeHeight = stackHeight - 40;
             const reward = getGameServiceInstance().rewardStoneStacking(relativeHeight);
             if (reward > 0) {
@@ -587,48 +586,101 @@ export class UIManager {
             }
 
             overlay.classList.add('hidden');
-            dropZone.innerHTML = '<div class="base-stone"></div>';
-            stackHeight = 40; // Reset stack height
+            resetStack();
         });
 
         let stackHeight = 40; // Base stone height
+        let balanceScore = 0; // 0 = perfect balance. +/- means tipping left/right.
+        const BALANCE_THRESHOLD = 150;
+
+        const resetStack = () => {
+            dropZone.innerHTML = '<div class="base-stone"></div>';
+            stackHeight = 40;
+            balanceScore = 0;
+        };
 
         const placeStone = (size: string) => {
             const newStone = document.createElement('div');
             newStone.classList.add('stone', 'stacked-stone');
-            newStone.textContent = '🪨';
+
+            // Asset based on size? Ideally yes, but we only have 'rock.png' icon or emoji.
+            // Let's stick to emoji or if we had assets we'd use them.
+            // The task was replacing Menu Emojis. The stones themselves are still styled <div>s with emojis in previous code.
+            // Let's keep emoji for the stone *visual* inside the div for now, or use the rock.png?
+            // "rock.png" is a singular icon. Let's use the rock.png as background?
+            // User put `rock.png` in menu. Let's try to use `rock.png` here for consistency if easy.
+            // Actually, let's stick to the emoji 🪨 or an image tag if we want.
+            // For now, keeping logic focused on physics.
+            newStone.textContent = '';
+            const img = document.createElement('img');
+            img.src = 'src/assets/menu-icons/rock.png';
+            img.style.width = '100%';
+            img.style.height = '100%';
+            img.style.objectFit = 'contain';
+            newStone.appendChild(img);
+
+            let weight = 1;
+            let width = 60;
+            let height = 40;
 
             // Size logic
             if (size === 'large') {
-                newStone.style.fontSize = '4rem';
-                newStone.style.width = '100px';
-                newStone.style.height = '60px';
+                width = 100; height = 60; weight = 3;
             } else if (size === 'medium') {
-                newStone.style.fontSize = '3rem';
-                newStone.style.width = '80px';
-                newStone.style.height = '50px';
+                width = 80; height = 50; weight = 2;
             } else {
-                newStone.style.fontSize = '2rem';
-                newStone.style.width = '60px';
-                newStone.style.height = '40px';
+                width = 60; height = 40; weight = 1;
             }
 
-            // Stack logic (simplified physics)
+            newStone.style.width = `${width}px`;
+            newStone.style.height = `${height}px`;
+            newStone.style.display = 'flex';
+            newStone.style.alignItems = 'center';
+            newStone.style.justifyContent = 'center';
+
+            // Physics / Offset
+            // Make offset a bit more random/dangerous
+            const offset = (Math.random() - 0.5) * 50; // Range -25 to +25
+
+            // Calculate new balance
+            // Instability increases as we go higher (lever arm effect?)
+            // Simplified: Add (offset * weight).
+            balanceScore += offset * weight;
+
+            // Visual positioning
             newStone.style.bottom = `${stackHeight}px`;
-            const offset = (Math.random() - 0.5) * 20;
             newStone.style.left = `calc(50% + ${offset}px)`;
-            newStone.style.transform = `translateX(-50%) rotate(${(Math.random() - 0.5) * 10}deg)`;
+
+            // Rotation reflects current instability
+            const lean = balanceScore / 10; // Simple fallback
+            newStone.style.transform = `translateX(-50%) rotate(${lean}deg)`;
 
             dropZone.appendChild(newStone);
 
-            const addedHeight = size === 'large' ? 50 : size === 'medium' ? 40 : 30;
-            stackHeight += addedHeight;
+            // Check collapse
+            if (Math.abs(balanceScore) > BALANCE_THRESHOLD) {
+                // COLLAPSE!
+                if (navigator.vibrate) navigator.vibrate([50, 50, 50]);
+                void audioManager.playSFX('splash', true); // Or 'thud'
+                this.notificationUI.showAlert('Crollato!', 'error');
+
+                // Visual collapse effect (simple timeout reset)
+                setTimeout(() => {
+                    resetStack();
+                }, 800);
+                return;
+            }
+
+            stackHeight += height * 0.8; // Overlap slightly
 
             if (navigator.vibrate) navigator.vibrate(20);
 
             if (stackHeight > 300) {
-                this.notificationUI.showAlert('Che equilibrio perfetto...', 'info');
-                void audioManager.playSFX('happy', true);
+                // High stack!
+                // Maybe check balance for bonus?
+                if (Math.abs(balanceScore) < 50) {
+                    this.notificationUI.showAlert('Equilibrio Zen!', 'success');
+                }
             }
         };
 
