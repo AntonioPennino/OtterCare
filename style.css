@@ -320,10 +320,48 @@ body.zen-mode .coins-display {
 }
 
 .journal-page {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: #FDF5E6; /* Old Lace */
+  border-radius: 2px 16px 16px 2px;
+  box-shadow: inset 20px 0 30px rgba(0,0,0,0.05), 5px 5px 15px rgba(0,0,0,0.2);
+  padding: 32px 24px;
+  display: flex;
   flex-direction: column;
-  animation: fadeInPage 0.4s ease;
-  overflow-y: auto; /* Allow scrolling if content is too tall */
-  padding-bottom: 8px; /* Space for nav */
+  gap: 12px;
+  overflow-y: auto;
+  scrollbar-width: none;
+  transform-style: preserve-3d;
+  transform-origin: left center;
+  transition: transform 0.8s cubic-bezier(0.645, 0.045, 0.355, 1);
+  z-index: 1;
+}
+
+.journal-page::-webkit-scrollbar {
+  display: none;
+}
+
+.journal-page.flipped {
+  transform: rotateY(-180deg);
+  pointer-events: none;
+}
+
+.journal-page h2 {
+  font-family: 'Mountains of Christmas', cursive;
+  color: #5D4037;
+  border-bottom: 2px dashed #D7CCC8;
+  padding-bottom: 8px;
+  margin-bottom: 8px;
+}
+
+.stat-row {
+  display: flex;
+  justify-content: space-between;
+  padding: 6px 0;
+  border-bottom: 1px dashed rgba(93, 64, 55, 0.1);
 }
 
 /* ... */
