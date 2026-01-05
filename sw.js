@@ -150,8 +150,41 @@ async function cacheFirst(request) {
   return response;
 }
 
-self.addEventListener('message', event => {
-  if (event.data && event.data.type === 'SKIP_WAITING') {
-    self.skipWaiting();
-  }
+if (event.data && event.data.type === 'SKIP_WAITING') {
+  self.skipWaiting();
+}
+});
+
+// Gestione Push Notifications (Real System Notifications)
+self.addEventListener('push', event => {
+  const data = event.data ? event.data.json() : {};
+  const title = data.title || 'Pebble ha bisogno di te!';
+  const options = {
+    body: data.body || 'C\'è qualcosa di nuovo da scoprire.',
+    icon: './icons/icon-192.png',
+    badge: './icons/icon-192.png',
+    data: { url: data.url || './' }
+  };
+
+  event.waitUntil(
+    self.registration.showNotification(title, options)
+  );
+});
+
+self.addEventListener('notificationclick', event => {
+  event.notification.close();
+  event.waitUntil(
+    clients.matchAll({ type: 'window' }).then(windowClients => {
+      // Se c'è già una finestra aperta, focussala
+      for (let client of windowClients) {
+        if (client.url === '/' || client.url.includes('index.html')) {
+          return client.focus();
+        }
+      }
+      // Altrimenti aprine una nuova
+      if (clients.openWindow) {
+        return clients.openWindow('./');
+      }
+    })
+  );
 });
