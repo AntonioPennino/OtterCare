@@ -819,17 +819,21 @@ export class UIManager {
         const ctx = canvas.getContext('2d');
         if (!ctx) return;
 
-        // Generate Stars
-        this.stars = [];
-        this.connections = [];
-        for (let i = 0; i < 8; i++) {
-            this.stars.push({
-                x: Math.random() * (canvas.width - 100) + 50,
-                y: Math.random() * (canvas.height - 100) + 50,
-                connected: false,
-                id: i
-            });
-        }
+        // Generate Stars Helper
+        const generateStars = () => {
+            this.stars = [];
+            this.connections = [];
+            for (let i = 0; i < 8; i++) {
+                this.stars.push({
+                    x: Math.random() * (canvas.width - 100) + 50,
+                    y: Math.random() * (canvas.height - 100) + 50,
+                    connected: false,
+                    id: i
+                });
+            }
+        };
+
+        generateStars();
 
         let isDragging = false;
         let startStar: number | null = null;
@@ -871,10 +875,31 @@ export class UIManager {
 
                         // Reward!
                         if (getGameServiceInstance().rewardFireflyConnection()) {
-                            // Sparkle or sound
-                        } else {
-                            // Limit reached
-                            this.notificationUI.showAlert('Le lucciole riposano...', 'warning');
+                            // Small reward
+                        }
+
+                        // Check Completion (All stars used in at least one connection)
+                        const connectedSet = new Set<number>();
+                        this.connections.forEach(c => {
+                            connectedSet.add(c.from);
+                            connectedSet.add(c.to);
+                        });
+
+                        if (connectedSet.size === this.stars.length) {
+                            // WIN!
+                            if (navigator.vibrate) navigator.vibrate([100, 50, 100]);
+                            void audioManager.playSFX('happy', true);
+                            this.notificationUI.showAlert('Costellazione completata!', 'success');
+
+                            // Visual fanfare?
+                            ctx!.fillStyle = 'rgba(255, 255, 255, 0.8)';
+                            ctx!.fillRect(0, 0, canvas.width, canvas.height);
+
+                            // Reset level after brief pause
+                            setTimeout(() => {
+                                generateStars(); // Re-generate
+                                draw();
+                            }, 1500);
                         }
                     }
                 }
