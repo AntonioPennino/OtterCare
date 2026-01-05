@@ -22,9 +22,12 @@
 <body>
   <div id="nightOverlay" class="night-overlay"></div>
   <div id="alertBanner" class="alert-banner hidden"></div>
+  <div id="updateBanner" class="update-toast hidden">
+    <span>Nuova versione disponibile! 🚀</span>
+    <button id="updateNowBtn" class="toast-btn">Aggiorna</button>
+  </div>
   <header>
     <div class="header-content">
-      <img src="icons/icon-192.png" alt="Logo" class="header-logo" />
       <h1 class="brand-lowercase">pebble</h1>
     </div>
   </header>
@@ -160,8 +163,15 @@
       <!-- Page 2: Backpack (Inventory/Settings) -->
       <div class="journal-page" data-page="backpack" style="z-index: 2;">
         <h2>Zaino</h2>
-        <div class="inventory-grid" id="journalInventory">
-          <!-- Filled by JS -->
+        <div class="journal-content">
+          <div id="journalInventory" class="inventory-grid">
+            <!-- Items injected here -->
+          </div>
+
+          <!-- Advanced Options (Export/Import) -->
+          <h3 style="margin: 24px 0 8px 0; font-size: 1.1rem; color: #8D6E63; border-bottom: 1px solid #EFEBE9;">Salvataggio</h3>
+          <button id="exportSaveBtn" class="action-btn" style="width:100%; margin-bottom: 8px; font-size: 0.9rem;">Copia Codice Salvataggio 💾</button>
+          <button id="importSaveBtn" class="action-btn" style="width:100%; background: #D7CCC8; color: #5D4037; font-size: 0.9rem;">Ripristina da Codice 📥</button>
         </div>
         
         <div class="settings-mini-panel" style="margin-top: 15px;">

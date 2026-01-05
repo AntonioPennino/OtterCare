@@ -1434,6 +1434,42 @@ export class UIManager {
                 audioManager.setAmbienceMuted(!musicToggle.checked);
             });
         }
+
+        // Update Toast Button
+        const updateBtn = $('updateNowBtn');
+        if (updateBtn) {
+            updateBtn.addEventListener('click', () => {
+                if (this.updateConfirm) this.updateConfirm();
+                $('updateBanner')?.classList.add('hidden');
+            });
+        }
+
+        // Export/Import
+        const exportBtn = $('exportSaveBtn');
+        const importBtn = $('importSaveBtn');
+        if (exportBtn) {
+            exportBtn.addEventListener('click', () => {
+                const code = getGameStateInstance().getFullStateString();
+                if (code) {
+                    navigator.clipboard.writeText(code).then(() => {
+                        this.notificationUI.showAlert('Codice copiato negli appunti! 📋', 'info');
+                    });
+                } else {
+                    this.notificationUI.showAlert('Errore esportazione.', 'error');
+                }
+            });
+        }
+        if (importBtn) {
+            importBtn.addEventListener('click', () => {
+                const code = prompt('Incolla qui il codice di salvataggio (Base64):');
+                if (code && code.trim().length > 10) {
+                    const success = getGameStateInstance().importStateString(code.trim());
+                    if (!success) {
+                        this.notificationUI.showAlert('Codice non valido!', 'error');
+                    }
+                }
+            });
+        }
     }
 
     private updateJournalStats(): void {

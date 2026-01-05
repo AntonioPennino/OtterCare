@@ -38,6 +38,7 @@ interface StoredGameState {
         xp: number;
         level: number;
     };
+    lastUpdated?: number;
 }
 
 export class GameState {
@@ -60,6 +61,8 @@ export class GameState {
     private dailyStreak: number = 0;
     private dailyLimits: { date: string; current: number; firefly: number; stones: number };
     private bond: { xp: number; level: number };
+    private isDirty = false;
+    private lastUpdated = Date.now();
 
     constructor(
         private storageService: IStorageService,
@@ -79,6 +82,7 @@ export class GameState {
         this.isSleeping = !!stored.state.isSleeping; // Restore sleep state
         this.lastDailyBonusClaim = stored.state.lastDailyBonusClaim || 0;
         this.dailyStreak = stored.state.dailyStreak || 0;
+        this.lastUpdated = stored.state.lastUpdated || Date.now();
 
         // Init Limits & Bond
         this.dailyLimits = stored.state.dailyLimits || { date: new Date().toDateString(), current: 0, firefly: 0, stones: 0 };
@@ -88,6 +92,16 @@ export class GameState {
 
         this.playerId = this.resolvePlayerId();
         this.dispatchPlayerIdChange();
+
+        // Offline Handling
+        if (typeof window !== 'undefined') {
+            window.addEventListener('online', () => {
+                if (this.isDirty) {
+                    console.log('[Pebble] Connessione ripristinata. Sincronizzazione in corso...');
+                    this.triggerAutoSync();
+                }
+            });
+        }
     }
 
     public subscribe(listener: () => void): () => void {
@@ -555,6 +569,7 @@ export class GameState {
     }
 
     private writeToStorage(): void {
+        this.lastUpdated = Date.now();
         const payload: StoredGameState = {
             stats: this.cloneStats(this.stats),
             lastLoginDate: this.lastLoginDate,
@@ -568,7 +583,8 @@ export class GameState {
             lastDailyBonusClaim: this.lastDailyBonusClaim,
             dailyStreak: this.dailyStreak,
             dailyLimits: { ...this.dailyLimits },
-            bond: { ...this.bond }
+            bond: { ...this.bond },
+            lastUpdated: this.lastUpdated
         };
         this.storageService.setItem(LOCAL_STORAGE_KEY, JSON.stringify(payload));
         this.persistPlayerId(this.playerId);
@@ -581,7 +597,14 @@ export class GameState {
         }
         // Debounce sync to avoid spamming Supabase on every stat change
         this.syncTimeout = setTimeout(() => {
-            void this.syncWithSupabase();
+            this.syncWithSupabase()
+                .then(() => {
+                    this.isDirty = false;
+                })
+                .catch(err => {
+                    console.warn('[Pebble] Sync failed, marked generic dirty', err);
+                    this.isDirty = true;
+                });
             this.syncTimeout = null;
         }, 5000); // 5 seconds debounce
     }
@@ -644,5 +667,31 @@ export class GameState {
         }
         const random = Math.floor(Math.random() * 0xffff_ffff).toString(16).padStart(8, '0');
         return `player-${Date.now().toString(16)}-${random}`;
+    }
+
+    public getFullStateString(): string {
+        try {
+            const raw = this.storageService.getItem(LOCAL_STORAGE_KEY);
+            return raw ? btoa(raw) : '';
+        } catch (e) {
+            console.error('Export failed', e);
+            return '';
+        }
+    }
+
+    public importStateString(b64: string): boolean {
+        try {
+            const raw = atob(b64);
+            const parsed = JSON.parse(raw);
+            if (!parsed.stats || !parsed.petName) {
+                return false;
+            }
+            this.storageService.setItem(LOCAL_STORAGE_KEY, raw);
+            window.location.reload();
+            return true;
+        } catch (e) {
+            console.error('Import failed', e);
+            return false;
+        }
     }
 }

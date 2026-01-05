@@ -1,5 +1,5 @@
 // Service Worker per PWA Pebble
-const CACHE_NAME = 'pebble-v4';
+const CACHE_NAME = 'pebble-v1.0.0';
 const urlsToCache = [
   './',
   './index.html',
@@ -150,9 +150,10 @@ async function cacheFirst(request) {
   return response;
 }
 
-if (event.data && event.data.type === 'SKIP_WAITING') {
-  self.skipWaiting();
-}
+self.addEventListener('message', event => {
+  if (event.data && event.data.type === 'SKIP_WAITING') {
+    self.skipWaiting();
+  }
 });
 
 // Gestione Push Notifications (Real System Notifications)
