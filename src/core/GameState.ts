@@ -609,7 +609,7 @@ export class GameState {
             isSleeping: false,
             lastDailyBonusClaim: 0,
             dailyStreak: 0,
-            dailyLimits: { current: 0, firefly: 0, stones: 0 },
+            dailyLimits: { date: new Date().toDateString(), current: 0, firefly: 0, stones: 0 },
             bond: { xp: 0, level: 1 }
         };
     }
