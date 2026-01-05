@@ -1465,6 +1465,7 @@ export class UIManager {
             else if (stats.happiness >= 40) happyEl.textContent = 'Serena 🍃';
             else happyEl.textContent = 'Triste ☁️';
         }
+    }
 
 
     private renderJournalInventory(): void {
