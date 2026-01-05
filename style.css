@@ -91,12 +91,19 @@ header {
   pointer-events: none; /* Let clicks pass through */
 }
 
-.header-content {
-  width: 100%;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  pointer-events: auto;
+.header-logo {
+  width: 40px;
+  height: 40px;
+  border-radius: 8px; /* Soft round */
+  margin-right: 12px;
+  box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+}
+
+.brand-lowercase {
+  font-family: 'Patrick Hand', cursive; /* Ensure handwriting font */
+  font-size: 2rem;
+  color: #3E2723;
+  margin: 0;
 }
 
 h1 {
