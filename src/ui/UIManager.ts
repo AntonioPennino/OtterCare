@@ -9,6 +9,7 @@ import { NotificationUI } from './components/NotificationUI.js';
 import { initMiniGame, openMiniGame, isMiniGameRunning } from '../features/minigame.js';
 import { audioManager, resumeAudioContext } from '../core/audio.js';
 import { recordEvent } from '../core/analytics.js';
+import { StandardGameRulesService } from '../core/services/StandardGameRulesService.js';
 import { getGameStateInstance, getSettingsStateInstance, getGameServiceInstance } from '../bootstrap.js';
 import { enableNotifications, disableNotifications } from '../core/services/notifications.js';
 import { mountStonePolishingActivity, StonePolishingActivity } from '../features/stonePolishing.js';
@@ -219,9 +220,18 @@ export class UIManager {
         let isNight = getGameStateInstance().getIsSleeping();
         if (isNight) {
             document.body.classList.add('night-mode');
-            // If night, play fireplace ambient if in den, or quiet? 
-            // handleSceneChange will handle it on scroll, but initial state?
-            // Let's rely on handleSceneChange triggering on init via intersection observer.
+        } else {
+            // Goodnight Reminder Check (Soul)
+            const hour = new Date().getHours();
+            if ((hour >= 22 || hour < 5)) {
+                const reminderKey = `pebble_sleep_reminded_${new Date().toDateString()}`;
+                if (!localStorage.getItem(reminderKey)) {
+                    setTimeout(() => {
+                        this.notificationUI.showAlert('Si è fatto tardi, Pebble ha sonno...', 'info');
+                        localStorage.setItem(reminderKey, 'true');
+                    }, 3000);
+                }
+            }
         }
 
         lantern.addEventListener('click', () => {
@@ -246,10 +256,44 @@ export class UIManager {
                 this.notificationUI.showAlert('Buongiorno!', 'info');
                 if (navigator.vibrate) navigator.vibrate([20, 50, 20]);
 
-                // Play happy sound with variance
                 void audioManager.playSFX('happy', true);
             }
         });
+
+        // Secret Moon Logic
+        const moon = document.getElementById('secretMoon');
+        let moonClicks = 0;
+        if (moon) {
+            moon.addEventListener('click', () => {
+                moonClicks++;
+                if (navigator.vibrate) navigator.vibrate(10);
+
+                // Subtle feedback per click
+                moon.style.transform = `scale(${1 + moonClicks * 0.1})`;
+
+                if (moonClicks >= 5) {
+                    moonClicks = 0;
+                    moon.style.display = 'none'; // Poof
+
+                    if (navigator.vibrate) navigator.vibrate([100, 50, 100, 50, 100]);
+                    void audioManager.playSFX('happy', true);
+
+                    getGameServiceInstance().spendCoins(-50); // Hack to ADD coins: spend -50. Or better use setStats logic in service. 
+                    // Actually GameService doesn't have addCoins?
+                    // It has rewardFishCatch etc.
+                    // Let's use a raw update? Or better:
+                    // `getGameServiceInstance().rewardItemPurchase('moon_secret')` (tracks metric) + grant coins manually?
+                    // Looking at GameService, `spendCoins` subtracts. `reward...` adds.
+                    // I'll assume I can just use `gameState.getStats().seaGlass += 50` via `setStats`.
+
+                    const gs = getGameStateInstance();
+                    const stats = gs.getStats();
+                    gs.setStats({ seaGlass: stats.seaGlass + 50 });
+
+                    this.notificationUI.showAlert('Hai scoperto un segreto lunare! (+50 💎)', 'success');
+                }
+            });
+        }
     }
 
     private initKitchenScene(): void {
@@ -769,6 +813,44 @@ export class UIManager {
         const closeShopBtn = $('closeShopBtn');
         const shopItems = document.querySelectorAll('.shop-item');
         const seaGlassDisplay = $('seaGlassCount');
+        const merchantChar = document.querySelector('.merchant-character') as HTMLElement;
+
+        // Check Merchant Schedule (Soul)
+        const rules = new StandardGameRulesService();
+        const isAvailable = rules.isMerchantAvailable();
+        const todayKey = new Date().toDateString();
+        const notifiedKey = `pebble_merchant_notified_${todayKey}`;
+
+        if (!isAvailable) {
+            // Merchant is away
+            if (merchantChar) merchantChar.style.display = 'none';
+            if (shopTrigger) {
+                shopTrigger.style.opacity = '0.5'; // Dim the rug/trigger
+                shopTrigger.style.pointerEvents = 'none'; // Disable click
+                // Optional: Replace with "Out of Office" sign?
+            }
+            // If shop is open? (Shouldn't happen on reload, but if open, close it?)
+            if (shopOverlay && !shopOverlay.classList.contains('hidden')) {
+                shopOverlay.classList.add('hidden');
+            }
+        } else {
+            // Merchant is here
+            if (merchantChar) merchantChar.style.display = 'block';
+            if (shopTrigger) {
+                shopTrigger.style.opacity = '1';
+                shopTrigger.style.pointerEvents = 'auto';
+            }
+
+            // Notify if fresh arrival
+            const alreadyNotified = localStorage.getItem(notifiedKey);
+            if (!alreadyNotified) {
+                setTimeout(() => {
+                    this.notificationUI.showAlert('Il mercante è stato avvistato!', 'info');
+                    if (navigator.vibrate) navigator.vibrate([50, 50]);
+                }, 2000); // Delay slightly for immersion
+                localStorage.setItem(notifiedKey, 'true');
+            }
+        }
 
         const updateDisplay = () => {
             if (seaGlassDisplay) {

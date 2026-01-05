@@ -945,6 +945,29 @@ body.night-mode .lantern-trigger {
     pointer-events: none;
 }
 
+
 .merchant-img {
     object-position: center bottom;
+}
+
+/* Secret Moon */
+.secret-moon {
+  position: absolute;
+  top: 10%;
+  right: 15%;
+  width: 60px;
+  height: 60px;
+  background: radial-gradient(circle at 30% 30%, #FFFDE7, #FDD835);
+  border-radius: 50%;
+  box-shadow: 0 0 20px #FDD835;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 2s ease-in-out;
+  z-index: 1; /* Behind UI */
+  cursor: pointer;
+}
+
+body.night-mode .secret-moon {
+  opacity: 0.6;
+  pointer-events: auto;
 }

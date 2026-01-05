@@ -1,6 +1,7 @@
 import { AccessoryState, Mood, OutfitKey } from '../../core/types.js';
 import { $ } from '../utils.js';
 import { audioManager, resumeAudioContext } from '../../core/audio.js';
+import { getGameStateInstance } from '../../bootstrap.js';
 
 const OTTER_ASSET_BASE = 'src/assets/otter';
 
@@ -25,6 +26,12 @@ export class OtterRenderer {
     }
 
     public sync(mood: Mood, accessories: AccessoryState, force = false): void {
+        // Bond Evolution: If bond is high (>= 5), Pebble is always happy to see you!
+        const bond = getGameStateInstance().getBond();
+        if (bond.level >= 5 && mood === 'neutral') {
+            mood = 'happy';
+        }
+
         this.latestMood = mood;
         this.latestAccessories = accessories;
         this.collectOtterElements();

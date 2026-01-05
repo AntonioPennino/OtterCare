@@ -72,4 +72,17 @@ export class StandardGameRulesService implements IGameRulesService {
             default: return { type: 'seaGlass', value: 25 };
         }
     }
+
+    public isMerchantAvailable(): boolean {
+        const now = new Date();
+        const day = now.getDay(); // 0 = Sun, 1 = Mon, ...
+        const hour = now.getHours();
+
+        // Schedule: Mon (1), Wed (3), Fri (5)
+        // Hours: 08:00 - 20:00
+        const isDay = [1, 3, 5].includes(day); // Mon, Wed, Fri
+        const isTime = hour >= 8 && hour < 20;
+
+        return isDay && isTime;
+    }
 }
