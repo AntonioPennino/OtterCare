@@ -1319,26 +1319,52 @@ export class UIManager {
     private initJournal(): void {
         const trigger = $('journalTrigger');
         const overlay = $('journalOverlay');
-        const closeBtn = $('journalCloseBtn');
+        const closeBtn = $('journalCloseBtn'); // Using 'journalCloseBtn' as per existing HTML
+        const pages = document.querySelectorAll('.journal-page');
 
         if (!trigger || !overlay || !closeBtn) return;
 
+        // Open
         trigger.addEventListener('click', () => {
             overlay.classList.remove('hidden');
-            this.updateJournalStats();
+            this.updateJournalStats(); // Refresh stats on open
         });
 
+        const resetBook = () => {
+            pages.forEach(p => p.classList.remove('flipped'));
+        };
+
+        // Close
         closeBtn.addEventListener('click', () => {
             overlay.classList.add('hidden');
+            setTimeout(resetBook, 500); // Reset after close
         });
 
-        // Page Navigation
-        document.querySelectorAll('.next-page-btn, .prev-page-btn').forEach(btn => {
-            btn.addEventListener('click', (e) => {
-                const targetPage = (e.target as HTMLElement).dataset.target;
-                if (targetPage) {
-                    document.querySelectorAll('.journal-page').forEach(page => page.classList.add('hidden'));
-                    document.querySelector(`.journal-page[data-page="${targetPage}"]`)?.classList.remove('hidden');
+        // Flip Logic (Real Book)
+        pages.forEach((page, index) => {
+            page.addEventListener('click', (e) => {
+                // Ignore interactions with form inputs inside the page
+                if ((e.target as HTMLElement).tagName === 'INPUT' || (e.target as HTMLElement).tagName === 'LABEL') {
+                    return;
+                }
+
+                const rect = (page as HTMLElement).getBoundingClientRect();
+                const x = (e as MouseEvent).clientX - rect.left;
+                const width = rect.width;
+                const isLeftClick = x < width * 0.3;
+
+                if (isLeftClick) {
+                    // Go Back: Unflip previous page
+                    if (index > 0) {
+                        pages[index - 1].classList.remove('flipped');
+                        if (navigator.vibrate) navigator.vibrate(10);
+                    }
+                } else {
+                    // Go Forward: Flip current page
+                    if (index < pages.length - 1) {
+                        page.classList.add('flipped');
+                        if (navigator.vibrate) navigator.vibrate(10);
+                    }
                 }
             });
         });
