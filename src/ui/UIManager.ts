@@ -687,7 +687,7 @@ export class UIManager {
                 return;
             }
 
-            stackHeight += height * 0.8;
+            stackHeight += height * 0.4; // Tighter overlap (was 0.8)
 
             if (navigator.vibrate) navigator.vibrate(20);
 
