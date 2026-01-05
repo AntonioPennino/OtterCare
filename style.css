@@ -312,11 +312,28 @@ body.zen-mode .coins-display {
 .journal-book {
   width: 90vw;
   max-width: 420px;
-  height: 80vh; /* Fixed height for book ratio */
-  max-height: 650px;
-  background: transparent; /* Pages handle background */
+  height: 65vh; /* Reduced from 80vh */
+  max-height: 520px; /* Reduced from 650px */
+  background: transparent;
   position: relative;
-  perspective: 1500px; /* 3D Depth */
+  perspective: 1500px;
+  margin-bottom: 20px; /* Space from bottom if centered */
+}
+
+/* Page Curl/Fold for first pages */
+.journal-page:not(:last-of-type)::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 0;
+  height: 0;
+  border-style: solid;
+  border-width: 0 30px 30px 0;
+  border-color: transparent #EFEBE9 transparent transparent; /* Creating the fold triangle */
+  box-shadow: 3px -3px 4px rgba(0,0,0,0.15); /* Shadow for depth */
+  z-index: 10;
+  border-radius: 0 0 0 4px; /* Slight softening */
 }
 
 .journal-page {
