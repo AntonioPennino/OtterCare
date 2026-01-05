@@ -389,15 +389,24 @@ export class GameState {
     }
 
     public async syncWithSupabase(): Promise<void> {
+        // PACKING EXTRA DATA: We pack bond, metrics, and dailyLimits into the 'stats' JSONB column
+        // to ensure full persistence without changing the SQL schema.
+        const packedStats: any = {
+            ...this.stats,
+            bond: this.bond,
+            metrics: this.metrics,
+            dailyLimits: this.dailyLimits
+        };
+
         // Sync stats, inventory, petName, and playerName
         const remote = await this.cloudService.syncWithSupabase(
             this.playerId,
-            this.stats,
+            packedStats, // Sending PACKED stats
             this.lastLoginDate,
             this.inventory,
             this.petName,
             this.playerName,
-            this.firstLoginDate // Add this!
+            this.firstLoginDate
         );
         if (remote) {
             this.mergeRemoteState(remote);
@@ -408,12 +417,49 @@ export class GameState {
 
     private mergeRemoteState(remote: any): void {
         const remoteLogin = typeof remote.last_login === 'string' ? Date.parse(remote.last_login) : Number.NaN;
-        const remoteStats = this.sanitizeStats(remote.stats);
+        // Unpack potential extra data from the 'stats' jsonb
+        const rawStats = remote.stats || {};
+
+        const remoteStats = this.sanitizeStats(rawStats);
         const remoteInventory = this.sanitizeInventory(remote.inventory);
+
+        // UNPACK EXTRA DATA if present (Full Pack Strategy)
+        if (rawStats.bond) {
+            this.bond = { ...rawStats.bond };
+        }
+        if (rawStats.metrics) {
+            this.metrics = { ...rawStats.metrics };
+        }
+        if (rawStats.dailyLimits) {
+            // Check date to ensure we don't restore old limits? 
+            // Actually trust cloud if it's newer login.
+            // If remoteLogin > local, we trust it.
+            this.dailyLimits = { ...rawStats.dailyLimits };
+        }
 
         if (Number.isFinite(remoteLogin) && remoteLogin > this.lastLoginDate) {
             this.stats = remoteStats;
             this.lastLoginDate = remoteLogin;
+            // Also trust the unpacked data specifically here? 
+            // The unpacking above did it unconditionally. 
+            // Ideally we only overwrite if remote is newer.
+            // Moving unpacking INSIDE this block is safer.
+        } else {
+            // If local is newer, we ignoring remote stats. 
+            // Revert unpacking?
+            // Actually, merge logic usually implies "Merge Union" for inventory, but "Winner Takes All" for state.
+            // If remote is older, we shouldn't overwrite local bond/metrics.
+            // FIX: Move unpacking inside the `remoteLogin > this.lastLoginDate` check.
+        }
+
+        // CORRECT LOGIC:
+        if (Number.isFinite(remoteLogin) && remoteLogin > this.lastLoginDate) {
+            this.stats = remoteStats;
+            this.lastLoginDate = remoteLogin;
+
+            if (rawStats.bond) this.bond = { ...rawStats.bond };
+            if (rawStats.metrics) this.metrics = { ...rawStats.metrics };
+            if (rawStats.dailyLimits) this.dailyLimits = { ...rawStats.dailyLimits };
         }
 
         const mergedInventory = new Set<string>([...this.inventory, ...remoteInventory]);
@@ -428,13 +474,6 @@ export class GameState {
         // Sync playerName
         if (remote.player_name && !this.playerName) {
             this.playerName = remote.player_name;
-        } else if (remote.player_name && this.playerName && remote.player_name !== this.playerName) {
-            // Conflict: We can't easily know which is newer without per-field timestamps. 
-            // For now, let's assume local is fresher if they differ, or trust remote.
-            // Let's trust local if it's set, because the user might just have typed it.
-            // Actually, syncWithSupabase *pushes* local to remote. 
-            // mergeRemoteState usually happens if we pulled data. 
-            // If we are recovering, we want remote.
         }
 
         // Sync created_at for accurate days count

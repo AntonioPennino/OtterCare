@@ -55,7 +55,7 @@ export class SupabaseCloudService implements ICloudService {
         }
     }
 
-    public async syncWithSupabase(playerId: string, stats: CoreStats, lastLoginDate: number, inventory: string[], petName: string, playerName: string, firstLoginDate: number): Promise<SupabaseGameStateRow | null> {
+    public async syncWithSupabase(playerId: string, stats: any, lastLoginDate: number, inventory: string[], petName: string, playerName: string, firstLoginDate: number): Promise<SupabaseGameStateRow | null> {
         const supabase = getSupabaseClient();
         if (!supabase || this.supabaseUnavailable) {
             return null;
