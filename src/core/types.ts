@@ -59,6 +59,10 @@ export interface CoreStats {
   energy: number;
   clean: number;
   seaGlass: number;
+  days?: number;
+  minigamesPlayed?: number;
+  fishCaught?: number;
+  itemsCollected?: number;
 }
 
 export interface PebbleGiftEventDetail {

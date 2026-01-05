@@ -1425,22 +1425,90 @@ export class UIManager {
                 }
             });
         }
+
+        // Music Toggle (Nature Sounds)
+        const musicToggle = $('musicToggle') as HTMLInputElement;
+        if (musicToggle) {
+            musicToggle.addEventListener('change', () => {
+                // If checked, Muted = false. If unchecked, Muted = true.
+                audioManager.setAmbienceMuted(!musicToggle.checked);
+            });
+        }
     }
 
     private updateJournalStats(): void {
         const stats = getGameStateInstance().getStats();
-        const petName = getGameStateInstance().getPetName();
 
-        const happyEl = $('journalHappy');
+        // Stats
+        const statDays = $('statDays');
+        const statGames = $('statGames');
+        const statFish = $('statFish');
+        const statItems = $('statItems');
+
+        if (statDays) statDays.textContent = String(stats.days ?? 1); // Default to 1 if undefined
+        if (statGames) statGames.textContent = String(stats.minigamesPlayed ?? 0);
+        if (statFish) statFish.textContent = String(stats.fishCaught ?? 0);
+        if (statItems) statItems.textContent = String(stats.itemsCollected ?? 0);
+
+        // Status (Soul)
         const hungerEl = $('journalHunger');
-        const nameEl = $('journalPetName');
-        const daysEl = $('daysCount');
+        const happyEl = $('journalHappy');
 
-        if (happyEl) happyEl.textContent = stats.happiness > 70 ? 'Molto Felice' : stats.happiness > 30 ? 'Serena' : 'Triste';
-        if (hungerEl) hungerEl.textContent = stats.hunger > 70 ? 'Piena' : stats.hunger > 30 ? 'Soddisfatta' : 'Affamata';
-        if (nameEl) nameEl.textContent = petName || 'Pebble';
-        if (daysEl) daysEl.textContent = String(getGameStateInstance().getDaysPlayed());
+        if (hungerEl) {
+            if (stats.hunger >= 80) hungerEl.textContent = 'Piena 🍖';
+            else if (stats.hunger >= 40) hungerEl.textContent = 'Soddisfatta 🐟';
+            else hungerEl.textContent = 'Affamata... 🥣';
+        }
+
+        if (happyEl) {
+            if (stats.happiness >= 80) happyEl.textContent = 'Radiosa ✨';
+            else if (stats.happiness >= 40) happyEl.textContent = 'Serena 🍃';
+            else happyEl.textContent = 'Triste ☁️';
+        }
+
+
+    private renderJournalInventory(): void {
+        const container = $('journalInventory');
+        if (!container) return;
+
+        const items = getGameStateInstance().getInventory();
+        container.innerHTML = '';
+
+        if (items.length === 0) {
+            container.innerHTML = '<p style="grid-column: 1/-1; text-align: center; color: #8D6E63; font-style: italic;">Lo zaino è vuoto...</p>';
+            return;
+        }
+
+        items.forEach(item => {
+            const el = document.createElement('div');
+            el.className = 'inventory-item';
+            el.style.width = '50px';
+            el.style.height = '50px';
+            el.style.background = 'rgba(255,255,255,0.5)';
+            el.style.borderRadius = '8px';
+            el.style.display = 'flex';
+            el.style.alignItems = 'center';
+            el.style.justifyContent = 'center';
+            el.style.border = '1px solid #D7CCC8';
+
+            const img = document.createElement('img');
+            // Basic mapping or direct usage. Assuming item IDs match filenames or are generic.
+            // If item is emoji (legacy), use it as text.
+            if (item.match(/\p{Emoji}/u)) {
+                el.textContent = item;
+                el.style.fontSize = '2rem';
+            } else {
+                img.src = `src/assets/items/${item}.png`;
+                img.alt = item;
+                img.className = 'item-icon';
+                img.onerror = () => { img.style.display = 'none'; el.textContent = '📦'; };
+                el.appendChild(img);
+            }
+
+            container.appendChild(el);
+        });
     }
+
 
     private tempShowUI(): void {
         document.body.classList.remove('zen-mode');

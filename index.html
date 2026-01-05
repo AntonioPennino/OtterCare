@@ -116,12 +116,25 @@
   <!-- The Journal Overlay -->
   <div id="journalOverlay" class="overlay hidden">
     <div class="journal-book">
-      <button id="journalCloseBtn" class="journal-close">✕</button>
+      <button id="journalCloseBtn" class="journal-close-btn" aria-label="Chiudi diario">✕</button>
       
       <!-- Page 1: Memories (Stats) -->
       <div class="journal-page" data-page="memories" style="z-index: 3;">
         <h2>Ricordi</h2>
         <div class="journal-content">
+          <!-- Current Status -->
+          <h3 style="margin: 0 0 8px 0; font-size: 1.1rem; color: #8D6E63; border-bottom: 1px solid #EFEBE9;">Stato Attuale</h3>
+          <div class="stat-row">
+            <span>Pancia:</span>
+            <span id="journalHunger">--</span>
+          </div>
+          <div class="stat-row">
+            <span>Umore:</span>
+            <span id="journalHappy">--</span>
+          </div>
+
+          <!-- History Stats -->
+          <h3 style="margin: 16px 0 8px 0; font-size: 1.1rem; color: #8D6E63; border-bottom: 1px solid #EFEBE9;">Statistiche</h3>
           <div class="stat-row">
             <span>Giorni nel Fiume:</span>
             <span id="statDays">0</span>

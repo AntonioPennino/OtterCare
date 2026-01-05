@@ -26,6 +26,8 @@ export class AudioManager {
   private readonly bufferPromises = new Map<string, Promise<AudioBuffer>>();
   private currentAmbient: AmbientPlayback | null = null;
   private readonly defaultFade = 1.6;
+  private isAmbienceMuted = false;
+  private lastAmbientName: string | null = null;
 
   public static getInstance(): AudioManager {
     if (!this.instance) {
@@ -74,7 +76,22 @@ export class AudioManager {
     }
   }
 
+  public setAmbienceMuted(muted: boolean): void {
+    this.isAmbienceMuted = muted;
+    if (muted) {
+      void this.stopAmbient();
+    } else if (this.lastAmbientName) {
+      void this.playAmbient(this.lastAmbientName);
+    }
+  }
+
   public async playAmbient(name: string, volume = 0.5): Promise<void> {
+    this.lastAmbientName = name;
+
+    if (this.isAmbienceMuted) {
+      return;
+    }
+
     if (!this.manifest.has(name)) {
       console.warn(`Traccia ambient "${name}" non registrata`);
       return;

@@ -102,7 +102,13 @@ export class GameState {
     }
 
     public getStats(): CoreStats {
-        return this.cloneStats(this.stats);
+        return {
+            ...this.stats,
+            days: this.getDaysPlayed(),
+            minigamesPlayed: this.metrics.gamesPlayed,
+            fishCaught: this.metrics.fishCaught,
+            itemsCollected: this.inventory.length
+        };
     }
 
     public getInventory(): string[] {

@@ -298,8 +298,33 @@ body.zen-mode .coins-display {
   z-index: 10;
 }
 
-.journal-trigger:hover {
-  transform: scale(1.05) rotate(-5deg);
+
+/* Close Button Fixed */
+.journal-close-btn {
+  position: absolute;
+  top: 12px;
+  right: 16px;
+  background: rgba(141, 110, 99, 0.1);
+  color: #5D4037;
+  border: 1px solid rgba(141, 110, 99, 0.2);
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  font-size: 1.2rem;
+  font-weight: bold;
+  cursor: pointer;
+  z-index: 1000; /* Must be > pages */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+}
+
+.journal-close-btn:hover {
+  background: #8D6E63;
+  color: white;
+  transform: rotate(90deg);
 }
 
 /* The/* Journal Modal (Book) */
