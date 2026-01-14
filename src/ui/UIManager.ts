@@ -873,16 +873,27 @@ export class UIManager {
         });
 
         // Purchase Logic
+        const inventory = getGameStateInstance().getInventory(); // Update inventory reference
+
         shopItems.forEach(item => {
+            const itemKey = (item as HTMLElement).dataset.item;
+
+            // Check if already owned
+            if (itemKey && inventory.includes(itemKey)) {
+                item.classList.add('purchased');
+                (item as HTMLElement).style.opacity = '0.5';
+                (item as HTMLElement).style.pointerEvents = 'none';
+            }
+
             item.addEventListener('click', () => {
                 const cost = Number((item as HTMLElement).dataset.cost);
-                const itemKey = (item as HTMLElement).dataset.item;
+                const currentItemKey = (item as HTMLElement).dataset.item; // distinct var
 
-                if (!cost || !itemKey) return;
+                if (!cost || !currentItemKey) return;
 
                 if (getGameServiceInstance().spendCoins(cost)) {
-                    getGameServiceInstance().rewardItemPurchase(itemKey);
-                    this.notificationUI.showAlert(`Hai ottenuto: ${itemKey}!`, 'info');
+                    getGameServiceInstance().rewardItemPurchase(currentItemKey);
+                    this.notificationUI.showAlert(`Hai ottenuto: ${currentItemKey}!`, 'info');
 
                     // Visual feedback
                     item.classList.add('purchased');

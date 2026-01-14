@@ -1,5 +1,5 @@
 // Service Worker per PWA Pebble
-const CACHE_NAME = 'pebble-v1.0.1';
+const CACHE_NAME = 'pebble-v1.0.2';
 const urlsToCache = [
   './',
   './index.html',

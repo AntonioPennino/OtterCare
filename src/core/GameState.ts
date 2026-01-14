@@ -204,10 +204,10 @@ export class GameState {
         today.setHours(0, 0, 0, 0);
 
         const diffTime = today.getTime() - last.getTime();
-        const diffDays = diffTime / (1000 * 60 * 60 * 24);
+        const diffDays = Math.round(diffTime / (1000 * 60 * 60 * 24));
 
-        if (diffDays === 0) {
-            // Already claimed today
+        if (diffDays <= 0) {
+            // Already claimed today (or future/time glitch)
             return { canClaim: false, currentDay: this.dailyStreak, reward: undefined };
         }
 
@@ -215,7 +215,6 @@ export class GameState {
 
         // If difference is 1 (yesterday), we continue streak.
         // If difference > 1 (missed a day), we reset to 1.
-        // NOTE: If lastClaim is 0 (never), diffDays is huge -> reset to 1. Correct.
         if (diffDays > 1) {
             nextDay = 1;
         }
