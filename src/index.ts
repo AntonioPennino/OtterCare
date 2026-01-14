@@ -2,6 +2,7 @@ import { UIManager } from './ui/UIManager.js';
 import { calculateOfflineProgress, getGameStateInstance, getGameServiceInstance, syncWithSupabase } from './bootstrap.js';
 import { PebbleGiftEventDetail } from './core/types.js';
 import { audioManager } from './core/audio.js';
+import { notifyLowStat } from './core/services/notifications.js';
 
 const uiManager = new UIManager();
 
@@ -126,25 +127,25 @@ function bootstrap(): void {
 
   // Game Loop / Tick
   window.setInterval(() => {
-    // advanceTick(); // Was in state.ts. Logic needs to be moved to GameService or GameState.
-    // GameState.calculateOfflineProgress handles decay.
-    // We need a 'tick' method for active play decay?
-    // state.ts had 'advanceTick' which decayed stats every 5 seconds.
-
-    // Let's implement decay in GameService or GameState.
-    // For now, let's just use calculateOfflineProgress with current time?
-    // No, offline progress is for large gaps.
-    // We need a simple decay.
-
     const stats = gameState.getStats();
-    gameState.setStats({
+
+    // Decay logic
+    const nextStats = {
       hunger: Math.max(0, stats.hunger - 0.5),
       happiness: Math.max(0, stats.happiness - 0.5),
       energy: Math.max(0, stats.energy - 0.2),
       clean: Math.max(0, stats.clean - 0.3)
-    });
+    };
+    gameState.setStats(nextStats);
+
+    // Check for notifications
+    if (nextStats.hunger < 30) void notifyLowStat('hunger');
+    if (nextStats.happiness < 30) void notifyLowStat('happy');
+    if (nextStats.energy < 30) void notifyLowStat('energy');
+    if (nextStats.clean < 30) void notifyLowStat('clean');
 
   }, 5000);
+
 
   // Auto-save is handled by GameState on every change, but we can force sync occasionally?
   // GameState writes to storage on every setStats.
